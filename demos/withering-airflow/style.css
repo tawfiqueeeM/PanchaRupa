@@ -1,0 +1,66 @@
+@import url("../../shared/css/base.css");
+
+/* Specific styling for Withering Airflow demo */
+.withering-chamber {
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.chamber-gauges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-sm);
+}
+
+.gauge-tile {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  text-align: center;
+}
+
+.gauge-val {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-top: 2px;
+}
+
+.fan-icon-spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.sensor-fault-banner {
+  background: #991b1b;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: none;
+}
+
+.sensor-fault-banner.active {
+  display: block;
+}
+
+.comparison-chart-box {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+}

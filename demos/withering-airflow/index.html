@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withering Airflow & Moisture Control — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>💨</span>
+          <span>Withering Airflow & Moisture Dynamics</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 03</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 1 Production Engineering · Fan airflow modulation, ambient RH sensitivity & moisture trajectory modeling
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/04-withering/projects/withering-airflow/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/withering-airflow/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="SPRING-NOMINAL">Spring Nominal (65% RH)</button>
+        <button class="scenario-pill" data-scenario="MONSOON-HUMID">Monsoon Humid (88% RH)</button>
+        <button class="scenario-pill" data-scenario="SENSOR-FAULT">Sensor Fault Injected</button>
+        <button class="scenario-pill" data-scenario="COMPARE-RUNS">Compare Run A vs Run B</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Batch: <strong id="lblActiveBatch" class="font-mono">B-W01 (40 kg)</strong> ·
+      Fan Speed: <strong id="lblFanSpeedDisplay" class="font-mono">60%</strong> ·
+      Sensor Status: <strong id="lblSensorStatus" class="font-mono" style="color:#15803d;">HEALTHY</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- Withering Chamber Display -->
+    <section class="card withering-chamber" aria-labelledby="chamber-title">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="chamber-title" style="font-size:1.05rem; font-weight:700; color:#f8fafc; display:flex; align-items:center; gap:8px;">
+          <span id="fanSpinIcon" class="fan-icon-spin" style="font-size:1.2rem;">🌀</span>
+          Withering Tray Chamber Telemetry
+        </h2>
+        <span id="badgeTargetReached" class="status-badge normal" style="display:none;">TARGET REACHED (65%)</span>
+      </div>
+
+      <div id="sensorFaultAlert" class="sensor-fault-banner">
+        ⚠️ SENSOR FAULT DETECTED: Moisture probe AI_MOISTURE_PROBE (%IW70) reading out-of-bounds (-99.9%). Automatic cutoff inhibited!
+      </div>
+
+      <div class="chamber-gauges">
+        <div class="gauge-tile">
+          <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Moisture Probe (%IW70)</div>
+          <div id="gaugeMoisture" class="gauge-val" style="color:#4ade80;">78.0%</div>
+          <div style="font-size:0.7rem; color:#94a3b8;">Target: 65.0%</div>
+        </div>
+        <div class="gauge-tile">
+          <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">VFD Fan Command (%QW64)</div>
+          <div id="gaugeFan" class="gauge-val">60%</div>
+          <div id="lblFanRpm" style="font-size:0.7rem; color:#94a3b8;">1,440 RPM (0.16 kW)</div>
+        </div>
+        <div class="gauge-tile">
+          <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Ambient Conditions</div>
+          <div id="gaugeAmbient" class="gauge-val" style="font-size:1.25rem;">25°C / 65% RH</div>
+          <div id="lblAmbientProfile" style="font-size:0.7rem; color:#94a3b8;">Spring Nominal</div>
+        </div>
+        <div class="gauge-tile">
+          <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">Cumulative Fan Energy</div>
+          <div id="gaugeKwh" class="gauge-val" style="color:#fbbf24;">0.00 kWh</div>
+          <div id="lblElapsedHours" style="font-size:0.7rem; color:#94a3b8;">0.0 hrs elapsed</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls & Comparison Panels -->
+    <div class="panel-grid">
+      <!-- Operator Process Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <div class="card-header">
+          <h2 id="controls-title" class="card-title">
+            <span>🎛️</span> Airflow & Withering Controls
+          </h2>
+          <span class="status-badge normal">MANUAL / AUTO</span>
+        </div>
+
+        <div class="form-group">
+          <label for="rngFanSpeed" class="form-label" style="display:flex; justify-content:space-between;">
+            <span>Fan Speed Command (AO_FAN_SPEED)</span>
+            <strong id="lblFanSpeedVal" class="font-mono">60%</strong>
+          </label>
+          <input type="range" id="rngFanSpeed" min="0" max="100" step="5" value="60" style="width:100%;">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+          <div class="form-group">
+            <label for="inpInitialMoisture" class="form-label">Initial Moisture (%)</label>
+            <input type="number" id="inpInitialMoisture" class="form-input font-mono" step="0.5" value="78.0">
+          </div>
+          <div class="form-group">
+            <label for="inpTargetMoisture" class="form-label">Target Moisture (%)</label>
+            <input type="number" id="inpTargetMoisture" class="form-input font-mono" step="0.5" value="65.0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="selAmbientScenario" class="form-label">Ambient Environment Scenario</label>
+          <select id="selAmbientScenario" class="form-select font-mono">
+            <option value="SPRING-NOMINAL" selected>SPRING-NOMINAL: 25°C, 65% RH (Standard drying rate)</option>
+            <option value="MONSOON-HUMID">MONSOON-HUMID: 28°C, 88% RH (High humidity, slow drying)</option>
+            <option value="DRY-AUTUMN">DRY-AUTUMN: 22°C, 50% RH (Dry air, rapid moisture loss)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); align-items:center;">
+          <button id="btnStepHour" class="btn btn-secondary" style="flex:1;">
+            <span>⏱️</span> Step +1 Hour
+          </button>
+          <button id="btnAutoSim" class="btn btn-primary" style="flex:1;">
+            <span>▶️</span> Run to Target (65%)
+          </button>
+          <button id="btnToggleSensorFault" class="btn btn-danger" style="font-size:0.75rem;">
+            Inject Fault
+          </button>
+        </div>
+
+        <!-- Visible Assumptions Block -->
+        <div style="background:var(--color-bg-surface-alt); padding:var(--space-sm); border-radius:var(--radius-sm); font-size:0.75rem; color:var(--color-text-muted); border:1px solid var(--color-border);">
+          <strong>Assumed Engineering Parameters:</strong>
+          <ul style="margin-left:16px; margin-top:4px;">
+            <li>Tray Leaf Density: 4.5 kg fresh leaf / m²</li>
+            <li>Fan Motor: 0.75 kW rated (Affinity cube law power: P = P_rated * (speed/100)^3)</li>
+            <li>Equilibrium Moisture: 55.0% + 15.0% * RH</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Trajectory Comparison & Export -->
+      <section class="card" aria-labelledby="comparison-title">
+        <div class="card-header">
+          <h2 id="comparison-title" class="card-title">
+            <span>📊</span> Multi-Run Airflow Comparison
+          </h2>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>💾</span> Export CSV
+            </button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>📄</span> Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="comparison-chart-box">
+          <div style="font-size:0.8rem; font-weight:700; margin-bottom:var(--space-xs);">
+            Run A (40% Fan) vs Run B (85% Fan) Trajectory:
+          </div>
+          <div class="data-table-container" style="max-height:160px; overflow-y:auto;">
+            <table class="data-table" aria-label="Comparison Table">
+              <thead>
+                <tr>
+                  <th>Elapsed</th>
+                  <th>Run A (40% Fan)</th>
+                  <th>Run A Energy</th>
+                  <th>Run B (85% Fan)</th>
+                  <th>Run B Energy</th>
+                </tr>
+              </thead>
+              <tbody id="comparisonTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Active Event Log:</div>
+          <div id="eventLogContainer" class="event-log-container" style="max-height:110px;" role="log" aria-live="polite">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
