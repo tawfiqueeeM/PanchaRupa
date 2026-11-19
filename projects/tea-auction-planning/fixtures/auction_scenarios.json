@@ -1,0 +1,68 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "THREE-CENTRE-BASELINE",
+      "description": "Baseline 1,000 kg lot comparison across Panchagarh (215 Tk), Sreemangal (235 Tk), and Chattogram (255 Tk)",
+      "lot": {
+        "lotId": "LOT-AUC-2026-01",
+        "product": "GREEN_TEA",
+        "quantityKg": 1000.0,
+        "reservePriceBdt": 200.0
+      },
+      "venues": [
+        {
+          "venueId": "PANCHAGARH",
+          "name": "Panchagarh Tea Auction",
+          "expectedHammerPriceBdt": 215.0,
+          "freightPerKg": 1.50,
+          "transitDays": 0,
+          "brokerCommissionPct": 1.25,
+          "warehouseFeePerKg": 0.50,
+          "settlementDays": 7
+        },
+        {
+          "venueId": "SREEMANGAL",
+          "name": "Sreemangal Tea Auction",
+          "expectedHammerPriceBdt": 235.0,
+          "freightPerKg": 6.00,
+          "transitDays": 2,
+          "brokerCommissionPct": 1.50,
+          "warehouseFeePerKg": 1.00,
+          "settlementDays": 14
+        },
+        {
+          "venueId": "CHATTOGRAM",
+          "name": "Chattogram Tea Auction (TTAB)",
+          "expectedHammerPriceBdt": 255.0,
+          "freightPerKg": 10.00,
+          "transitDays": 4,
+          "brokerCommissionPct": 1.75,
+          "warehouseFeePerKg": 1.50,
+          "settlementDays": 21
+        }
+      ]
+    },
+    {
+      "scenarioId": "RESERVE-PRICE-DEFICIT-RELIST",
+      "description": "Depressed market bids falling slightly short of reserve price (Reserve: BDT 225/kg vs Net Realization: BDT 216.44/kg, deficit 8.56 Tk <= 10 Tk) triggering RELIST",
+      "lot": {
+        "lotId": "LOT-AUC-2026-02",
+        "product": "GOLDEN_TEA",
+        "quantityKg": 500.0,
+        "reservePriceBdt": 225.0
+      },
+      "venues": [
+        {
+          "venueId": "CHATTOGRAM",
+          "name": "Chattogram Tea Auction (TTAB)",
+          "expectedHammerPriceBdt": 232.0,
+          "freightPerKg": 10.00,
+          "transitDays": 4,
+          "brokerCommissionPct": 1.75,
+          "warehouseFeePerKg": 1.50,
+          "settlementDays": 21
+        }
+      ]
+    }
+  ]
+}

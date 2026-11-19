@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Tea Auction Planning & Venue Optimization</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>🏛</span> PanchaRupa Tea Auction Planning & Venue Optimization</h1>
+        <p class="demo-subtitle">Dept 7 Business Operations — Three-Centre Comparison, Freight Break-Even & Reserve Price Decision Gates</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="auctionStatusPill">● VENUE EVALUATED</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Auction Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="THREE-CENTRE-BASELINE">1. Three-Centre Baseline (Panchagarh 215 Tk, Sreemangal 235 Tk, Chattogram 255 Tk)</option>
+        <option value="RESERVE-PRICE-DEFICIT-RELIST">2. Reserve Price Deficit Gate (Chattogram 232 Tk vs 225 Tk Reserve -> RELIST)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="auc-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Recommended Venue</span>
+      <span class="kpi-value" id="kpiBestVenue" style="color:var(--color-brand-primary);">CHATTOGRAM</span>
+      <span class="kpi-sub" id="kpiBestVenueSub">Highest net price realization</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Best Realized Net Price</span>
+      <span class="kpi-value" id="kpiNetPrice">BDT 239.04</span>
+      <span class="kpi-sub" id="kpiNetTotal">Proceeds: BDT 239,040 (1,000 kg)</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Local Panchagarh Net</span>
+      <span class="kpi-value" id="kpiLocalNet">BDT 210.31</span>
+      <span class="kpi-sub">Freight: BDT 1.50/kg | Comm: 1.25%</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Chattogram Break-Even</span>
+      <span class="kpi-value" id="kpiBreakEven">BDT 225.76</span>
+      <span class="kpi-sub" id="kpiBreakEvenSub">+BDT 10.76/kg premium needed</span>
+    </div>
+  </section>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Left Column: Lot Parameters & Price Sliders -->
+    <div class="auc-card">
+      <div class="auc-card-header">
+        <span class="auc-card-title">⚙ Catalogued Lot & Valuation Controls</span>
+      </div>
+      <div class="auc-card-body">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Catalogued Lot Mass: <span id="qtyVal" style="font-family:var(--font-mono); font-weight:700;">1,000 kg</span>
+          </label>
+          <input type="range" id="qtySlider" min="200" max="3000" value="1000" step="100" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Floor Reserve Price: <span id="reserveVal" style="font-family:var(--font-mono); font-weight:700;">BDT 200.0 / kg</span>
+          </label>
+          <input type="range" id="reserveSlider" min="150" max="300" value="200" step="5" style="width:100%;">
+        </div>
+
+        <div style="border-top:1px dashed var(--color-border); padding-top:10px;">
+          <div style="font-size:0.8rem; font-weight:600; margin-bottom:6px;">Expected Hammer Bids (BDT/kg):</div>
+          
+          <div style="margin-bottom:8px;">
+            <label style="font-size:0.75rem; display:flex; justify-content:space-between;">
+              <span>Panchagarh (Local):</span>
+              <strong id="panchagarhPriceVal" style="font-family:var(--font-mono);">215.0 Tk</strong>
+            </label>
+            <input type="range" id="panchagarhPriceSlider" min="170" max="280" value="215" step="1" style="width:100%;">
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <label style="font-size:0.75rem; display:flex; justify-content:space-between;">
+              <span>Sreemangal (Regional):</span>
+              <strong id="sreemangalPriceVal" style="font-family:var(--font-mono);">235.0 Tk</strong>
+            </label>
+            <input type="range" id="sreemangalPriceSlider" min="180" max="300" value="235" step="1" style="width:100%;">
+          </div>
+
+          <div>
+            <label style="font-size:0.75rem; display:flex; justify-content:space-between;">
+              <span>Chattogram (National):</span>
+              <strong id="chattogramPriceVal" style="font-family:var(--font-mono);">255.0 Tk</strong>
+            </label>
+            <input type="range" id="chattogramPriceSlider" min="190" max="350" value="255" step="1" style="width:100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Venue Evaluation Table -->
+    <div class="auc-card">
+      <div class="auc-card-header">
+        <span class="auc-card-title">📊 Auction Centres Evaluation & Net Proceeds Bridge</span>
+        <span style="font-size:0.75rem; color:var(--color-text-muted);">Real-time Freight & Broker Deduction</span>
+      </div>
+      <div class="auc-card-body" style="padding:0; overflow-x:auto;">
+        <table class="auc-table">
+          <thead>
+            <tr>
+              <th>Auction Centre</th>
+              <th>Hammer Bid</th>
+              <th>Freight / Fees</th>
+              <th>Net Tk/kg</th>
+              <th>Net Proceeds</th>
+              <th>Decision Gate</th>
+              <th>Settlement</th>
+            </tr>
+          </thead>
+          <tbody id="venuesTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

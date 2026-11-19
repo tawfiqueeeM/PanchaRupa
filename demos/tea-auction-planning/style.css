@@ -1,0 +1,119 @@
+@import url("../../shared/css/base.css");
+
+/* Tea Auction Planning Styles */
+
+.auc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-main);
+}
+
+.kpi-sub {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.panel-container {
+  padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 980px) {
+  .panel-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auc-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.auc-card-header {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auc-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.auc-card-body {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.auc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.auc-table th, .auc-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auc-table th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+
+.badge-decision {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.badge-decision.SOLD_SETTLE { background: #dcfce7; color: #15803d; }
+.badge-decision.RELIST { background: #fef3c7; color: #b45309; }
+.badge-decision.WITHDRAW_HOLD { background: #fee2e2; color: #b91c1c; }
