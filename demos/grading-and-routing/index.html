@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grading & Routing Interlock — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🔍</span>
+          <span>Quality Grading & Destination Routing</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 07</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 4 Quality & Traceability · Lot disposition (Hold/Release), bin capacity interlocks & upstream-to-downstream genealogy
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/06-grading-and-routing/projects/grading-and-routing/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/grading-and-routing/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="NOMINAL-RELEASE-BIN1">Nominal Release to Bin 1</button>
+        <button class="scenario-pill" data-scenario="QUALITY-HOLD-GATE">Quality Hold Gate</button>
+        <button class="scenario-pill" data-scenario="DESTINATION-BIN-FULL">Destination Bin Full Fault</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Inspecting: <strong id="lblActiveLotId" class="font-mono">F-G01</strong> ·
+      Disposition: <strong id="lblActiveDisposition" class="font-mono" style="color:#d97706;">PENDING</strong> ·
+      Routing: <strong id="lblRoutingState" class="font-mono">IDLE</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- Lot Genealogy & Traceability Bar -->
+    <section class="card genealogy-card" aria-labelledby="genealogy-title">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="genealogy-title" style="font-size:0.95rem; font-weight:700; color:#f8fafc;">
+          <span>🌱</span> End-to-End Lot Traceability & Genealogy
+        </h2>
+        <span class="status-badge normal">QUANTITY CONSERVED</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-xs);">
+        <div class="genealogy-step">
+          <span>1️⃣ Delivery:</span>
+          <strong id="lblGenealogyVendor" class="font-mono">V-01 (Lot L-G01)</strong>
+        </div>
+        <div class="genealogy-step">
+          <span>2️⃣ Processing:</span>
+          <strong id="lblGenealogyBatch" class="font-mono">Batch B-G01 (30 kg net)</strong>
+        </div>
+        <div class="genealogy-step">
+          <span>3️⃣ Quality Grade:</span>
+          <strong id="lblGenealogyGrade" class="font-mono">Grade A (Infusion 9.2)</strong>
+        </div>
+        <div class="genealogy-step">
+          <span>4️⃣ Destination:</span>
+          <strong id="lblGenealogyBin" class="font-mono">Bin 1 (Premium)</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inspection Controls & Destination Bins -->
+    <div class="panel-grid">
+      <!-- Quality Inspection & Disposition Controls -->
+      <section class="card" aria-labelledby="inspection-title">
+        <div class="card-header">
+          <h2 id="inspection-title" class="card-title">
+            <span>🔬</span> Lot Inspection & Quality Sign-Off
+          </h2>
+          <span id="badgeDisposition" class="status-badge warning">PENDING SIGN-OFF</span>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-label">Dried Net Mass</div>
+            <div id="valLotMass" class="metric-value font-mono">30.00 kg</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Moisture Content</div>
+            <div id="valMoisture" class="metric-value font-mono" style="color:#15803d;">3.8%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Infusion Score</div>
+            <div id="valInfusion" class="metric-value font-mono" style="color:var(--color-brand-gold);">9.2 / 10</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="selGrade" class="form-label">Quality Grade Classification</label>
+          <select id="selGrade" class="form-select font-mono">
+            <option value="GRADE_A" selected>Grade A: Whole Leaf / Tips (Premium Liquor, Target Bin 1)</option>
+            <option value="GRADE_B">Grade B: Broken Pekoe / Standard (Target Bin 2)</option>
+            <option value="GRADE_C">Grade C: Fannings / Secondary (Target Bin 3)</option>
+          </select>
+        </div>
+
+        <!-- Disposition Decision Buttons -->
+        <div style="display:flex; gap:var(--space-xs); margin-top:var(--space-2xs);">
+          <button id="btnReleaseLot" class="btn btn-primary" style="flex:1;">
+            <span>✅</span> Release Lot
+          </button>
+          <button id="btnHoldLot" class="btn btn-warning" style="flex:1;">
+            <span>⏸️</span> Hold Lot
+          </button>
+          <button id="btnRejectLot" class="btn btn-danger" style="flex:1;">
+            <span>❌</span> Reject Lot
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-top:var(--space-xs);">
+          <label for="selDecisionReason" class="form-label">Sign-Off Decision Reason</label>
+          <select id="selDecisionReason" class="form-select font-mono">
+            <option value="INFUSION_SCORE_EXCELLENT" selected>INFUSION_SCORE_EXCELLENT (Aroma and briskness verified)</option>
+            <option value="MOISTURE_VERIFIED">MOISTURE_VERIFIED (Moisture <= 4.0%)</option>
+            <option value="SAMPLE_PENDING_LAB">SAMPLE_PENDING_LAB (Held for heavy metal/micro check)</option>
+            <option value="OFF_ODOR_DETECTED">OFF_ODOR_DETECTED (Smoky / fermented off-note)</option>
+          </select>
+        </div>
+
+        <!-- Execute Routing -->
+        <div style="margin-top:var(--space-xs);">
+          <button id="btnRouteMaterial" class="btn btn-primary" style="width:100%; padding:10px; font-size:0.95rem;">
+            <span>🚀</span> Route Material into Destination Bin (%Q6.0)
+          </button>
+        </div>
+
+        <div id="routingFaultAlert" class="validation-box">
+          <strong>INTERLOCK ACTIVE:</strong> Routing blocked!
+        </div>
+      </section>
+
+      <!-- Destination Storage Bins & Routing Interlock -->
+      <section class="card" aria-labelledby="bins-title">
+        <div class="card-header">
+          <h2 id="bins-title" class="card-title">
+            <span>🏭</span> Storage Bins & Level Interlocks
+          </h2>
+          <span id="badgeInterlockStatus" class="status-badge normal">PERMISSIVE CLEAR</span>
+        </div>
+
+        <div id="binsContainer" class="bin-container-grid">
+          <!-- Dynamically populated Bin Cards -->
+        </div>
+
+        <div style="margin-top:var(--space-xs); display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">
+            Surge Hopper Unrouted: <strong id="lblUnroutedMass" class="font-mono">30.0 kg</strong>
+          </div>
+          <button id="btnAcknowledgeFault" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+            Acknowledge Fault (%I6.3)
+          </button>
+        </div>
+
+        <!-- Ledger & Exports -->
+        <div style="margin-top:var(--space-xs); border-top:1px solid var(--color-border); padding-top:var(--space-xs); display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:0.8rem;">Routing Events & Ledger:</strong>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">CSV</button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">JSON</button>
+          </div>
+        </div>
+
+        <div id="eventLogContainer" class="event-log-container" style="max-height:110px;" role="log" aria-live="polite">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

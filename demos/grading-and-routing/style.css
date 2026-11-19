@@ -1,0 +1,68 @@
+@import url("../../shared/css/base.css");
+
+/* Specific styling for Grading and Routing demo */
+.genealogy-card {
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border: 1px solid #1e293b;
+}
+
+.genealogy-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  background: #1e293b;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-brand-accent);
+}
+
+.bin-container-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-sm);
+}
+
+.bin-card {
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  transition: all 0.2s ease;
+}
+
+.bin-card.selected {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(30, 61, 47, 0.2);
+}
+
+.bin-card.full {
+  border-color: var(--color-status-fault);
+  background: #fef2f2;
+}
+
+.bin-fill-track {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.bin-fill-bar {
+  height: 100%;
+  background: var(--color-brand-accent);
+  transition: width 0.3s ease;
+}
+
+.bin-fill-bar.full {
+  background: #dc2626;
+}

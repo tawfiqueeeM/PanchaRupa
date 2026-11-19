@@ -1,0 +1,82 @@
+{
+  "finishedLots": [
+    {
+      "finishedLotId": "F-G01",
+      "batchId": "B-G01",
+      "vendorLotId": "L-G01",
+      "vendorId": "V-01",
+      "productType": "GREEN",
+      "netMassKg": 30.0,
+      "moisturePercent": 3.8,
+      "infusionScore": 9.2,
+      "recommendedGrade": "GRADE_A"
+    },
+    {
+      "finishedLotId": "F-O01",
+      "batchId": "B-O01",
+      "vendorLotId": "L-O01",
+      "vendorId": "V-02",
+      "productType": "GOLDEN",
+      "netMassKg": 10.0,
+      "moisturePercent": 4.1,
+      "infusionScore": 9.5,
+      "recommendedGrade": "GRADE_A"
+    }
+  ],
+  "defaultBins": [
+    {
+      "binId": "BIN-01",
+      "name": "Bin 1 (Premium Grade A)",
+      "assignedGrade": "GRADE_A",
+      "capacityKg": 50.0,
+      "currentOccupancyKg": 15.0,
+      "isLocked": false
+    },
+    {
+      "binId": "BIN-02",
+      "name": "Bin 2 (Standard Grade B)",
+      "assignedGrade": "GRADE_B",
+      "capacityKg": 50.0,
+      "currentOccupancyKg": 0.0,
+      "isLocked": false
+    },
+    {
+      "binId": "BIN-03",
+      "name": "Bin 3 (Secondary Grade C)",
+      "assignedGrade": "GRADE_C",
+      "capacityKg": 30.0,
+      "currentOccupancyKg": 0.0,
+      "isLocked": false
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-RELEASE-BIN1",
+      "description": "Nominal inspection, Grade A assignment, and routing to Bin 1",
+      "finishedLotId": "F-G01",
+      "grade": "GRADE_A",
+      "disposition": "RELEASED",
+      "decisionReason": "INFUSION_SCORE_EXCELLENT",
+      "targetBinId": "BIN-01"
+    },
+    {
+      "scenarioId": "QUALITY-HOLD-GATE",
+      "description": "Lot placed on Hold pending sensory check; routing interlock locked",
+      "finishedLotId": "F-G01",
+      "grade": "GRADE_A",
+      "disposition": "ON_HOLD",
+      "decisionReason": "SAMPLE_PENDING_LAB",
+      "targetBinId": "BIN-01"
+    },
+    {
+      "scenarioId": "DESTINATION-BIN-FULL",
+      "description": "Bin 1 at capacity; routing trips; material held in upstream surge hopper",
+      "finishedLotId": "F-G01",
+      "grade": "GRADE_A",
+      "disposition": "RELEASED",
+      "decisionReason": "MOISTURE_VERIFIED",
+      "targetBinId": "BIN-01",
+      "bin1InitialOccupancyKg": 50.0
+    }
+  ]
+}
