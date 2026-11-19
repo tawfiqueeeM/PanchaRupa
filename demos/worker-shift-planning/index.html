@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Worker Shift Planning & Skills Matrix</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>👥</span> PanchaRupa Worker Shift Planning & Skills Matrix</h1>
+        <p class="demo-subtitle">Dept 2 Operations — Multi-Skill Competency, Concurrency Overlap Gating & Uncovered Work Detection</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="rosterStatusPill">● 100% COVERED</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Shift Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="NOMINAL-FULL-CREW">1. Nominal Full Crew (100% Coverage, 4 Workers)</option>
+        <option value="ABSENT-OPERATOR-DEFICIT">2. Process Operator Absent (Uncovered Rolling/Drying Deficit)</option>
+        <option value="OVERLAP-CONFLICT-TEST">3. Concurrency Overlap Conflict (Lead Tea Master Double-Booked)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <label style="font-size:0.85rem; font-weight:600;">Roster Mode:</label>
+      <select id="rosterModeSelect" style="padding:6px 10px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="SEASONAL">Seasonal Augmented (Fixed + Seasonal)</option>
+        <option value="FIXED">Fixed Core Baseline Only</option>
+      </select>
+      <button class="bms-btn" id="btnReset">↺ Reset Roster</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="shift-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Staffing Feasibility</span>
+      <span class="kpi-value" id="kpiFeasibility" style="color:var(--color-status-success);">FEASIBLE</span>
+      <span class="kpi-sub" id="kpiFeasibilitySub">Zero uncovered station minutes</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Task Hours Coverage</span>
+      <span class="kpi-value" id="kpiCoverage">100%</span>
+      <span class="kpi-sub" id="kpiCoverageSub">710 / 710 operator minutes</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Uncovered Work Deficit</span>
+      <span class="kpi-value" id="kpiUncovered" style="color:var(--color-status-success);">0 min</span>
+      <span class="kpi-sub" id="kpiUncoveredSub">All stations fully staffed</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Present Crew</span>
+      <span class="kpi-value" id="kpiCrew">4 / 4</span>
+      <span class="kpi-sub" id="kpiCrewSub">All operators active on shift</span>
+    </div>
+  </section>
+
+  <!-- Infeasibility Banner -->
+  <div id="shiftAlertBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="shiftAlertMsg">STAFFING DEFICIT DETECTED</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Worker Matrix Panel -->
+    <div class="shift-card">
+      <div class="shift-card-header">
+        <span class="shift-card-title">👷 Staff Skills Matrix & Presence</span>
+      </div>
+      <div class="shift-card-body" id="workerListContainer">
+        <!-- Dynamically rendered workers -->
+      </div>
+    </div>
+
+    <!-- Shift Schedule Timeline Panel -->
+    <div class="shift-card">
+      <div class="shift-card-header">
+        <span class="shift-card-title">📋 Workstation Shift Timeline & Coverage Gantt</span>
+        <div style="display:flex; gap:10px; font-size:0.75rem; align-items:center;">
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#0284c7; border-radius:2px;"></span> W-01 Tea Master</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#059669; border-radius:2px;"></span> W-02 Operator</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#d97706; border-radius:2px;"></span> W-03 Packaging</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#7c3aed; border-radius:2px;"></span> W-04 Seasonal</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#dc2626; border-radius:2px;"></span> Uncovered</span>
+        </div>
+      </div>
+      <div class="shift-card-body">
+        <div id="timelineContainer">
+          <!-- Dynamically populated timeline tracks -->
+        </div>
+
+        <!-- Exceptions & Violations Table -->
+        <div style="margin-top:var(--space-md); border-top:1px solid var(--color-border); padding-top:var(--space-md);">
+          <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--color-brand-primary);">Exceptions & Constraint Violations</h4>
+          <table class="log-table" style="font-size:0.8rem;">
+            <thead>
+              <tr>
+                <th style="width:120px;">Type</th>
+                <th>Target / Station</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="violationsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
