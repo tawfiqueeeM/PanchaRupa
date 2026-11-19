@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrated Factory Capstone Simulator — PanchaRupa</title>
+  <link rel="stylesheet" href="../../shared/css/tokens.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="capstone-container">
+    <!-- Header -->
+    <header class="hero-header">
+      <h1>Integrated Virtual Tea Factory Capstone (Dept 5 with All Departments)</h1>
+      <p>Multi-Station Evolutionary Simulator, Five-Configuration Comparison, and Portfolio Navigation Directory</p>
+    </header>
+
+    <!-- Toolbar & Scenario Selection -->
+    <section class="toolbar" aria-label="Simulation Controls">
+      <div style="display:flex; align-items:center; gap:var(--space-2);">
+        <label for="workloadSelect"><strong>Replay Workload:</strong></label>
+        <select id="workloadSelect">
+          <option value="load_design_1000kg">Active Month Design Target (1,000 kg) [Founder Target]</option>
+          <option value="load_pilot_100kg">Pilot Batch Benchmark (100 kg) [Founder Historical]</option>
+          <option value="load_day40_integration">DAY-40 Multi-Product Benchmark (40 kg)</option>
+        </select>
+        <span id="workloadSourceBadge" class="badge-founder">FOUNDER-REPORTED TARGET</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:var(--space-2);">
+        <label for="customTargetInput">Target (kg):</label>
+        <input type="number" id="customTargetInput" value="1000" min="10" max="5000" step="10" style="width: 80px;">
+        <button id="btnApplyTarget" class="btn-secondary">Apply</button>
+      </div>
+
+      <button id="btnToggleNav" class="btn-secondary">📂 Portfolio Directory (20 Modules)</button>
+      <button id="btnReset" class="btn-secondary">↺ Reset</button>
+
+      <div style="margin-left: auto; display: flex; gap: var(--space-2);">
+        <button id="btnExportCsv" class="btn-secondary">Export CSV</button>
+        <button id="btnExportJson" class="btn-primary">Export JSON</button>
+      </div>
+    </section>
+
+    <!-- Five Configurations Selector Cards -->
+    <section class="config-selector-grid" id="configCardsGrid" aria-label="Five Factory Configurations">
+      <!-- Populated dynamically -->
+    </section>
+
+    <!-- Active Configuration Equipment Detail -->
+    <section class="comparison-panel" id="activeConfigDetailPanel">
+      <h2 style="margin-top:0; font-size:1.15rem; color:var(--color-brand-primary);" id="detailConfigTitle">
+        Selected Configuration Specifications
+      </h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:var(--space-3);" id="equipmentGrid">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Cross-Configuration Comparison Matrix -->
+    <section class="comparison-panel" aria-label="Comparative Matrix">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:1.15rem; color:var(--color-brand-primary);">
+          Five-Configuration Replay Matrix (Identical Order Load)
+        </h2>
+        <span class="badge-simulated">SIMULATED / MODELED DYNAMICS</span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="comparison-table" id="comparisonTable">
+          <thead>
+            <tr>
+              <th>Config</th>
+              <th>Name</th>
+              <th>Max Cap.</th>
+              <th>Output</th>
+              <th>Status</th>
+              <th>Bottleneck</th>
+              <th>Labor (hrs/kg)</th>
+              <th>Total Labor</th>
+              <th>SEC (kWh/kg)</th>
+              <th>Unit Cost</th>
+              <th>Total Cost</th>
+              <th>Lead Time</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Comparative Scale-Up Summary -->
+      <div style="margin-top:var(--space-3); padding:12px; background:var(--color-bg-surface-alt); border-radius:var(--radius-sm); font-size:0.85rem; line-height:1.6;" id="scaleupSummary">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Full Portfolio Navigation Directory (Collapsible) -->
+    <section class="navigation-drawer" id="navDrawer" style="display:none;" aria-label="Portfolio Directory">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:1.15rem; color:var(--color-brand-primary);">
+          PanchaRupa Virtual Tea Factory — Complete Subproject Navigation
+        </h2>
+        <span style="font-size:0.8rem; color:var(--color-text-muted);">20 Verified Subproject Branches</span>
+      </div>
+      <p style="font-size:0.85rem; color:var(--color-text-muted); margin: 4px 0 var(--space-2) 0;">
+        Direct access to all 20 independently tested engineering and business operations modules:
+      </p>
+
+      <div class="nav-grid" id="navGridContainer">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
