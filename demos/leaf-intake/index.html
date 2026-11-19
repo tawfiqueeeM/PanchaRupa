@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaf Intake & Buffer Interlock — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🌿</span>
+          <span>Leaf Intake & Buffer Interlocks</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 01</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 1 Production Engineering · PLC scale integration, vendor lot registration & downstream buffer interlocks
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/01-leaf-intake/projects/leaf-intake/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/leaf-intake/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="DAY-40-NOMINAL">Day-40 Green (V-01)</button>
+        <button class="scenario-pill" data-scenario="DAY-40-GOLDEN">Day-40 Golden (V-02)</button>
+        <button class="scenario-pill" data-scenario="ABNORMAL-BUFFER-BLOCKED">Buffer Blocked Fault</button>
+        <button class="scenario-pill" data-scenario="ABNORMAL-REJECTED">Quality Rejection</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Active Batch: <strong id="lblActiveLotId" class="font-mono">L-001</strong> ·
+      Assigned Station: <strong id="lblAssignedStation" class="font-mono">DRUM_INFEED_HOPPER</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <div class="panel-grid">
+      <!-- Scale & Intake Registration Panel -->
+      <section class="card" aria-labelledby="intake-title">
+        <div class="card-header">
+          <h2 id="intake-title" class="card-title">
+            <span>⚖️</span> Scale Intake & Weight Calculation
+          </h2>
+          <span id="scaleStatusBadge" class="status-badge normal">STABLE (%I0.0)</span>
+        </div>
+
+        <div class="scale-display">
+          <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Digital Load-Cell Net Mass</div>
+          <div id="readoutNetKg" class="scale-readout-main">120.00 kg</div>
+          <div class="scale-readout-sub">
+            <span>Gross: <strong id="readoutGrossKg" style="color:#f8fafc;">125.0 kg</strong></span>
+            <span>Tare: <strong id="readoutTareKg" style="color:#f8fafc;">5.0 kg</strong></span>
+            <span>Capacity: 250 kg</span>
+          </div>
+        </div>
+
+        <div id="validationBanner" class="validation-box">
+          Validation Error Message Here
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+          <div class="form-group">
+            <label for="inpVendorId" class="form-label">Vendor ID</label>
+            <input type="text" id="inpVendorId" class="form-input font-mono" value="V-01">
+          </div>
+          <div class="form-group">
+            <label for="inpLotId" class="form-label">Vendor Lot ID</label>
+            <input type="text" id="inpLotId" class="form-input font-mono" value="L-001">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+          <div class="form-group">
+            <label for="inpGrossKg" class="form-label">Gross Weight (kg)</label>
+            <input type="number" id="inpGrossKg" class="form-input font-mono" step="0.1" value="125.0">
+          </div>
+          <div class="form-group">
+            <label for="inpTareKg" class="form-label">Tare Weight (kg)</label>
+            <input type="number" id="inpTareKg" class="form-input font-mono" step="0.1" value="5.0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="selTeaType" class="form-label">Leaf Classification</label>
+          <select id="selTeaType" class="form-select">
+            <option value="GREEN" selected>Green Tea Grade (Direct to Heated Drum)</option>
+            <option value="GOLDEN">Golden Tea Eligible (Direct to Withering Trays)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); align-items:center;">
+          <button id="btnAcceptLot" class="btn btn-primary" style="flex:1;">
+            <span>✅</span> Accept Lot (DI_01)
+          </button>
+          <button id="btnRejectLot" class="btn btn-danger" style="flex:1;">
+            <span>❌</span> Reject Lot (DI_02)
+          </button>
+        </div>
+
+        <div class="form-group" id="rejectReasonGroup" style="display:none;">
+          <label for="selRejectReason" class="form-label" style="color:var(--color-status-fault);">Rejection Reason</label>
+          <select id="selRejectReason" class="form-select font-mono">
+            <option value="HIGH_MOISTURE">HIGH_MOISTURE (Surface water > 82%)</option>
+            <option value="COARSE_STALK">COARSE_STALK (High fiber / coarse leaf)</option>
+            <option value="FOREIGN_MATTER">FOREIGN_MATTER (Stones / dirt / weed)</option>
+            <option value="FERMENTED_HEAT">FERMENTED_HEAT (Overheating in bag)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Buffer Interlock & Transfer Panel -->
+      <section class="card" aria-labelledby="buffer-title">
+        <div class="card-header">
+          <h2 id="buffer-title" class="card-title">
+            <span>🛡️</span> Buffer Sensor & Transfer Interlock
+          </h2>
+          <span id="interlockBadge" class="status-badge normal">PERMISSIVE OK</span>
+        </div>
+
+        <div id="bufferCard" class="card buffer-indicator-card clear" style="padding:var(--space-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:0.9rem;">Downstream Destination Buffer</div>
+              <div id="lblDestinationDetail" style="font-size:0.8rem; color:var(--color-text-muted);">
+                Target: Drum Infeed Hopper (Max 150 kg)
+              </div>
+            </div>
+            <span id="bufferSensorPill" class="status-badge normal">CLEAR (%I0.3)</span>
+          </div>
+
+          <div style="margin-top:var(--space-xs); display:flex; align-items:center; justify-content:space-between;">
+            <label class="form-label" for="chkBufferSensor">Simulate Buffer Sensor State:</label>
+            <button id="btnToggleBuffer" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 10px;">
+              Toggle Sensor (DI_03)
+            </button>
+          </div>
+        </div>
+
+        <!-- Transfer Conveyor Execution -->
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-label">Transfer Command</div>
+            <div id="valTransferCmd" class="metric-value font-mono" style="font-size:1.1rem; color:#475569;">OFF (%Q0.0)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Interlock State</div>
+            <div id="valInterlockState" class="metric-value font-mono" style="font-size:1.1rem;">READY</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Transfer Progress</label>
+          <div class="transfer-progress-track">
+            <div id="progressBar" class="transfer-progress-fill"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm);">
+          <button id="btnJogTransfer" class="btn btn-warning" style="flex:1;">
+            <span>⏩</span> Jog Transfer (25%)
+          </button>
+          <button id="btnAutoTransfer" class="btn btn-primary" style="flex:1;">
+            <span>▶️</span> Run Full Transfer
+          </button>
+        </div>
+
+        <div id="interlockNotice" class="validation-box">
+          <strong>INTERLOCK TRIP:</strong> Destination buffer sensor DI_BUFFER_CLEAR dropped FALSE. Transfer drive motor dropped immediately. Lot remains assigned in intake hopper.
+        </div>
+      </section>
+    </div>
+
+    <!-- Live PLC Registers & Audit Logs -->
+    <div class="panel-grid">
+      <!-- PLC Registers -->
+      <section class="card" aria-labelledby="plc-title">
+        <div class="card-header">
+          <h2 id="plc-title" class="card-title">
+            <span>⚙️</span> Live Emulated PLC Registers & I/O
+          </h2>
+          <span class="status-badge idle">SCAN: 20ms</span>
+        </div>
+
+        <div class="data-table-container">
+          <table class="data-table" aria-label="PLC Register Map">
+            <thead>
+              <tr>
+                <th>Tag Name</th>
+                <th>Address</th>
+                <th>Type</th>
+                <th>Current Value</th>
+                <th>Engineering State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono">AI_SCALE_GROSS</td>
+                <td class="font-mono">%IW64</td>
+                <td>INT</td>
+                <td id="regGross" class="font-mono">1250</td>
+                <td>125.0 kg</td>
+              </tr>
+              <tr>
+                <td class="font-mono">AI_SCALE_TARE</td>
+                <td class="font-mono">%IW66</td>
+                <td>INT</td>
+                <td id="regTare" class="font-mono">50</td>
+                <td>5.0 kg</td>
+              </tr>
+              <tr>
+                <td class="font-mono">DI_BUFFER_CLEAR</td>
+                <td class="font-mono">%I0.3</td>
+                <td>BOOL</td>
+                <td id="regBufferClear" class="font-mono">TRUE</td>
+                <td id="regBufferClearDesc">Hopper sensor clear</td>
+              </tr>
+              <tr>
+                <td class="font-mono">DO_TRANSFER_RUN</td>
+                <td class="font-mono">%Q0.0</td>
+                <td>BOOL</td>
+                <td id="regMotorRun" class="font-mono">FALSE</td>
+                <td id="regMotorRunDesc">Motor contactor de-energized</td>
+              </tr>
+              <tr>
+                <td class="font-mono">DO_INTERLOCK_FAULT</td>
+                <td class="font-mono">%Q0.1</td>
+                <td>BOOL</td>
+                <td id="regAlarmBeacon" class="font-mono">FALSE</td>
+                <td id="regAlarmBeaconDesc">Alarm beacon clear</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Audit Event Log & Exports -->
+      <section class="card" aria-labelledby="events-title">
+        <div class="card-header">
+          <h2 id="events-title" class="card-title">
+            <span>📜</span> Intake & Interlock Event Ledger
+          </h2>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>💾</span> Export CSV
+            </button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>📄</span> Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div id="eventLogContainer" class="event-log-container" role="log" aria-live="polite">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Dispatched Lots Ledger:</div>
+          <div class="data-table-container" style="max-height:130px; overflow-y:auto;">
+            <table class="data-table" aria-label="Dispatched Lots">
+              <thead>
+                <tr>
+                  <th>Lot ID</th>
+                  <th>Vendor</th>
+                  <th>Type</th>
+                  <th>Net (kg)</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dispatchedTableBody">
+                <tr><td colspan="6" style="text-align:center; color:var(--color-text-muted);">No lots dispatched yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
