@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Costing, Overhead & Margin Analysis</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>💰</span> PanchaRupa Costing & Margin Engine</h1>
+        <p class="demo-subtitle">Dept 7 Business Operations — Full Absorption Cost Bridge, Freight Segregation & Break-Even Modeling</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="marginStatusPill">● PROFITABLE</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Financial Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="DESIGN-MONTH-1000KG">1. 1,000 kg Design Month (BDT 181.63/kg Mfg Cost, 90% Bulk)</option>
+        <option value="ZERO-OUTPUT-DORMANCY">2. Zero-Output Dormancy (BDT 71,833.33 Period Variance)</option>
+        <option value="HIGH-RETAIL-PREMIUM">3. Premium Boutique Mix (500 kg, 50% Retail, High Margin)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="cost-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Unit Manufacturing Cost</span>
+      <span class="kpi-value" id="kpiUnitCost">BDT 181.63</span>
+      <span class="kpi-sub" id="kpiUnitCostSub">Excludes outbound freight</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Net Operating Margin</span>
+      <span class="kpi-value" id="kpiNetMargin" style="color:var(--color-status-success);">27.0%</span>
+      <span class="kpi-sub" id="kpiNetIncome">BDT 70,366.67 net profit</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Gross Revenue</span>
+      <span class="kpi-value" id="kpiRevenue">BDT 261,000</span>
+      <span class="kpi-sub" id="kpiRevenueSub">Bulk: BDT 216k | Retail: BDT 45k</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Break-Even Output</span>
+      <span class="kpi-value" id="kpiBreakEven">542 kg</span>
+      <span class="kpi-sub" id="kpiBreakEvenSub">54.2% of plant capacity</span>
+    </div>
+  </section>
+
+  <!-- Zero-Output Warning Banner -->
+  <div id="zeroOutputBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner warning">
+      <span>ℹ</span>
+      <span>ZERO PRODUCTION OUTPUT: Variable costs are BDT 0. Fixed manufacturing overhead and depreciation are recognized as unabsorbed period variance (BDT 71,833.33).</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Sensitivity Controls -->
+    <div class="cost-card">
+      <div class="cost-card-header">
+        <span class="cost-card-title">⚙ Operational & Commercial Inputs</span>
+      </div>
+      <div class="cost-card-body">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Monthly Finished Volume: <span id="volVal" style="font-family:var(--font-mono); font-weight:700;">1,000 kg</span>
+          </label>
+          <input type="range" id="volSlider" min="0" max="2000" value="1000" step="50" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Fresh Green Leaf Price: <span id="leafPriceVal" style="font-family:var(--font-mono); font-weight:700;">BDT 25.0 / kg</span>
+          </label>
+          <input type="range" id="leafPriceSlider" min="15" max="45" value="25" step="1" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Net Processing Yield: <span id="yieldVal" style="font-family:var(--font-mono); font-weight:700;">25.0%</span>
+          </label>
+          <input type="range" id="yieldSlider" min="18" max="32" value="25" step="0.5" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Sales Channel Mix: <span id="channelSplitVal" style="font-family:var(--font-mono); font-weight:700;">90% Bulk / 10% Retail</span>
+          </label>
+          <input type="range" id="channelSplitSlider" min="0" max="100" value="90" step="5" style="width:100%;">
+        </div>
+
+        <div style="border-top:1px dashed var(--color-border); padding-top:10px;">
+          <div style="font-size:0.8rem; font-weight:600; margin-bottom:6px;">Selling Price Assumptions (BDT/kg):</div>
+          <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+              <label style="font-size:0.75rem;">Bulk Auction:</label>
+              <input type="number" id="bulkPriceInput" value="240" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.75rem;">Retail Bottles:</label>
+              <input type="number" id="retailPriceInput" value="450" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Absorption Cost Bridge & Variance Table -->
+    <div class="cost-card">
+      <div class="cost-card-header">
+        <span class="cost-card-title">📊 Full Absorption Cost Bridge & Operating Reconciliation</span>
+        <span style="font-size:0.75rem; color:var(--color-text-muted);">Standard Cost Waterfall</span>
+      </div>
+      <div class="cost-card-body" style="padding:0;">
+        <table class="cost-table">
+          <thead>
+            <tr>
+              <th>Cost Component</th>
+              <th>Basis / Cost Driver</th>
+              <th style="text-align:right;">Total BDT / Month</th>
+              <th style="text-align:right;">BDT / Released kg</th>
+            </tr>
+          </thead>
+          <tbody id="costBridgeTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

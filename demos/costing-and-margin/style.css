@@ -1,0 +1,113 @@
+@import url("../../shared/css/base.css");
+
+/* Costing and Margin Styles */
+
+.cost-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-main);
+}
+
+.kpi-sub {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.panel-container {
+  padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 960px) {
+  .panel-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cost-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cost-card-header {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cost-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.cost-card-body {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.cost-table th, .cost-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cost-table th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+
+.cost-total-row {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
+}
