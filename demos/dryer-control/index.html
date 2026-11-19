@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tea Dryer Control & Fan Interlock — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🔥</span>
+          <span>Tea Dryer Control & Safety Interlocks</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 08</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 3 Controls & Electrical · Temperature PID regulation, fan proof loss trip & strict 3-phase safety reset discipline
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/03-dryer-controls/projects/dryer-control/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/dryer-control/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="DRY-NORMAL">Nominal Drying (95°C SP)</button>
+        <button class="scenario-pill" data-scenario="DRY-FAULT">Fan Proof Trip & Recovery</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Batch: <strong id="lblBatchId" class="font-mono">B-D01</strong> ·
+      Elapsed: <strong id="lblBatchElapsed" class="font-mono">0 min</strong> ·
+      Fan Proof: <strong id="lblFanProofStatus" class="font-mono" style="color:#15803d;">HEALTHY (%I3.0)</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- Process Hero Cockpit Display -->
+    <section class="card dryer-cockpit" aria-labelledby="cockpit-title">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="cockpit-title" style="font-size:1.05rem; font-weight:700; color:#f8fafc; display:flex; align-items:center; gap:8px;">
+          <span>♨️</span> Dryer Chamber Thermal Process Telemetry
+        </h2>
+        <span id="badgeHeaterLoop" class="status-badge idle">HEATER IDLE</span>
+      </div>
+
+      <div class="temperature-gauge-hero">
+        <div>
+          <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase;">Chamber Measured Temperature (AI_DRYER_TEMP_PV)</div>
+          <div id="readoutTempPV" class="temp-big-val">25.0°C</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase;">Target Setpoint (SP)</div>
+          <div id="readoutTempSP" class="font-mono" style="font-size:2.0rem; color:#f8fafc; font-weight:700;">95.0°C</div>
+        </div>
+      </div>
+
+      <!-- Heat Command Modulation Output Meter -->
+      <div class="form-group" style="margin-top:2px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#cbd5e1;">
+          <span>SCR Heat Output Duty Cycle (AO_HEAT_COMMAND, %QW60)</span>
+          <strong id="readoutHeatPercent" class="font-mono">0.0%</strong>
+        </div>
+        <div class="heat-output-meter-track">
+          <div id="heatMeterFill" class="heat-output-meter-fill"></div>
+        </div>
+      </div>
+
+      <!-- Emergency Trip Interlock Banner -->
+      <div id="interlockAlertBox" class="interlock-alert-box">
+        <strong>🚨 SAFETY INTERLOCK TRIP:</strong> Circulating fan proof lost (%I3.0=FALSE). Heat command forced to 0.0% immediately.
+        <div style="font-size:0.8rem; margin-top:4px; opacity:0.9;">
+          Safety Rule: Acknowledgement alone CANNOT restore heat! Must: (1) Acknowledge -> (2) Restore Fan Proof -> (3) Press Deliberate Restart.
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls & Trending Grid -->
+    <div class="panel-grid">
+      <!-- Operator Controls & 3-Phase Reset Buttons -->
+      <section class="card" aria-labelledby="controls-title">
+        <div class="card-header">
+          <h2 id="controls-title" class="card-title">
+            <span>🎛️</span> Setpoint & Safety Discipline Controls
+          </h2>
+          <span class="status-badge normal">BURNER READY</span>
+        </div>
+
+        <div class="form-group">
+          <label for="inpSetpoint" class="form-label" style="display:flex; justify-content:space-between;">
+            <span>Chamber Temperature Setpoint (°C)</span>
+            <strong id="lblSetpointVal" class="font-mono">95.0°C</strong>
+          </label>
+          <input type="range" id="inpSetpoint" min="60" max="120" step="1" value="95" style="width:100%;">
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); margin-top:var(--space-2xs);">
+          <button id="btnStartBatch" class="btn btn-primary" style="flex:1;">
+            <span>▶️</span> Start Batch Heating
+          </button>
+          <button id="btnStepTime" class="btn btn-secondary" style="flex:1;">
+            <span>⏱️</span> Step +2 Minutes
+          </button>
+        </div>
+
+        <!-- Safety Trip Injection & Reset Actions -->
+        <div style="margin-top:var(--space-sm); border-top:1px solid var(--color-border); padding-top:var(--space-sm);">
+          <strong style="font-size:0.8rem; color:#b45309;">Safety Trip & Reset Protocol:</strong>
+          
+          <div style="display:flex; gap:var(--space-xs); margin-top:var(--space-xs); flex-wrap:wrap;">
+            <button id="btnInjectFanLoss" class="btn btn-danger" style="flex:1; font-size:0.75rem;">
+              Trip Fan Proof (%I3.0)
+            </button>
+            <button id="btnRestoreFanProof" class="btn btn-secondary" style="flex:1; font-size:0.75rem;">
+              Restore Fan Proof
+            </button>
+          </div>
+
+          <div style="display:flex; gap:var(--space-xs); margin-top:var(--space-xs);">
+            <button id="btnAckAlarm" class="btn btn-warning" style="flex:1; font-size:0.8rem;">
+              1. Acknowledge Alarm (%I3.1)
+            </button>
+            <button id="btnDeliberateRestart" class="btn btn-primary" style="flex:1; font-size:0.8rem;">
+              2. Deliberate Restart (%I3.2)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Thermal Trend Log & Exports -->
+      <section class="card" aria-labelledby="trends-title">
+        <div class="card-header">
+          <h2 id="trends-title" class="card-title">
+            <span>📈</span> Temperature & Heat Trend Record
+          </h2>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>💾</span> Export CSV
+            </button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>📄</span> Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="data-table-container" style="max-height:160px; overflow-y:auto;">
+          <table class="data-table" aria-label="Thermal Trend History">
+            <thead>
+              <tr>
+                <th>Elapsed (m)</th>
+                <th>Setpoint SP</th>
+                <th>Measured PV</th>
+                <th>Heat Command</th>
+                <th>Fan Proof</th>
+                <th>Alarm State</th>
+              </tr>
+            </thead>
+            <tbody id="trendTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Dryer Event Ledger:</div>
+          <div id="eventLogContainer" class="event-log-container" style="max-height:100px;" role="log" aria-live="polite">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
