@@ -1,0 +1,106 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "DAY-40-MRP-BASE",
+      "description": "DAY-40 procurement baseline: 30 kg Green demand with 10 kg released stock (20 kg net requirement at 25% yield = 80 kg fresh leaf) and 10 kg Golden demand",
+      "month": "APRIL",
+      "isWinterDormancy": false,
+      "products": [
+        {
+          "productId": "GREEN_TEA",
+          "productName": "PanchaRupa Premium Green Tea",
+          "grossDemandKg": 30.0,
+          "releasedStockKg": 10.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "STANDARD_FINE",
+          "supplierId": "SUPPLIER_02",
+          "supplierName": "Tetulia Green Cooperative",
+          "leadTimeHours": 18,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 6
+        },
+        {
+          "productId": "GOLDEN_TEA",
+          "productName": "PanchaRupa Artisanal Golden Tips",
+          "grossDemandKg": 10.0,
+          "releasedStockKg": 0.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "GOLDEN_TENDER_BUD",
+          "supplierId": "SUPPLIER_01",
+          "supplierName": "Kazi Tea Estate",
+          "leadTimeHours": 24,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 7
+        }
+      ]
+    },
+    {
+      "scenarioId": "SUPPLIER-LEAD-TIME-SHORTAGE",
+      "description": "Logistics road block causes 6-hour delay on Golden tea leaf arrival (arriving at 14:00 vs 08:00 production slot), causing material starvation",
+      "month": "JULY",
+      "isWinterDormancy": false,
+      "products": [
+        {
+          "productId": "GREEN_TEA",
+          "productName": "PanchaRupa Premium Green Tea",
+          "grossDemandKg": 30.0,
+          "releasedStockKg": 0.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "STANDARD_FINE",
+          "supplierId": "SUPPLIER_02",
+          "supplierName": "Tetulia Green Cooperative",
+          "leadTimeHours": 18,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 7
+        },
+        {
+          "productId": "GOLDEN_TEA",
+          "productName": "PanchaRupa Artisanal Golden Tips",
+          "grossDemandKg": 10.0,
+          "releasedStockKg": 0.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "GOLDEN_TENDER_BUD",
+          "supplierId": "SUPPLIER_01",
+          "supplierName": "Kazi Tea Estate",
+          "leadTimeHours": 30,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 14
+        }
+      ]
+    },
+    {
+      "scenarioId": "WINTER-DORMANCY-JANUARY",
+      "description": "January winter bush dormancy: fresh leaf procurement halted (0 kg leaf intake); 40 kg demand fulfilled from released stock buffer",
+      "month": "JANUARY",
+      "isWinterDormancy": true,
+      "products": [
+        {
+          "productId": "GREEN_TEA",
+          "productName": "PanchaRupa Premium Green Tea",
+          "grossDemandKg": 30.0,
+          "releasedStockKg": 45.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "STANDARD_FINE",
+          "supplierId": "NONE",
+          "supplierName": "Dormancy - No Harvest",
+          "leadTimeHours": 0,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 8
+        },
+        {
+          "productId": "GOLDEN_TEA",
+          "productName": "PanchaRupa Artisanal Golden Tips",
+          "grossDemandKg": 10.0,
+          "releasedStockKg": 15.0,
+          "assumedYieldPct": 25.0,
+          "requiredGrade": "GOLDEN_TENDER_BUD",
+          "supplierId": "NONE",
+          "supplierName": "Dormancy - No Harvest",
+          "leadTimeHours": 0,
+          "scheduledSlotHour": 8,
+          "estimatedArrivalHour": 8
+        }
+      ]
+    }
+  ]
+}
