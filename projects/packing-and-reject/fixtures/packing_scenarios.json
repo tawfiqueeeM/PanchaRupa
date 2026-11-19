@@ -1,0 +1,61 @@
+{
+  "formats": [
+    {
+      "formatId": "RETAIL_50G",
+      "name": "50g Retail Bottle",
+      "targetNetG": 50.0,
+      "toleranceG": 1.5,
+      "minWeightG": 48.5,
+      "maxWeightG": 51.5,
+      "channel": "RETAIL"
+    },
+    {
+      "formatId": "RETAIL_100G",
+      "name": "100g Retail Bottle",
+      "targetNetG": 100.0,
+      "toleranceG": 2.0,
+      "minWeightG": 98.0,
+      "maxWeightG": 102.0,
+      "channel": "RETAIL"
+    },
+    {
+      "formatId": "BULK_25KG",
+      "name": "25kg Bulk Auction Bag",
+      "targetNetG": 25000.0,
+      "toleranceG": 100.0,
+      "minWeightG": 24900.0,
+      "maxWeightG": 25100.0,
+      "channel": "AUCTION"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-50G",
+      "description": "Nominal 50g retail bottle dosing (50.2g, Passed checkweigh)",
+      "formatId": "RETAIL_50G",
+      "sourceLotId": "F-G01",
+      "simulatedWeightG": 50.2
+    },
+    {
+      "scenarioId": "NOMINAL-100G",
+      "description": "Nominal 100g retail bottle dosing (100.4g, Passed checkweigh)",
+      "formatId": "RETAIL_100G",
+      "sourceLotId": "F-G01",
+      "simulatedWeightG": 100.4
+    },
+    {
+      "scenarioId": "NOMINAL-BULK-25KG",
+      "description": "Nominal 25kg bulk auction bag dosing (25,020g, Passed checkweigh)",
+      "formatId": "BULK_25KG",
+      "sourceLotId": "F-G01",
+      "simulatedWeightG": 25020.0
+    },
+    {
+      "scenarioId": "UNDERFILL-REJECT-FAULT",
+      "description": "Short fill fault on 50g bottle (42.5g) triggering pneumatic reject pusher",
+      "formatId": "RETAIL_50G",
+      "sourceLotId": "F-G01",
+      "simulatedWeightG": 42.5
+    }
+  ]
+}
