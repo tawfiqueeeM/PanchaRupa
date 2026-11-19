@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factory Sustainability and Waste Control — PanchaRupa</title>
+  <link rel="stylesheet" href="../../shared/css/tokens.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sustainability-dashboard">
+    <!-- Header -->
+    <header class="hero-banner">
+      <h1>Factory Sustainability & Waste Control (Dept 4 & Dept 7)</h1>
+      <p>Thermodynamic Mass Balance, Intake Defect vs Queue Delay Attribution, Energy Accounting, and Quality Authority Routing</p>
+    </header>
+
+    <!-- Controls -->
+    <section class="controls-bar" aria-label="Simulation Controls">
+      <div class="control-group">
+        <label for="scenarioSelect">Operational Scenario:</label>
+        <select id="scenarioSelect">
+          <option value="case_nominal_production">Nominal Production Run (Standard Batch)</option>
+          <option value="case_intake_failure">Intake Quality Failure (Coarse / Waterlogged Leaf)</option>
+          <option value="case_queue_outage_deterioration">Queue Delay Deterioration (Dryer Breakdown Outage)</option>
+        </select>
+      </div>
+
+      <button id="btnPairedReplay" class="btn-secondary" title="Run paired replay under identical 200kg input">
+        ⇄ Compare Paired Replay
+      </button>
+
+      <button id="btnReset" class="btn-secondary" title="Reset scenario to nominal baseline">
+        ↺ Reset
+      </button>
+
+      <div style="margin-left: auto; display: flex; gap: var(--space-2);">
+        <button id="btnExportCsv" class="btn-secondary">Export CSV</button>
+        <button id="btnExportJson" class="btn-primary">Export JSON</button>
+      </div>
+    </section>
+
+    <!-- Key Metrics Cards -->
+    <section class="metrics-grid" aria-label="Key Performance Indicators">
+      <div class="metric-card">
+        <div class="label">Input Green Leaf</div>
+        <div class="value" id="kpiInputLeaf">200.0 <span style="font-size:0.9rem;">kg</span></div>
+        <div class="subtext">Initial harvest batch mass</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Prime Made Tea</div>
+        <div class="value" id="kpiPrimeTea" style="color: #16a34a;">44.5 <span style="font-size:0.9rem;">kg</span></div>
+        <div class="subtext" id="kpiYieldPercent">Yield: 22.3%</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Wasted Energy</div>
+        <div class="value" id="kpiWastedEnergy" style="color: #dc2626;">0.0 <span style="font-size:0.9rem;">kWh</span></div>
+        <div class="subtext" id="kpiSecDenominator">SEC: 1.08 kWh/kg</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Net Financial Impact</div>
+        <div class="value" id="kpiFinancialImpact">BDT 66.00</div>
+        <div class="subtext" id="kpiSalvageSubtext">Salvage credit: BDT 54.00</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Quality Disposition</div>
+        <div class="value" id="kpiDisposition"><span class="badge badge-release">RELEASE</span></div>
+        <div class="subtext" id="kpiDelayHours">Schedule delay: 0.0 hrs</div>
+      </div>
+    </section>
+
+    <!-- Detailed Panels -->
+    <div class="panel-container">
+      <!-- Mass Balance & Streams -->
+      <section class="card-panel" aria-label="Mass Balance">
+        <h2>Thermodynamic Mass Balance & Streams</h2>
+        <p style="font-size:0.85rem; color:var(--color-text-muted); margin-top:-8px;">
+          Strict physical distinction between natural moisture evaporation loss and operational waste.
+        </p>
+        <div class="mass-bar-container" id="massSegmentsContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Department Accountability & Routing -->
+      <section class="card-panel" aria-label="Incident Attribution">
+        <h2>Incident Audit & Departmental Routing</h2>
+        <table class="audit-table">
+          <tbody>
+            <tr>
+              <td><strong>Root Cause Event:</strong></td>
+              <td id="auditRootCause">None (Nominal)</td>
+            </tr>
+            <tr>
+              <td><strong>Cause Confidence:</strong></td>
+              <td id="auditConfidence"><span class="badge badge-confirmed">CONFIRMED</span></td>
+            </tr>
+            <tr>
+              <td><strong>Primary Owner:</strong></td>
+              <td id="auditPrimaryOwner"><strong>Quality</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Secondary / Support:</strong></td>
+              <td id="auditSecondaryOwner">Warehouse</td>
+            </tr>
+            <tr>
+              <td><strong>Decision Authority:</strong></td>
+              <td><strong>Quality Control Department</strong> (Exclusive)</td>
+            </tr>
+            <tr>
+              <td><strong>Quality Final Disposition:</strong></td>
+              <td id="auditDisposition"><span class="badge badge-release">RELEASE</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style="font-size:0.95rem; margin-top:var(--space-3); margin-bottom:4px;">Action Directives:</h3>
+        <ul class="recommendation-list" id="auditActionList">
+          <!-- Populated dynamically -->
+        </ul>
+      </section>
+    </div>
+
+    <!-- Paired Replay Section -->
+    <section class="paired-replay-container" id="pairedReplaySection" style="display:none;" aria-label="Paired Replay">
+      <h2>Paired Replay: Intake Failure vs Queue Deterioration (Identical 200 kg Raw Leaf)</h2>
+      <p style="font-size:0.85rem; color:var(--color-text-muted); margin-top:-8px;">
+        Contrasting upstream supplier rejection with in-process equipment breakdown under identical starting inputs.
+      </p>
+
+      <div class="replay-grid">
+        <div class="replay-column">
+          <h3>Case A: Intake Failure (Supplier Defect)</h3>
+          <ul style="font-size:0.85rem; padding-left:18px; line-height:1.6;">
+            <li><strong>Root Cause:</strong> Substandard leaf (48% fine leaf)</li>
+            <li><strong>Owner:</strong> <span style="color:#0284c7; font-weight:600;">Procurement</span></li>
+            <li><strong>Discard at Gate:</strong> 65.0 kg coarse leaf</li>
+            <li><strong>Wasted Energy:</strong> 0.8 kWh (conveyor only)</li>
+            <li><strong>Financial Loss:</strong> BDT 3,310.00 (raw leaf cost)</li>
+            <li><strong>Schedule Slip:</strong> 0.5 hours (intake hold)</li>
+            <li><strong>Quality Disposition:</strong> <span class="badge badge-downgrade">DOWNGRADE</span></li>
+          </ul>
+        </div>
+
+        <div class="replay-column">
+          <h3>Case B: Queue Deterioration (Dryer Outage)</h3>
+          <ul style="font-size:0.85rem; padding-left:18px; line-height:1.6;">
+            <li><strong>Root Cause:</strong> 120m dryer heating outage & stewing</li>
+            <li><strong>Owner:</strong> <span style="color:#dc2626; font-weight:600;">Maintenance</span></li>
+            <li><strong>Scrapped in Trough:</strong> 12.5 kg made tea equiv. (50 kg wet)</li>
+            <li><strong>Wasted Energy:</strong> 42.0 kWh (withering, rolling, reheat)</li>
+            <li><strong>Financial Loss:</strong> BDT 9,680.00 (prime tea value lost)</li>
+            <li><strong>Schedule Slip:</strong> 2.5 hours (repair + reload)</li>
+            <li><strong>Quality Disposition:</strong> <span class="badge badge-scrap">SCRAP</span></li>
+          </ul>
+        </div>
+
+        <div class="replay-column" style="background:#e0f2fe; border:1px solid #7dd3fc;">
+          <h3 style="color:#0369a1;">Comparative Delta (Case B − Case A)</h3>
+          <ul style="font-size:0.85rem; padding-left:18px; line-height:1.6; color:#0c4a6e;">
+            <li><strong>Embedded Energy Waste Delta:</strong> +41.2 kWh</li>
+            <li><strong>Financial Damage Delta:</strong> +BDT 6,370.00</li>
+            <li><strong>Order Delivery Delay Delta:</strong> +2.0 hours</li>
+            <li><strong>Accountability Shift:</strong> Procurement ➔ Maintenance</li>
+            <li><strong>Thermodynamic Lesson:</strong> In-process failures destroy all prior expended energy and downstream value.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
