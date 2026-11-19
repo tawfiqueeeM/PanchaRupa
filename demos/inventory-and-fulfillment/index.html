@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Inventory & Order Fulfillment Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>📦</span> PanchaRupa Inventory Reservation & Fulfillment</h1>
+        <p class="demo-subtitle">Dept 7 Business Operations — DAY-40 Pack Splits, Quality Disposition Gating & Order Lifecycles</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="invStatusPill">● ALLOCATION COMPLIANT</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Fulfillment Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="DAY-40-ALLOCATION-BASE">1. DAY-40 Benchmark (36kg Bulk Auction + 4kg Retail Bottles)</option>
+        <option value="HELD-LOT-DISPATCH-ATTEMPT">2. Held Lot Quarantine Gate (QA Block on LOT-QA-HOLD)</option>
+        <option value="SETTLEMENT-DELAY-SIMULATION">3. Settlement Delay Simulation (Auction Proceeds Overdue)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="inv-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Allocation Feasibility</span>
+      <span class="kpi-value" id="kpiFeasibility" style="color:var(--color-status-success);">COMPLIANT</span>
+      <span class="kpi-sub" id="kpiFeasibilitySub">All lots released, zero over-allocation</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Total Warehouse Stock</span>
+      <span class="kpi-value" id="kpiTotalStock">40.0 kg</span>
+      <span class="kpi-sub" id="kpiTotalStockSub">Available: 0.0 kg | Reserved: 40.0 kg</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Auction Bulk Channel</span>
+      <span class="kpi-value" id="kpiBulk">36.0 kg</span>
+      <span class="kpi-sub">90.0% of production volume</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Retail Bottles Channel</span>
+      <span class="kpi-value" id="kpiRetail">4.0 kg</span>
+      <span class="kpi-sub">40 x 50g + 20 x 100g bottles</span>
+    </div>
+  </section>
+
+  <!-- Exception Alert Banner -->
+  <div id="invAlertBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="invAlertMsg">INVENTORY ALLOCATION EXCEPTION</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Warehouse Lots & Allocation Form -->
+    <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+      <div class="inv-card">
+        <div class="inv-card-header">
+          <span class="inv-card-title">🏬 Warehouse Lots & Stock Status</span>
+        </div>
+        <div class="inv-card-body" id="lotsContainer">
+          <!-- Dynamically populated lots -->
+        </div>
+      </div>
+
+      <!-- Quick Reservation Form -->
+      <div class="inv-card">
+        <div class="inv-card-header">
+          <span class="inv-card-title">➕ Reserve New Order</span>
+        </div>
+        <div class="inv-card-body" style="gap:var(--space-sm);">
+          <div>
+            <label style="font-size:0.75rem; font-weight:600; display:block;">Target Lot:</label>
+            <select id="formLotSelect" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Channel:</label>
+              <select id="formChannelSelect" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+                <option value="AUCTION_BULK">Auction Bulk</option>
+                <option value="RETAIL_BOTTLES">Retail Bottles</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Quantity (kg):</label>
+              <input type="number" id="formQtyInput" min="1" max="100" value="5" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.75rem; font-weight:600; display:block;">Customer / Recipient:</label>
+            <input type="text" id="formCustomerInput" value="Sylhet Tea Trading Co." style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+          </div>
+          <button class="bms-btn primary" id="btnSubmitReserve" style="margin-top:6px;">Commit Reservation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fulfillment Orders & Lifecycle Panel -->
+    <div class="inv-card">
+      <div class="inv-card-header">
+        <span class="inv-card-title">🚚 Fulfillment Orders & Traceable Lifecycle</span>
+        <div style="display:flex; gap:8px; font-size:0.75rem;">
+          <span class="badge-lifecycle RESERVED">RESERVED</span>
+          <span class="badge-lifecycle DISPATCHED">DISPATCHED</span>
+          <span class="badge-lifecycle SETTLED">SETTLED</span>
+        </div>
+      </div>
+      <div class="inv-card-body" style="padding:0; overflow-x:auto;">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Channel</th>
+              <th>Customer</th>
+              <th>Format</th>
+              <th>Qty (kg)</th>
+              <th>State</th>
+              <th>Settlement</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
