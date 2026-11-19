@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robotic Packing Cell — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🤖</span>
+          <span>Robotic Packing Cell & Interrupted Recovery</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 06</span>
+        </h1>
+        <div class="demo-subtitle">
+          Depts 1 & 3 Production and Controls · Delta robot handshake, 50g/100g format matrix, vacuum loss recovery & case count
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/15-robotic-packing/projects/robotic-packing/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/robotic-packing/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="NOMINAL-50G-CARTON">Nominal 50g Carton (12 pk)</button>
+        <button class="scenario-pill" data-scenario="NOMINAL-100G-CARTON">Nominal 100g Carton (6 pk)</button>
+        <button class="scenario-pill" data-scenario="INTERRUPTED-PICK-FAULT">Interrupted Pick Fault</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Cell State: <strong id="lblCellState" class="font-mono">IDLE</strong> ·
+      Format: <strong id="lblFormatName" class="font-mono">50g (12 pk)</strong> ·
+      Cartons Completed: <strong id="lblCartonsCompleted" class="font-mono">0</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- Visual Robot Cell & Carton Grid Layout -->
+    <section class="card robot-cell-layout" aria-labelledby="cell-title">
+      <!-- Left Column: Robot Handshake & Telemetry -->
+      <div class="robot-arm-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 id="cell-title" style="font-size:1.0rem; font-weight:700; color:#f8fafc;">
+            <span>🦾</span> Delta Robot Kinematics & I/O
+          </h2>
+          <span id="badgeRobotReady" class="status-badge normal">READY (%I5.0)</span>
+        </div>
+
+        <div class="metric-grid" style="grid-template-columns:1fr 1fr; margin-top:var(--space-2xs);">
+          <div class="metric-box" style="background:#0f172a; border-color:#334155;">
+            <div class="metric-label" style="color:#94a3b8;">Arm Motion State</div>
+            <div id="valArmMotion" class="metric-value font-mono" style="font-size:1.0rem; color:#38bdf8;">SAFE_HOME</div>
+          </div>
+          <div class="metric-box" style="background:#0f172a; border-color:#334155;">
+            <div class="metric-label" style="color:#94a3b8;">Vacuum Gripper</div>
+            <div id="valVacuumStatus" class="metric-value font-mono" style="font-size:1.0rem; color:#4ade80;">IDLE (%I5.2)</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.75rem; color:#cbd5e1; margin-top:var(--space-xs);">
+          <strong>Active Discrete Handshake Pins:</strong>
+          <ul style="margin-left:16px; margin-top:4px; font-family:var(--font-mono); font-size:0.7rem; color:#94a3b8;">
+            <li>%Q5.0 (Conveyor Index Run): <span id="regConveyorRun">FALSE</span></li>
+            <li>%I5.1 (Bottle In Pick Datum): <span id="regBottleDatum">FALSE</span></li>
+            <li>%Q5.1 (Trigger Pick Motion): <span id="regTriggerPick">FALSE</span></li>
+            <li>%I5.4 (Gripper Fault / Vacuum Loss): <span id="regGripperFault" style="color:#f87171;">FALSE</span></li>
+          </ul>
+        </div>
+
+        <!-- Interrupted Pick Alert Banner -->
+        <div id="interruptedAlert" class="interrupted-alert">
+          <strong>🛑 EMERGENCY TRIP:</strong> Vacuum pressure loss mid-trajectory (%I5.4 TRIPPED). Arm frozen in air. Purge & Home recovery required before resuming infeed.
+        </div>
+      </div>
+
+      <!-- Right Column: Shipping Carton Grid Visualizer -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xs);">
+          <div>
+            <strong style="font-size:0.95rem; color:#f8fafc;">Shipping Carton Matrix</strong>
+            <span id="lblCartonPocketProgress" style="font-size:0.75rem; color:#94a3b8; margin-left:6px;">(0 / 12 bottles)</span>
+          </div>
+          <span id="badgeCartonStatus" class="status-badge idle">INDEXED</span>
+        </div>
+
+        <div id="cartonGridVisual" class="carton-grid-visual cols-4">
+          <!-- Dynamically populated pockets -->
+        </div>
+
+        <div style="margin-top:var(--space-xs); display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#94a3b8;">
+          <span>Purge Defect Tray: <strong id="lblPurgedCount" style="color:#f87171;">0 bottles</strong></span>
+          <span>Target Batch: <strong style="color:#f8fafc;">F-G01 Retail Run</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls & Manifest Grid -->
+    <div class="panel-grid">
+      <!-- Operator Cell Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <div class="card-header">
+          <h2 id="controls-title" class="card-title">
+            <span>🎮</span> Operator Cell Controls
+          </h2>
+          <span class="status-badge normal">AUTOMATIC</span>
+        </div>
+
+        <div class="form-group">
+          <label for="selFormat" class="form-label">Bottle Packaging Format</label>
+          <select id="selFormat" class="form-select font-mono">
+            <option value="FORMAT_50G" selected>50g Bottle (12 bottles/carton, 4x3 matrix)</option>
+            <option value="FORMAT_100G">100g Bottle (6 bottles/carton, 3x2 matrix)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); margin-top:var(--space-2xs); flex-wrap:wrap;">
+          <button id="btnStepPick" class="btn btn-primary" style="flex:1;">
+            <span>▶️</span> Step Pick-and-Place
+          </button>
+          <button id="btnAutoPack" class="btn btn-warning" style="flex:1;">
+            <span>⏩</span> Auto-Pack Carton
+          </button>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); margin-top:var(--space-xs);">
+          <button id="btnInjectInterruption" class="btn btn-danger" style="flex:1; font-size:0.75rem;">
+            Inject Vacuum Loss
+          </button>
+          <button id="btnRecoverPurge" class="btn btn-secondary" style="flex:1; font-size:0.75rem;">
+            Purge & Home Recovery (%Q5.4)
+          </button>
+        </div>
+      </section>
+
+      <!-- Case Manifest Ledger & Cycle Audit -->
+      <section class="card" aria-labelledby="manifest-title">
+        <div class="card-header">
+          <h2 id="manifest-title" class="card-title">
+            <span>📦</span> Sealed Cartons & Cycle Ledger
+          </h2>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>💾</span> Export CSV
+            </button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>📄</span> Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-label">Bottles Picked</div>
+            <div id="valBottlesProcessed" class="metric-value font-mono">0</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Cartons Dispatched</div>
+            <div id="valCartonsCompleted" class="metric-value font-mono" style="color:#15803d;">0</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Purged Defective</div>
+            <div id="valBottlesPurged" class="metric-value font-mono" style="color:#dc2626;">0</div>
+          </div>
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Sealed Cartons Manifest:</div>
+          <div class="data-table-container" style="max-height:100px; overflow-y:auto;">
+            <table class="data-table" aria-label="Sealed Cartons">
+              <thead>
+                <tr>
+                  <th>Carton ID</th>
+                  <th>Format</th>
+                  <th>Bottles</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="cartonsTableBody">
+                <tr><td colspan="4" style="text-align:center; color:var(--color-text-muted);">No sealed cartons yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Cell Event Log:</div>
+          <div id="eventLogContainer" class="event-log-container" style="max-height:90px;" role="log" aria-live="polite">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
