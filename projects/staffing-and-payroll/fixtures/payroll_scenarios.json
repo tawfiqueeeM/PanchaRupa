@@ -1,0 +1,86 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "MONTH-24-STANDARD-CLOSE",
+      "description": "Cumulative Month 24 financial close: Sales BDT 2.4M, COGS BDT 1.65M, PBT BDT 300k, Payroll BDT 300k, and Profit vs Cash reconciliation",
+      "financials": {
+        "salesRevenueBdt": 2400000.0,
+        "cogsBdt": 1650000.0,
+        "operatingExpensesBdt": 390000.0,
+        "interestExpenseBdt": 60000.0,
+        "depreciationBdt": 10833.33,
+        "uncollectedReceivablesBdt": 280000.0,
+        "unsoldInventoryBdt": 150000.0
+      },
+      "staff": [
+        {
+          "empId": "EMP-FAC-01",
+          "name": "Production Lead & Tea Master",
+          "dept": "FACTORY",
+          "attendedShifts": 26,
+          "baseSalaryBdt": 120000.0,
+          "overtimeHours": 0.0,
+          "overtimeRateBdt": 350.0,
+          "mealRateBdt": 120.0
+        },
+        {
+          "empId": "EMP-FAC-02",
+          "name": "Line Operator & Packing Lead",
+          "dept": "FACTORY",
+          "attendedShifts": 26,
+          "baseSalaryBdt": 100000.0,
+          "overtimeHours": 0.0,
+          "overtimeRateBdt": 300.0,
+          "mealRateBdt": 120.0
+        },
+        {
+          "empId": "EMP-OFF-01",
+          "name": "Bookkeeper & Operations Officer",
+          "dept": "OFFICE",
+          "attendedShifts": 22,
+          "baseSalaryBdt": 80000.0,
+          "overtimeHours": 0.0,
+          "overtimeRateBdt": 250.0,
+          "mealRateBdt": 0.0
+        }
+      ],
+      "approvalStage": "SUPERVISOR_REVIEW"
+    },
+    {
+      "scenarioId": "EARLY-STAGE-TWO-WORKER",
+      "description": "Single-month early factory staffing: 2 floor workers, 26 attended shifts each, exactly BDT 6,240 factory meal allowance",
+      "financials": {
+        "salesRevenueBdt": 240000.0,
+        "cogsBdt": 165000.0,
+        "operatingExpensesBdt": 39000.0,
+        "interestExpenseBdt": 6000.0,
+        "depreciationBdt": 10833.33,
+        "uncollectedReceivablesBdt": 30000.0,
+        "unsoldInventoryBdt": 15000.0
+      },
+      "staff": [
+        {
+          "empId": "EMP-FAC-01",
+          "name": "Production Lead & Operator",
+          "dept": "FACTORY",
+          "attendedShifts": 26,
+          "baseSalaryBdt": 15000.0,
+          "overtimeHours": 10.0,
+          "overtimeRateBdt": 200.0,
+          "mealRateBdt": 120.0
+        },
+        {
+          "empId": "EMP-FAC-02",
+          "name": "Packing & Quality Assistant",
+          "dept": "FACTORY",
+          "attendedShifts": 26,
+          "baseSalaryBdt": 12000.0,
+          "overtimeHours": 5.0,
+          "overtimeRateBdt": 160.0,
+          "mealRateBdt": 120.0
+        }
+      ],
+      "approvalStage": "SUPERVISOR_REVIEW"
+    }
+  ]
+}
