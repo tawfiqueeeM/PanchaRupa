@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa BMS & Building Automation Supervisor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>🏢</span> PanchaRupa BMS / SD-Anlegg Supervisor</h1>
+        <p class="demo-subtitle">Desigo CC / BACnet / Modbus RTU Supervisory Control & Building Energy Telemetry</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="systemSummaryStatus">● SYSTEM ONLINE</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Control Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Operational Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="NOMINAL-OPS-DAY">1. Nominal Operations Day (Healthy Ventilation, 58% RH, Meter OK)</option>
+        <option value="VENTILATION-PROOF-LOSS">2. Ventilation Proof Loss Trip (Fan ON, Proof Broken)</option>
+        <option value="HUMIDITY-EXCURSION-TRIP">3. Finished Storage High Humidity (78% RH > 65% Limit)</option>
+        <option value="STALE-METER-TIMEOUT">4. Stale Modbus Meter Watchdog Timeout (Comms Line Severed)</option>
+      </select>
+    </div>
+    <div class="bms-control-row">
+      <button class="bms-btn primary" id="btnStepTime">⏱ Step Time (+5 min)</button>
+      <button class="bms-btn" id="btnReset">↺ Reset All</button>
+    </div>
+  </section>
+
+  <!-- Main Grid Dashboard -->
+  <main class="bms-grid">
+    <!-- Card 1: AHU Ventilation & Airflow -->
+    <div class="bms-card">
+      <div class="bms-card-header">
+        <div class="bms-card-title">🌀 AHU-01 Supply & Extract Ventilation</div>
+        <span class="status-indicator ok" id="ahuStatusBadge">RUNNING</span>
+      </div>
+      <div class="bms-card-body">
+        <div class="bms-gauge-container">
+          <span class="bms-gauge-val" id="ahuFlowVal">4,500</span>
+          <span class="bms-gauge-unit">m³/h</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Command Output (%Q7.0)</span>
+          <span class="bms-readout-value" id="ahuCmdReadout">RUN (1)</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Diff. Pressure Proof (%I7.1)</span>
+          <span class="bms-readout-value" id="ahuProofReadout">HEALTHY (1)</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Airflow Trip Alarm</span>
+          <span class="bms-readout-value" id="ahuAlarmReadout" style="color:var(--color-status-success);">NORMAL</span>
+        </div>
+        <div class="bms-control-row" style="margin-top:auto;">
+          <button class="bms-btn" id="btnToggleFan">Toggle Fan Cmd</button>
+          <button class="bms-btn" id="btnToggleProof">Simulate Proof Loss</button>
+          <button class="bms-btn warning" id="btnAckAhu" style="display:none;">Acknowledge Trip</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Warehouse Climate -->
+    <div class="bms-card">
+      <div class="bms-card-header">
+        <div class="bms-card-title">🌡 Finished Tea Warehouse Climate</div>
+        <span class="status-indicator ok" id="climateStatusBadge">NOMINAL</span>
+      </div>
+      <div class="bms-card-body">
+        <div class="bms-gauge-container">
+          <span class="bms-gauge-val" id="humidityVal">58.0</span>
+          <span class="bms-gauge-unit">% RH</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Room Temperature</span>
+          <span class="bms-readout-value" id="tempVal">22.5 °C</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Max Allowable RH Gate</span>
+          <span class="bms-readout-value">65.0 % RH</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Dehumidifier Unit (%Q7.4)</span>
+          <span class="bms-readout-value" id="dehumidifierReadout">OFF (0)</span>
+        </div>
+        <div style="margin-top:auto;">
+          <label style="font-size:0.8rem; color:var(--color-text-muted); display:block; margin-bottom:4px;">Inject Room Relative Humidity:</label>
+          <input type="range" id="humiditySlider" min="30" max="95" value="58" style="width:100%;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Modbus RTU Power Meter -->
+    <div class="bms-card">
+      <div class="bms-card-header">
+        <div class="bms-card-title">⚡ Incomer Power Meter (Modbus RTU)</div>
+        <span class="status-indicator ok" id="meterStatusBadge">ONLINE</span>
+      </div>
+      <div class="bms-card-body">
+        <div class="bms-gauge-container">
+          <span class="bms-gauge-val" id="activePowerVal">18.5</span>
+          <span class="bms-gauge-unit">kW</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Cumulative Energy (Reg 40001)</span>
+          <span class="bms-readout-value" id="cumEnergyVal">58.00 kWh</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Heartbeat Register (Reg 40003)</span>
+          <span class="bms-readout-value" id="heartbeatVal">100</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Comms Watchdog Timer</span>
+          <span class="bms-readout-value" id="staleWatchdogVal">0s / 15s</span>
+        </div>
+        <div class="bms-control-row" style="margin-top:auto;">
+          <button class="bms-btn" id="btnToggleMeterPolling">Sever Modbus Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Energy Efficiency & KPI -->
+    <div class="bms-card">
+      <div class="bms-card-header">
+        <div class="bms-card-title">📊 Factory Energy Intensity (KPI)</div>
+        <span class="status-indicator ok" id="kpiStatusBadge">EXCELLENT</span>
+      </div>
+      <div class="bms-card-body">
+        <div class="bms-gauge-container">
+          <span class="bms-gauge-val" id="specificEnergyVal">1.45</span>
+          <span class="bms-gauge-unit">kWh / kg</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Shift Cumulative Consumption</span>
+          <span class="bms-readout-value" id="kpiEnergyReadout">58.00 kWh</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Released Finished Tea Mass</span>
+          <span class="bms-readout-value" id="kpiMassReadout">40.0 kg</span>
+        </div>
+        <div class="bms-readout-row">
+          <span class="bms-readout-label">Target Specific Energy Cap</span>
+          <span class="bms-readout-value">&lt; 2.00 kWh / kg</span>
+        </div>
+        <div class="bms-readout-row" style="margin-top:auto;">
+          <span class="bms-readout-label">Facility Expansion Status</span>
+          <span class="bms-readout-value" style="color:var(--color-brand-primary);">Building A (Phase 1)</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Alarm & Audit Log Section -->
+  <section style="padding: 0 var(--space-lg) var(--space-xl) var(--space-lg);">
+    <div class="bms-card">
+      <div class="bms-card-header">
+        <div class="bms-card-title">📋 BMS SD-Anlegg Supervisor Event & Alarm Log</div>
+        <span style="font-size:0.8rem; color:var(--color-text-muted);">Real-time Telemetry & Audit Trail</span>
+      </div>
+      <div class="bms-card-body" style="padding:0; max-height:260px; overflow-y:auto;">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th style="width:110px;">Time</th>
+              <th style="width:90px;">Level</th>
+              <th>Event Description</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
