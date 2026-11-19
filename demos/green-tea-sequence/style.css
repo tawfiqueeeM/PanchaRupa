@@ -1,0 +1,66 @@
+@import url("../../shared/css/base.css");
+
+/* Specific styling for Green Tea Sequence demo */
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding: var(--space-md) 0;
+}
+
+.station-node {
+  flex: 1;
+  min-width: 220px;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.station-node.active {
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 3px rgba(46, 111, 64, 0.25);
+  background: #f0fdf4;
+}
+
+.station-node.waiting {
+  border-color: var(--color-brand-gold);
+  background: #fefce8;
+  animation: pulse-border 1.5s infinite;
+}
+
+.station-node.locked {
+  border-color: var(--color-status-fault);
+  background: #fef2f2;
+}
+
+.flow-connector {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(201, 136, 24, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(201, 136, 24, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 136, 24, 0); }
+}
+
+.reason-callout {
+  background: #fffbeb;
+  border-left: 4px solid var(--color-brand-gold);
+  padding: var(--space-sm);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  display: none;
+}
+
+.reason-callout.active {
+  display: block;
+}
