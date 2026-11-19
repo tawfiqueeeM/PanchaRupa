@@ -1,0 +1,51 @@
+{
+  "deliveries": [
+    {
+      "deliveryId": "DEL-2026-001",
+      "supplierId": "SUPPLIER_02",
+      "grossWeightKg": -45.0,
+      "tareWeightKg": 10.0,
+      "netWeightKg": -55.0,
+      "unit": "psi",
+      "timestamp": "2026-04-10T08:00:00Z"
+    }
+  ],
+  "batches": [
+    {
+      "batchId": "B-G01",
+      "deliveryId": "DEL-2026-001",
+      "product": "GREEN_TEA",
+      "freshLeafUsedKg": 120.0,
+      "status": "COMPLETED",
+      "timestamp": "2026-04-10T09:30:00Z"
+    },
+    {
+      "batchId": "B-G01",
+      "deliveryId": "DEL-2026-001",
+      "product": "GREEN_TEA",
+      "freshLeafUsedKg": 60.0,
+      "status": "COMPLETED",
+      "timestamp": "2026-04-10T10:00:00Z"
+    },
+    {
+      "batchId": "B-ORPHAN-99",
+      "deliveryId": "DEL-NON-EXISTENT",
+      "product": "GOLDEN_TEA",
+      "freshLeafUsedKg": 40.0,
+      "status": "COMPLETED",
+      "timestamp": "2026-04-10T11:00:00Z"
+    }
+  ],
+  "inspections": [
+    {
+      "inspectionId": "QC-2026-001",
+      "batchId": "B-G01",
+      "moisturePct": 115.0,
+      "grade": "GRADE_A",
+      "disposition": "RELEASED"
+    }
+  ],
+  "lots": [],
+  "packaging": [],
+  "orders": []
+}

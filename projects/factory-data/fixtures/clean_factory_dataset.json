@@ -1,0 +1,88 @@
+{
+  "deliveries": [
+    {
+      "deliveryId": "DEL-2026-001",
+      "supplierId": "SUPPLIER_02",
+      "grossWeightKg": 215.0,
+      "tareWeightKg": 55.0,
+      "netWeightKg": 160.0,
+      "unit": "kg",
+      "timestamp": "2026-04-10T08:00:00Z"
+    }
+  ],
+  "batches": [
+    {
+      "batchId": "B-G01",
+      "deliveryId": "DEL-2026-001",
+      "product": "GREEN_TEA",
+      "freshLeafUsedKg": 120.0,
+      "status": "COMPLETED",
+      "timestamp": "2026-04-10T09:30:00Z"
+    },
+    {
+      "batchId": "B-GL01",
+      "deliveryId": "DEL-2026-001",
+      "product": "GOLDEN_TEA",
+      "freshLeafUsedKg": 40.0,
+      "status": "COMPLETED",
+      "timestamp": "2026-04-10T10:15:00Z"
+    }
+  ],
+  "inspections": [
+    {
+      "inspectionId": "QC-2026-001",
+      "batchId": "B-G01",
+      "moisturePct": 3.2,
+      "grade": "GRADE_A",
+      "disposition": "RELEASED"
+    },
+    {
+      "inspectionId": "QC-2026-002",
+      "batchId": "B-GL01",
+      "moisturePct": 2.8,
+      "grade": "GRADE_A",
+      "disposition": "RELEASED"
+    }
+  ],
+  "lots": [
+    {
+      "lotId": "LOT-G01-REL",
+      "batchId": "B-G01",
+      "totalKg": 30.0,
+      "storageBin": "BIN-A1",
+      "disposition": "RELEASED"
+    },
+    {
+      "lotId": "LOT-GL01-REL",
+      "batchId": "B-GL01",
+      "totalKg": 10.0,
+      "storageBin": "BIN-A2",
+      "disposition": "RELEASED"
+    }
+  ],
+  "packaging": [
+    {
+      "packId": "PCK-BULK-01",
+      "lotId": "LOT-G01-REL",
+      "format": "BULK_SACK",
+      "unitCount": 1,
+      "packedKg": 26.0
+    },
+    {
+      "packId": "PCK-RET-50G",
+      "lotId": "LOT-G01-REL",
+      "format": "RETAIL_50G",
+      "unitCount": 40,
+      "packedKg": 2.0
+    }
+  ],
+  "orders": [
+    {
+      "orderId": "ORD-BULK-01",
+      "packId": "PCK-BULK-01",
+      "channel": "AUCTION_BULK",
+      "customer": "Sreemangal Auction Broker",
+      "lifecycleState": "DISPATCHED"
+    }
+  ]
+}
