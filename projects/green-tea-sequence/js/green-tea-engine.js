@@ -126,8 +126,15 @@ export class GreenTeaEngine {
     }
   }
 
-  startBatch() {
-    if (this.activeBatch.currentStage !== "IDLE" && this.activeBatch.currentStage !== "COMPLETED") {
+  startBatch(newBatchId = null, newFreshLeafKg = null) {
+    if (this.activeBatch.currentStage === "COMPLETED") {
+      if (!newBatchId || newBatchId === this.activeBatch.batchId) {
+        this.logEvent(`Cannot restart completed batch ${this.activeBatch.batchId}: Batch is already finished. Reset demo or supply a distinct batch ID.`, "WARN");
+        return false;
+      }
+      this.activeBatch.batchId = newBatchId;
+      this.activeBatch.freshLeafKg = newFreshLeafKg || 120.0;
+    } else if (this.activeBatch.currentStage !== "IDLE") {
       this.logEvent("Cannot start new batch: line is currently active.", "WARN");
       return false;
     }

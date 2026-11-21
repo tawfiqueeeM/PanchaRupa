@@ -98,3 +98,25 @@ test("GreenTeaEngine - Recipe selection modifies duration, temps and expected yi
   assert.equal(snapshot.stations.dryer.tempC, 90);
   assert.equal(snapshot.activeBatch.expectedOutputKg, 31.2); // 120 * 0.26 = 31.2
 });
+
+test("GreenTeaEngine - Regression: Completed batch cannot be restarted with duplicate ID", () => {
+  const engine = new GreenTeaEngine();
+  // Advance batch B-G01 to COMPLETED
+  for (let i = 0; i < 4; i++) {
+    engine.stepLine();
+  }
+  assert.equal(engine.getSnapshot().activeBatch.currentStage, "COMPLETED");
+  assert.equal(engine.getSnapshot().totalFinishedKg, 30.0);
+
+  // Calling startBatch() on the same batch ID must fail and not create duplicate outputs
+  const duplicateStart = engine.startBatch();
+  assert.equal(duplicateStart, false, "Restarting completed batch without new ID must be rejected");
+  assert.equal(engine.getSnapshot().totalFinishedKg, 30.0);
+  assert.equal(engine.getSnapshot().completedBatches.length, 1);
+
+  // Supplying a distinct new batch ID succeeds
+  const newBatchStart = engine.startBatch("B-G02", 120.0);
+  assert.equal(newBatchStart, true);
+  assert.equal(engine.getSnapshot().activeBatch.batchId, "B-G02");
+  assert.equal(engine.getSnapshot().activeBatch.currentStage, "DRUM");
+});
