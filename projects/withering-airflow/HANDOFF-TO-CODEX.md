@@ -8,7 +8,7 @@
 - **Assigned Directories:**
   - Logic & Specification: `projects/withering-airflow/`
   - Interactive Demo: `demos/withering-airflow/`
-- **Tested Implementation Revision:** `16d0d38` (plus corrective commit on branch)
+- **Tested Implementation Revision:** `ee7bfb78949cc1e9e9f1a3cbcf130fb48ea508d7`
 - **Shared Foundation Fix:** `16d0d38` (cherry-picked from `7f18e1c`)
 
 ---
