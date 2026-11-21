@@ -25,7 +25,14 @@ export class SchedulingEngine {
   loadScenario(scenario) {
     this.shiftStartMin = scenario.shiftStartMin ?? 0;
     this.shiftEndMin = scenario.shiftEndMin ?? 540;
-    this.orders = JSON.parse(JSON.stringify(scenario.orders || []));
+    this.orders = JSON.parse(JSON.stringify(scenario.orders || [])).map(order => ({
+      ...order,
+      baseQuantityKg: order.quantityKg,
+      steps: order.steps.map(step => ({
+        ...step,
+        baseDurationMin: step.durationMin
+      }))
+    }));
     this.outages = JSON.parse(JSON.stringify(scenario.outages || []));
 
     // Calculate baseline schedule (ignoring outages)
@@ -49,12 +56,15 @@ export class SchedulingEngine {
     const order = this.orders.find(o => o.batchId === batchId);
     if (!order) return false;
     
-    const factor = quantityKg / order.quantityKg;
-    order.quantityKg = Math.max(5, Math.min(150, Number(quantityKg)));
+    const targetKg = Math.max(5, Math.min(150, Number(quantityKg)));
+    order.quantityKg = targetKg;
+    const baseKg = order.baseQuantityKg || 10;
+    const factor = targetKg / baseKg;
     
-    // Scale durations proportionally
+    // Scale durations proportionally from immutable base durations
     order.steps.forEach(step => {
-      step.durationMin = Math.max(15, Math.round(step.durationMin * factor));
+      const baseDur = step.baseDurationMin ?? step.durationMin;
+      step.durationMin = Math.max(15, Math.round(baseDur * factor));
     });
 
     this.schedule = this.computeSchedule(this.orders, this.outages);
@@ -147,7 +157,21 @@ export class SchedulingEngine {
         const taskStart = scheduledStart + cleanMin;
         const taskEnd = taskStart + taskDuration;
 
-        // Record slot
+        // Record cleanup slot on calendar if changeover clean required
+        if (cleanMin > 0) {
+          cal.push({
+            type: "CLEANUP",
+            batchId: order.batchId,
+            product: order.product,
+            machine,
+            startMin: scheduledStart,
+            endMin: taskStart,
+            durationMin: cleanMin,
+            reason: `Changeover clean: ${lastProductOnMachine[machine]} -> ${order.product}`
+          });
+        }
+
+        // Record task slot
         cal.push({
           type: "TASK",
           batchId: order.batchId,
@@ -155,9 +179,10 @@ export class SchedulingEngine {
           stepIndex: stepIdx,
           machine,
           cleanMin,
-          cleanStartMin: scheduledStart,
+          cleanStartMin: cleanMin > 0 ? scheduledStart : null,
           startMin: taskStart,
-          endMin: taskEnd
+          endMin: taskEnd,
+          durationMin: taskDuration
         });
 
         // Keep calendar sorted
@@ -170,6 +195,7 @@ export class SchedulingEngine {
           stepIndex: stepIdx,
           machine,
           cleanMin,
+          cleanStartMin: cleanMin > 0 ? scheduledStart : null,
           startMin: taskStart,
           endMin: taskEnd,
           durationMin: taskDuration,
@@ -180,23 +206,36 @@ export class SchedulingEngine {
       });
     }
 
-    // Evaluate feasibility
+    // Evaluate feasibility against individual order due times and shift cutoff
     let makespanMin = 0;
     let anyInfeasible = false;
     const infeasibilities = [];
 
     scheduledBatches.forEach(b => {
       makespanMin = Math.max(makespanMin, b.completionMin);
-      if (b.completionMin > this.shiftEndMin) {
+      const dueMin = this.timeStrToMin(b.targetTime);
+      const isLateForDue = b.completionMin > dueMin;
+      const exceedsShift = b.completionMin > this.shiftEndMin;
+
+      if (isLateForDue || exceedsShift) {
         b.isLate = true;
-        b.delayMin = b.completionMin - this.shiftEndMin;
+        b.delayMin = Math.max(0, b.completionMin - dueMin);
         anyInfeasible = true;
+        let reason = "";
+        if (isLateForDue && exceedsShift) {
+          reason = `Batch ${b.batchId} completion (${this.minToTimeStr(b.completionMin)}) misses target due time (${b.targetTime}) and exceeds shift cutoff (17:00 / ${this.shiftEndMin}m)`;
+        } else if (isLateForDue) {
+          reason = `Batch ${b.batchId} completion (${this.minToTimeStr(b.completionMin)}) misses target due time (${b.targetTime}) by ${b.delayMin} min`;
+        } else {
+          reason = `Batch ${b.batchId} completion (${this.minToTimeStr(b.completionMin)}) exceeds shift cutoff (17:00 / ${this.shiftEndMin}m)`;
+        }
         infeasibilities.push({
           batchId: b.batchId,
           completionMin: b.completionMin,
           completionTime: this.minToTimeStr(b.completionMin),
+          targetTime: b.targetTime,
           delayMin: b.delayMin,
-          reason: `Batch completion (${this.minToTimeStr(b.completionMin)}) exceeds shift cutoff (17:00 / ${this.shiftEndMin}m)`
+          reason
         });
       }
     });
@@ -244,6 +283,16 @@ export class SchedulingEngine {
       batchComparisons,
       activeOutages: this.outages
     };
+  }
+
+  timeStrToMin(timeStr) {
+    if (!timeStr) return this.shiftEndMin;
+    const parts = timeStr.split(":");
+    if (parts.length !== 2) return this.shiftEndMin;
+    const hh = Number(parts[0]);
+    const mm = Number(parts[1]);
+    const totalMin = hh * 60 + mm;
+    return totalMin - 8 * 60; // relative to 08:00
   }
 
   minToTimeStr(mins) {

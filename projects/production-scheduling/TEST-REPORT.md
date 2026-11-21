@@ -1,10 +1,11 @@
 # Test Report — Production Scheduling & Machine Calendar (Dept 2)
 
 ## Test Execution Summary
+- **Date:** 2026-11-21
 - **Test Suite:** `projects/production-scheduling/tests/scheduling.test.js`
 - **Execution Command:** `node --test projects/production-scheduling/tests/scheduling.test.js`
 - **Environment:** Node.js native test runner (zero external dependencies)
-- **Status:** PASS (4/4 tests passed, 0 failures, 0 regressions)
+- **Status:** PASS (7/7 tests passed, 0 failures, 0 regressions)
 
 ## Detailed Test Cases
 
@@ -37,3 +38,30 @@
   - Makespan exceeds 540 min.
   - Infeasibility record details specific shift cutoff breach reason.
 - **Result:** PASS
+
+### 5. Regression R12: Exact Quantity Rescaling Toggle
+- **Objective:** Verify that quantity adjustment calculations reference immutable base durations and quantities without cumulative rounding drift.
+- **Verification:**
+  - Toggled batch quantity from 10 kg -> 5 kg -> 10 kg.
+  - Verified that restored makespan (465 min) and every individual step duration match the baseline exactly.
+- **Result:** PASS
+
+### 6. Regression R13: Machine Changeover Cleanup Reservation
+- **Objective:** Verify that changeover cleanup intervals between incompatible tea varieties are explicitly reserved on the machine calendar as non-overlapping slots.
+- **Verification:**
+  - Asserted presence of `CLEANUP` slot (15 min) on `SHARED_ROLLER` calendar between Green Tea and Golden Tea.
+  - Verified that subsequent tasks cannot schedule or start during cleanup intervals.
+- **Result:** PASS
+
+### 7. Regression R14: Individual Target Due Time Feasibility Check
+- **Objective:** Verify that orders with target due times earlier than shift cutoff (e.g. 10:00) are evaluated against their own due time, not merely the 17:00 cutoff.
+- **Verification:**
+  - Injected order finishing at 10:30 (150 min) with target time 10:00 (120 min).
+  - Verified `isLate: true`, `delayMin: 30`, and schedule flagged infeasible despite completing well before 17:00.
+- **Result:** PASS
+
+## Browser & Interface Verification
+- **Direct Route Launch:** `http://localhost:8080/demos/production-scheduling/` loads cleanly without error.
+- **Header Badge & Identity (R24):** Header badge correctly reflects `Demo 09`, Dept 2 Operations.
+- **Responsive Viewport Verification (R22):** Verified via Edge CDP: Desktop (1440px) `scrollWidth: 1401px`, Mobile (390px) `scrollWidth: 390px` with zero horizontal overflow.
+- **Console Errors:** 0 unhandled exceptions.
