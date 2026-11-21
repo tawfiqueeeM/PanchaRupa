@@ -42,6 +42,7 @@ export class PackingEngine {
   }
 
   reset() {
+    this.serialCounter = 1;
     this.selectedFormat = this.formats[0]; // RETAIL_50G
     this.activePack = {
       packId: `PK-${String(this.serialCounter).padStart(4, "0")}`,
@@ -112,13 +113,22 @@ export class PackingEngine {
   runFineDosing(customFinalWeight = null) {
     let finalWeight = customFinalWeight;
     if (finalWeight === null || finalWeight === undefined) {
-      // Nominal precision dosing lands within ±0.3% of target
+      // Seeded deterministic dosing variations within ±0.3% of target
+      const variations = [0.05, -0.08, 0.02, -0.04, 0.07, -0.03];
+      const varIdx = (this.serialCounter - 1) % variations.length;
       const target = this.selectedFormat.targetNetG;
-      const variation = (Math.random() * 0.4 - 0.2) * (this.selectedFormat.toleranceG / 2);
+      const variation = variations[varIdx] * (this.selectedFormat.toleranceG / 2);
       finalWeight = Math.round((target + variation) * 10) / 10;
+    } else {
+      const w = Number(customFinalWeight);
+      if (!Number.isFinite(w) || w <= 0) {
+        this.logEvent(`Invalid dosing weight: ${customFinalWeight}g is not a positive finite number.`, "WARN");
+        return false;
+      }
+      finalWeight = w;
     }
 
-    this.activePack.actualNetG = Number(finalWeight) || 0;
+    this.activePack.actualNetG = finalWeight;
     this.activePack.dosingState = "FINE_DONE";
     this.logEvent(`Fine trickle dosing complete: Final net mass on cell = ${this.activePack.actualNetG}g via %Q4.1`, "ACTION");
     this.checkweigh();
@@ -138,6 +148,13 @@ export class PackingEngine {
   checkweigh() {
     const weight = this.activePack.actualNetG;
     const fmt = this.selectedFormat;
+
+    if (typeof weight !== 'number' || !Number.isFinite(weight) || weight <= 0) {
+      this.activePack.checkweighStatus = "INVALID";
+      this.activePack.rejectPusherActive = false;
+      this.logEvent(`CHECKWEIGHER ERROR: Non-positive or non-finite mass (${weight}g) rejected.`, "ALARM");
+      return "INVALID";
+    }
 
     if (weight < fmt.minWeightG) {
       this.activePack.checkweighStatus = "REJECTED_UNDERFILL";
@@ -160,6 +177,11 @@ export class PackingEngine {
     if (this.activePack.dispatchStatus === "DISPATCHED") {
       this.logEvent(`DISPATCH REJECTED: Pack ${this.activePack.packId} has already been dispatched! Duplicate dispatch prevented.`, "WARN");
       return { success: false, reason: "ALREADY_DISPATCHED" };
+    }
+
+    if (this.activePack.checkweighStatus === "INVALID" || !Number.isFinite(this.activePack.actualNetG) || this.activePack.actualNetG <= 0) {
+      this.logEvent(`DISPATCH BLOCKED: Invalid container mass (${this.activePack.actualNetG}g).`, "WARN");
+      return { success: false, reason: "INVALID_MASS" };
     }
 
     if (this.activePack.checkweighStatus.startsWith("REJECTED")) {

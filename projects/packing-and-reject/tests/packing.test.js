@@ -85,3 +85,29 @@ test("PackingEngine - Mass balance reconciliation", () => {
   assert.equal(totalRejected, 40.0);
   assert.equal(totalDosed, totalDispatched + totalRejected, "Total dosed mass must equal dispatched plus rejected");
 });
+
+test("Regression R09: PackingEngine reset restores initial PK-0001 container ID", () => {
+  const engine = new PackingEngine();
+  engine.runFineDosing(50);
+  engine.dispatch();
+  assert.equal(engine.activePack.packId, "PK-0002");
+  
+  engine.reset();
+  assert.equal(engine.activePack.packId, "PK-0001", "Reset must restore serial counter and container ID to PK-0001");
+  assert.equal(engine.massLedger.countDispatched, 0);
+  assert.equal(engine.massLedger.countRejected, 0);
+  assert.equal(engine.massLedger.totalDosedG, 0);
+});
+
+test("Regression R09: PackingEngine rejects negative or non-finite dosing without corrupting ledger", () => {
+  const engine = new PackingEngine();
+  const fineDosingResult = engine.runFineDosing(-50);
+  assert.equal(fineDosingResult, false, "Negative dosing mass must be rejected");
+
+  const dispatchResult = engine.dispatch();
+  assert.equal(dispatchResult.success, false);
+  assert.equal(engine.massLedger.totalDosedG, 0, "Negative mass must not enter dosed total");
+  assert.equal(engine.massLedger.totalRejectedG, 0, "Negative mass must not enter rejected total");
+  assert.equal(engine.massLedger.countRejected, 0, "Negative mass must not enter reject count");
+  assert.equal(engine.rejectHistory.length, 0, "Negative mass must not enter reject history");
+});
