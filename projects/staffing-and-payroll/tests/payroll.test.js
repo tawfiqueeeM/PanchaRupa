@@ -85,3 +85,36 @@ test("PayrollEngine - Month 24 Income Statement & Accrual Profit vs Bank Cash re
   assert.equal(close.netOperatingCashBdt, -119166.67, "Operating cash must equal -BDT 119,166.67");
   assert.equal(close.isCashDeficit, true, "Must recognize cash deficit despite accounting profit");
 });
+
+test("PayrollEngine R15 - Modifying attendance shifts or overtime post-authorization revokes approval and resets stage", () => {
+  const engine = new PayrollEngine();
+  const baseScenario = fixtures.scenarios.find(s => s.scenarioId === "MONTH-24-STANDARD-CLOSE");
+  engine.loadScenario(baseScenario);
+
+  // Advance fully to OWNER_AUTHORIZATION
+  engine.advanceApprovalStage(); // HR_VERIFICATION
+  engine.advanceApprovalStage(); // FINANCE_RECONCILIATION
+  const finalAdv = engine.advanceApprovalStage(); // OWNER_AUTHORIZATION
+  assert.equal(finalAdv.isFullyApproved, true);
+  assert.equal(engine.calculatePayroll().isFullyApproved, true);
+
+  // Now an operator or clerk modifies attendance shifts
+  const updated = engine.updateAttendedShifts("EMP-FAC-01", 28);
+  assert.equal(updated, true);
+
+  // Verification: Approval must be invalidated and stage reset to SUPERVISOR_REVIEW
+  const payrollAfterEdit = engine.calculatePayroll();
+  assert.equal(payrollAfterEdit.isFullyApproved, false, "Payroll must no longer be fully approved after data mutation");
+  assert.equal(payrollAfterEdit.approvalStage, "SUPERVISOR_REVIEW", "Stage must reset to SUPERVISOR_REVIEW requiring re-authorization");
+
+  // Re-advance to HR
+  engine.advanceApprovalStage();
+  assert.equal(engine.calculatePayroll().approvalStage, "HR_VERIFICATION");
+
+  // Now modify overtime
+  const otUpdated = engine.updateOvertime("EMP-FAC-02", 15);
+  assert.equal(otUpdated, true);
+  const payrollAfterOt = engine.calculatePayroll();
+  assert.equal(payrollAfterOt.isFullyApproved, false);
+  assert.equal(payrollAfterOt.approvalStage, "SUPERVISOR_REVIEW", "Stage must reset back to SUPERVISOR_REVIEW on overtime edit");
+});

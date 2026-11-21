@@ -51,19 +51,35 @@ export class PayrollEngine {
     return { success: false, reason: "ALREADY_FULLY_APPROVED" };
   }
 
+  invalidateApproval(reason) {
+    if (this.currentStageIdx > 0) {
+      const priorStage = this.approvalStages[this.currentStageIdx];
+      this.currentStageIdx = 0;
+      this.log(`Approval invalidated (${reason}). Reset stage from ${priorStage} to ${this.approvalStages[0]} (Re-authorization required)`, "ALARM");
+    }
+  }
+
   updateAttendedShifts(empId, shifts) {
     const emp = this.staff.find(e => e.empId === empId);
     if (!emp) return false;
-    emp.attendedShifts = Math.max(0, Math.min(31, Number(shifts)));
-    this.log(`Updated attended shifts for ${emp.name} to ${emp.attendedShifts}`, "ACTION");
+    const newShifts = Math.max(0, Math.min(31, Number(shifts)));
+    if (emp.attendedShifts !== newShifts) {
+      emp.attendedShifts = newShifts;
+      this.invalidateApproval(`Attendance modified for ${emp.name}`);
+      this.log(`Updated attended shifts for ${emp.name} to ${emp.attendedShifts}`, "ACTION");
+    }
     return true;
   }
 
   updateOvertime(empId, hours) {
     const emp = this.staff.find(e => e.empId === empId);
     if (!emp) return false;
-    emp.overtimeHours = Math.max(0, Math.min(60, Number(hours)));
-    this.log(`Updated overtime hours for ${emp.name} to ${emp.overtimeHours} hrs`, "ACTION");
+    const newHours = Math.max(0, Math.min(60, Number(hours)));
+    if (emp.overtimeHours !== newHours) {
+      emp.overtimeHours = newHours;
+      this.invalidateApproval(`Overtime modified for ${emp.name}`);
+      this.log(`Updated overtime hours for ${emp.name} to ${emp.overtimeHours} hrs`, "ACTION");
+    }
     return true;
   }
 

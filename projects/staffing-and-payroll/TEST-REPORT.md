@@ -4,7 +4,7 @@
 - **Test Suite:** `projects/staffing-and-payroll/tests/payroll.test.js`
 - **Execution Command:** `node --test projects/staffing-and-payroll/tests/payroll.test.js`
 - **Environment:** Node.js native test runner (zero external dependencies)
-- **Status:** PASS (4/4 tests passed, 0 failures, 0 regressions)
+- **Status:** PASS (5/5 tests passed, 0 failures, 0 regressions)
 
 ## Detailed Test Cases
 
@@ -37,4 +37,14 @@
   - Sales 2.4M, COGS 1.65M, GP 750k, OpEx 390k, EBIT 360k, Interest 60k, PBT 300,000.
   - Working capital deductions (-280k receivables, -150k inventory) yield net operating cash of -BDT 119,166.67.
   - `isCashDeficit` correctly evaluates to `true`.
+- **Result:** PASS
+
+### 5. Approval Invalidation on Attendance Mutation (Regression R15)
+- **Objective:** Verify that modifying attendance shifts or overtime after approval progression immediately revokes approval (`isFullyApproved = false`) and resets approval stage to `SUPERVISOR_REVIEW`.
+- **Verification:**
+  - Progressed approval to `OWNER_AUTHORIZATION` (`isFullyApproved = true`).
+  - Mutated attendance shifts on `EMP-FAC-01`.
+  - Verified `isFullyApproved` became `false` and stage reset to `SUPERVISOR_REVIEW`.
+  - Advanced stage to `HR_VERIFICATION` and mutated overtime on `EMP-FAC-02`.
+  - Verified stage reset to `SUPERVISOR_REVIEW`.
 - **Result:** PASS
