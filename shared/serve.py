@@ -9,7 +9,11 @@ import sys
 import os
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.basename(script_dir) == "shared":
+    REPO_ROOT = os.path.abspath(os.path.join(script_dir, ".."))
+else:
+    REPO_ROOT = script_dir
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
