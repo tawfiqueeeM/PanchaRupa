@@ -1,45 +1,63 @@
-# Handoff to Codex — Withering Airflow & Moisture Dynamics (Project 03 / Order 3)
+# Handoff to Codex — Withering Airflow & Moisture Dynamics (Project 04)
 
-## Metadata & Scope
-- **Lead Department:** Dept 1 Production Engineering
-- **Contributing Departments:** Dept 3 Controls & Electrical, Dept 5 HMI & Simulation, Dept 6 Testing & Portfolio
-- **Branch:** `subproject/04-withering`
-- **Source Paths:**
+## 1. Status & Subproject Metadata
+- **Status:** `READY FOR CODEX RE-REVIEW`
+- **Subproject ID:** Project 04 (Demo 04)
+- **Lead Department:** Dept 3 Controls & Electrical (in coordination with Dept 1 Production Engineering)
+- **Git Branch:** `subproject/04-withering`
+- **Assigned Directories:**
   - Logic & Specification: `projects/withering-airflow/`
   - Interactive Demo: `demos/withering-airflow/`
-- **Status:** `READY FOR CODEX REVIEW`
+- **Tested Implementation Revision:** `16d0d38` (plus corrective commit on branch)
+- **Shared Foundation Fix:** `16d0d38` (cherry-picked from `7f18e1c`)
 
-## Revision History
-- **Base Revision:** `83f9980d499384ea322f5aa1b3bb347639e1408d`
-- **Foundation Revision:** `6ea3f5ff73d392bce306c72feb24470ab75ca0e1`
-- **Implementation Revision Tested:** Working commit on `subproject/04-withering`
+---
 
-## What Works, Fixture-Driven & Missing
-- **Working Implementation:**
-  - Continuous thin-layer moisture evaporation model driven by VFD fan airflow and ambient vapor pressure deficit.
-  - Multi-run comparison calculating side-by-side moisture trajectories, elapsed hours to target, and cumulative fan energy (kWh).
-  - Ambient environmental scenarios (Spring Nominal, Monsoon Humid, Autumn Dry).
-  - Out-of-bounds sensor fault injection with alarm latching and automatic shut-off inhibit.
-  - Interactive browser HMI with animated fan speed icon, live instrumentation telemetry gauges, comparison table, event ledger, and CSV/JSON exports.
-  - 3 automated unit tests running in Node.js test runner (`node --test`).
-- **Fixture-Driven:**
-  - Thin-layer kinetic rate constants and ambient temperature/RH presets.
-- **Missing / Deferred to Codex:**
-  - Dynamic psychrometric Mollier chart solver and real-time CFD moisture gradient model across multiple tray layers.
+## 2. Review Findings Addressed in this Pass
 
-## Launch and Test Instructions
-1. **Launch Static Server:**
-   ```bash
-   python shared/serve.py 8080
-   ```
-2. **Access Demo Route:**
-   Open browser to `http://localhost:8080/demos/withering-airflow/index.html`
-3. **Execute Unit Tests:**
-   ```bash
-   node --test projects/withering-airflow/tests/withering.test.js
-   ```
+| Review Finding ID | Description | Resolution & Evidence |
+|:---|:---|:---|
+| **R08 (P2)** | Initial moisture below target (50% with 65% target) jumped upward to 64.75% | Handled initially satisfied target moisture explicitly. When initial moisture <= target moisture, `targetReached` is immediately set to `true`, rehydration jump to ambient equilibrium is prevented, and fan energy is not consumed. Regression test 4 passing. |
+| **R22 (Mobile)** | Viewport overflowed at 390px | Added responsive styles, container bounds, and flexible layouts in `shared/css/base.css`. Browser verified via Edge CDP: `scrollWidth === 390px` at 390px viewport width (0px horizontal overflow). |
+| **R24 (Identity)** | Demo number labeled Demo 03 instead of Project 04; department labeled Dept 1 | Corrected identity to Project 04 (Demo 04), Lead Department: Dept 3 Controls & Electrical. |
+| **R03 (Launch)** | Standardized server launch instructions | Documented `python shared/serve.py 8080` with direct URL `http://localhost:8080/demos/withering-airflow/`. |
 
-## Proposed Engine Contract for Codex Integration
+---
+
+## 3. Verification Commands & Observed Results
+
+### 3.1 Unit Test Execution
+Command:
+```bash
+node --test projects/withering-airflow/tests/withering.test.js
+```
+Observed Output:
+```text
+TAP version 13
+# Subtest: WitheringEngine - Fan speed comparison on identical batch
+ok 1 - WitheringEngine - Fan speed comparison on identical batch
+# Subtest: WitheringEngine - Ambient humidity scenario sensitivity
+ok 2 - WitheringEngine - Ambient humidity scenario sensitivity
+# Subtest: WitheringEngine - Sensor fault injection and invalid reading detection
+ok 3 - WitheringEngine - Sensor fault injection and invalid reading detection
+# Subtest: WitheringEngine - Regression R08: Initially satisfied moisture target is recognized without upward jump
+ok 4 - WitheringEngine - Regression R08: Initially satisfied moisture target is recognized without upward jump
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+```
+
+### 3.2 Browser & Mobile Viewport Verification
+- **Command:** Launch `python shared/serve.py 8080` and open `http://localhost:8080/demos/withering-airflow/`.
+- **Desktop (1440x1000):** Viewport width 1416px, scrollWidth 1416px (0px document overflow).
+- **Mobile (390x844):** Viewport width 390px, scrollWidth 390px (0px document overflow).
+- **Unrun Checks:** Full 3D CFD spatial moisture gradient modeling across multi-layer troughs remains deferred.
+
+---
+
+## 4. Proposed Engine Contract for Codex Integration
 - **Engine File:** `projects/withering-airflow/js/withering-engine.js`
 - **Class:** `WitheringEngine`
 - **State Fields:**
@@ -50,19 +68,22 @@
     initialMoisture: number;
     targetMoisture: number;
     currentMoisture: number;
-    sensorReading: number;
-    sensorFault: boolean;
-    sensorValid: boolean;
+    ambientKey: 'SPRING-NOMINAL' | 'MONSOON-HUMID' | 'AUTUMN-DRY';
     fanSpeedPercent: number;
-    fanRatedPowerKw: number;
-    ambient: { name: string; tempC: number; rh: number; baseRate: number };
     elapsedHours: number;
     cumulativeFanKwh: number;
     targetReached: boolean;
-    trajectory: Array<TrajectoryPoint>;
+    sensorFault: boolean;
+    sensorReading: number;
+    trajectory: Array<{
+      elapsedHours: number;
+      moisturePercent: number;
+      sensorReading: number;
+      sensorValid: boolean;
+      fanSpeedPercent: number;
+      cumulativeFanKwh: number;
+      targetReached: boolean;
+    }>;
   }
   ```
-- **Replacement Hook:** Replace `simulateFullRun` or `stepTime` with your differential equation solver or psychrometric drying model.
-
-## Open Issues & Recommended Next Task
-- None blocking. Advance queue to **Row 4**: `subproject/05-golden-tea-processing` (`projects/golden-tea-sequence/`).
+- **Deferred Work:** Dynamic psychrometric Mollier chart solver and real-time CFD moisture gradient model.

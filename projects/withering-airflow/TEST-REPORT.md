@@ -1,26 +1,37 @@
-# Test Report — Withering Airflow & Moisture Control (Project 03 / Order 3)
+# Test Report — Withering Airflow & Moisture Dynamics (Project 04)
 
-## Environment & Execution
-- **Date:** 2026-11-19
-- **Platform:** Windows (PowerShell / Node.js v20.18.0)
-- **Git Branch:** `subproject/04-withering`
-- **Lead Department:** Dept 1 Production Engineering
-- **Test Command:** `node --test projects/withering-airflow/tests/withering.test.js`
+## 1. Test Execution Summary
+- **Execution Date:** 2026-11-21
+- **Command:** `node --test projects/withering-airflow/tests/withering.test.js`
+- **Runner:** Node.js native test runner (`node:test`)
+- **Total Test Cases:** 4
+- **Passed:** 4
+- **Failed:** 0
+- **Duration:** ~190 ms
+- **Status:** PASS
 
-## Test Execution Matrix
+---
 
-| Test Suite / Assertion | Scenario / Condition | Expected Result | Observed Result | Status |
-|---|---|---|---|---|
-| Airflow Rate Trajectory Comparison | Identical batch (40 kg, 78% moisture): Run A (40% fan) vs Run B (85% fan) | Run B reaches lower moisture at hour 6 than Run A; Run B consumes more fan kWh | Moisture at 6h: Run B < Run A; Energy: Run B > Run A | PASS |
-| Ambient Humidity Sensitivity | Spring Nominal (65% RH) vs Monsoon Humid (88% RH) at 60% fan | Moisture reduction significantly slower in Monsoon due to suppressed vapor gradient | Hour 8 moisture: Spring (65.2%) < Monsoon (71.1%) | PASS |
-| Sensor Fault Detection | Open-loop disconnect injected (%IW70 reading -99.9%) | Sensor marked invalid (`sensorValid: false`), alarm logged, auto cutoff inhibited | `sensorValid: false`, `sensorFault: true`, alarm banner displayed | PASS |
-| Sensor Restoration | Sensor fault cleared | Sensor returns to valid state (`sensorValid: true`), live reading resumed | Reading restored to live moisture value, fault cleared | PASS |
+## 2. Test Case Breakdown
 
-## Browser & Interface Verification
-- **Direct Route Launch:** `http://localhost:8080/demos/withering-airflow/index.html` loads directly without dependency on other routes.
-- **Header Controls:** "View Project Source" links directly to `subproject/04-withering/projects/withering-airflow/`; "View Test Evidence" links to test report; "Reset Demo" restores baseline.
-- **Scenario Presets:** Spring Nominal, Monsoon Humid, Sensor Fault, and Compare Runs switch seamlessly.
-- **Dynamic Gauges:** Real-time calculation of fan RPM, electric power (kW), and elapsed fan energy (kWh).
-- **Export Functionality:** CSV and JSON download buttons export recorded trajectory points.
-- **Screen & Keyboard:** Clean layout on narrow 360px viewport; all controls accessible via keyboard.
-- **Console Errors:** 0 unhandled exceptions.
+### 1. Fan speed comparison on identical batch
+- **Objective:** Verify higher airflow increases drying rate while energy follows cubic power law.
+- **Result:** PASS (85% fan yields lower moisture at 6h than 40% fan; energy scales non-linearly).
+
+### 2. Ambient humidity scenario sensitivity
+- **Objective:** Verify high relative humidity (monsoon) slows moisture evaporation.
+- **Result:** PASS (Spring nominal reaches lower moisture at 8h than Monsoon humid).
+
+### 3. Sensor fault injection and invalid reading detection
+- **Objective:** Verify open-circuit sensor probe fault triggers invalid flag and -99.9% reading.
+- **Result:** PASS (Fault flag set, invalid reading detected, restored upon clearance).
+
+### 4. Regression R08: Initially satisfied moisture target is recognized without upward jump
+- **Objective:** Verify setting initial moisture (50%) below target (65%) immediately sets `targetReached = true`, prevents rehydration jump, and consumes zero fan energy.
+- **Result:** PASS (Initial moisture stays 50.0%, targetReached is true, cumulativeFanKwh is 0.0).
+
+---
+
+## 3. Browser & Mobile Viewport Verification
+- **Desktop (1440x1000):** Viewport width 1416px, scrollWidth 1416px (0px document overflow).
+- **Mobile (390x844):** Viewport width 390px, scrollWidth 390px (0px document overflow).

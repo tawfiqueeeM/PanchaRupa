@@ -59,3 +59,18 @@ test("WitheringEngine - Sensor fault injection and invalid reading detection", (
   assert.equal(restoredSnapshot.sensorFault, false);
   assert.equal(restoredSnapshot.sensorValid, true);
 });
+
+test("WitheringEngine - Regression R08: Initially satisfied moisture target is recognized without upward jump", () => {
+  const engine = new WitheringEngine();
+  // Set initial moisture below target (50% initial with default 65% target)
+  engine.setInitialMoisture(50.0);
+  assert.equal(engine.initialMoisture, 50.0);
+  assert.equal(engine.currentMoisture, 50.0);
+  assert.equal(engine.targetReached, true, "Target must be immediately recognized as reached");
+
+  // Stepping time must not increase moisture or consume drying fan energy
+  engine.stepTime(0.5);
+  assert.equal(engine.currentMoisture, 50.0, "Moisture must not jump upward to equilibrium");
+  assert.equal(engine.targetReached, true);
+  assert.equal(engine.cumulativeFanKwh, 0.0, "No fan energy consumed when target already reached");
+});

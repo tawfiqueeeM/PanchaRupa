@@ -53,20 +53,25 @@ export class WitheringEngine {
   }
 
   setInitialMoisture(val) {
-    const m = Math.max(50, Math.min(90, Number(val) || 78.0));
+    const m = Math.max(40, Math.min(90, Number(val) || 78.0));
     this.initialMoisture = m;
     this.currentMoisture = m;
     this.sensorReading = this.sensorFault ? -99.9 : m;
     this.elapsedHours = 0;
     this.cumulativeFanKwh = 0;
-    this.targetReached = false;
+    this.targetReached = (this.currentMoisture <= this.targetMoisture);
     this.trajectory = [];
     this.recordStep();
-    this.logEvent(`Initial leaf moisture set to ${m.toFixed(1)}%`, "INFO");
+    if (this.targetReached) {
+      this.logEvent(`Initial leaf moisture ${m.toFixed(1)}% satisfies target (${this.targetMoisture.toFixed(1)}%). Target already reached.`, "INFO");
+    } else {
+      this.logEvent(`Initial leaf moisture set to ${m.toFixed(1)}%`, "INFO");
+    }
   }
 
   setTargetMoisture(val) {
-    this.targetMoisture = Math.max(50, Math.min(75, Number(val) || 65.0));
+    this.targetMoisture = Math.max(40, Math.min(75, Number(val) || 65.0));
+    this.targetReached = (this.currentMoisture <= this.targetMoisture);
     this.logEvent(`Target withered moisture set to ${this.targetMoisture.toFixed(1)}%`, "INFO");
   }
 
@@ -94,7 +99,8 @@ export class WitheringEngine {
   }
 
   stepTime(dtHours = 0.5) {
-    if (this.targetReached && this.currentMoisture <= this.targetMoisture) {
+    if (this.currentMoisture <= this.targetMoisture) {
+      this.targetReached = true;
       return;
     }
 
@@ -103,9 +109,11 @@ export class WitheringEngine {
     const fanFraction = this.fanSpeedPercent / 100.0;
     const dryingRateK = amb.baseRate * (0.3 + 0.7 * fanFraction) * (amb.tempC / 25.0);
 
-    // Exponential thin-layer decay
-    const deltaM = (this.currentMoisture - equilibriumMoisture) * (1 - Math.exp(-dryingRateK * dtHours));
-    this.currentMoisture = Math.max(equilibriumMoisture, this.currentMoisture - deltaM);
+    // Exponential thin-layer decay only if above equilibrium; airflow does not rehydrate leaf
+    if (this.currentMoisture > equilibriumMoisture) {
+      const deltaM = (this.currentMoisture - equilibriumMoisture) * (1 - Math.exp(-dryingRateK * dtHours));
+      this.currentMoisture = Math.max(equilibriumMoisture, this.currentMoisture - Math.max(0, deltaM));
+    }
 
     // Energy calculation (P ~ v^3)
     const fanPowerKw = this.fanRatedPowerKw * Math.pow(fanFraction, 3);
