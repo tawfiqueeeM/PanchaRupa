@@ -125,6 +125,9 @@ function render() {
     elRoutingFaultAlert.classList.remove("active");
   }
 
+  // Routing button state
+  elBtnRouteMaterial.disabled = (lot.routingState === "ROUTED" || lot.unroutedMassKg <= 0 || lot.disposition !== "RELEASED" || snapshot.faultLATCH);
+
   // Bins rendering
   elBinsContainer.innerHTML = bins.map(bin => {
     const isSelected = bin.binId === lot.targetBinId;

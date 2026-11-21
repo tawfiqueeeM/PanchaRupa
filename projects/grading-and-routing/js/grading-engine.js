@@ -87,6 +87,24 @@ export class GradingEngine {
   inspectLot(finishedLotId) {
     const found = this.lots.find(l => l.finishedLotId === finishedLotId);
     if (!found) return false;
+
+    // Check if lot was previously routed in routingHistory to prevent reissue
+    const pastRecord = this.routingHistory.find(r => r.finishedLotId === finishedLotId);
+    if (pastRecord) {
+      this.activeLot = {
+        ...found,
+        grade: pastRecord.grade,
+        disposition: pastRecord.disposition,
+        decisionReason: "PREVIOUSLY_ROUTED",
+        targetBinId: pastRecord.destinationBin,
+        routingState: "ROUTED",
+        unroutedMassKg: 0.0,
+        routedMassKg: pastRecord.routedKg
+      };
+      this.logEvent(`Inspecting Lot ${found.finishedLotId}: Previously routed to ${pastRecord.destinationBin} (${pastRecord.routedKg} kg).`, "INFO");
+      return true;
+    }
+
     this.activeLot = {
       ...found,
       grade: found.recommendedGrade,
@@ -112,6 +130,11 @@ export class GradingEngine {
   setDisposition(disposition, reason = null) {
     this.activeLot.disposition = disposition;
     this.activeLot.decisionReason = reason || "QUALITY_SIGN_OFF";
+
+    if (this.activeLot.routingState === "ROUTED") {
+      this.logEvent(`DISPOSITION UPDATE: Lot ${this.activeLot.finishedLotId} disposition updated to ${disposition}. Routing remains ROUTED.`, "INFO");
+      return;
+    }
 
     if (disposition === "ON_HOLD") {
       this.activeLot.routingState = "HOLD_LOCKED";
@@ -150,6 +173,12 @@ export class GradingEngine {
   }
 
   routeMaterial() {
+    // Check 0: Terminal state / idempotency guard
+    if (this.activeLot.routingState === "ROUTED" || this.activeLot.unroutedMassKg <= 0) {
+      this.logEvent(`ROUTING IGNORED: Lot ${this.activeLot.finishedLotId} has already been fully routed (${this.activeLot.routedMassKg} kg). Duplicate route blocked.`, "WARN");
+      return { success: false, reason: "ALREADY_ROUTED" };
+    }
+
     // Check 1: Disposition gate
     if (this.activeLot.disposition !== "RELEASED") {
       this.activeLot.routingState = "HOLD_LOCKED";

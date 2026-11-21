@@ -70,3 +70,41 @@ test("GradingEngine - Quantity conservation across genealogy", () => {
   assert.equal(snapshot.routingHistory[0].finishedLotId, "F-G01");
   assert.equal(snapshot.routingHistory[0].vendorLotId, "L-G01");
 });
+
+test("Regression R07: Repeated Route maintains idempotency and does not zero routed mass", () => {
+  const engine = new GradingEngine();
+  engine.setDisposition("RELEASED", "Quality approved");
+  const firstRoute = engine.routeMaterial();
+  assert.equal(firstRoute.success, true);
+  assert.equal(engine.activeLot.routedMassKg, 30.0);
+  assert.equal(engine.activeLot.unroutedMassKg, 0.0);
+  assert.equal(engine.routingHistory.length, 1);
+
+  // Attempt repeated route on already routed lot
+  const repeatRoute = engine.routeMaterial();
+  assert.equal(repeatRoute.success, false, "Repeated route must be rejected");
+  assert.equal(repeatRoute.reason, "ALREADY_ROUTED");
+  assert.equal(engine.activeLot.routedMassKg, 30.0, "Routed mass must not be zeroed out");
+  assert.equal(engine.activeLot.unroutedMassKg, 0.0);
+  assert.equal(engine.routingHistory.length, 1, "Routing history must not accumulate zero-mass duplicate records");
+  assert.equal(engine.routingHistory[0].routedKg, 30.0);
+});
+
+test("Regression R07: Inspecting previously routed lot preserves terminal routed state", () => {
+  const engine = new GradingEngine();
+  engine.setDisposition("RELEASED", "Quality approved");
+  engine.routeMaterial();
+  assert.equal(engine.routingHistory.length, 1);
+
+  // Inspect the same lot again
+  const reloaded = engine.inspectLot("F-G01");
+  assert.equal(reloaded, true);
+  assert.equal(engine.activeLot.routingState, "ROUTED");
+  assert.equal(engine.activeLot.unroutedMassKg, 0.0);
+  assert.equal(engine.activeLot.routedMassKg, 30.0);
+
+  // Routing attempt on re-inspected routed lot is blocked
+  const blockedRoute = engine.routeMaterial();
+  assert.equal(blockedRoute.success, false);
+  assert.equal(blockedRoute.reason, "ALREADY_ROUTED");
+});
