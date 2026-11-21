@@ -8,7 +8,7 @@
 - **Assigned Directories:**
   - Logic & Specification: `projects/green-tea-sequence/`
   - Interactive Demo: `demos/green-tea-sequence/`
-- **Tested Implementation Revision:** `bc9db72` (plus corrective commit on branch)
+- **Tested Implementation Revision:** `5b984d95d6219a6ccdf9c70d1b0cd0e643a1882b`
 - **Shared Foundation Fix:** `bc9db72` (cherry-picked from `7f18e1c`)
 
 ---
