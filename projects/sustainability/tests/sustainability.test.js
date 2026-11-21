@@ -52,7 +52,10 @@ test('SustainabilityEngine - Dryer outage queue deterioration causes stewing, hi
 
   const analysis = SustainabilityEngine.analyze(scenario);
 
-  assert.equal(analysis.massBalance.nonRecoverableDiscardKg, 12.5, '12.5 kg made tea equivalent scrapped');
+  assert.equal(analysis.massBalance.nonRecoverableDiscardKg, 50.0, '50.0 kg wet spoiled leaf scrapped');
+  assert.equal(analysis.massBalance.dryDiscardEquivalentKg, 12.5, '12.5 kg made tea dry equivalent');
+  assert.equal(analysis.massBalance.moistureEvaporatedKg, 112.5, '112.5 kg moisture evaporated');
+  assert.equal(analysis.massBalance.unreconciledKg, 0.0, 'Zero unreconciled mass');
   assert.equal(analysis.massBalance.primeTeaKg, 0.0, 'Zero prime tea due to batch-wide stewing');
   assert.equal(analysis.massBalance.downgradedCommercialTeaKg, 33.5, 'Remaining tea downgraded');
   assert.equal(analysis.impact.totalWastedEnergyKwh, 42.0, 'High energy waste from withering + rolling + reheat');
@@ -84,4 +87,32 @@ test('SustainabilityEngine - Paired replay highlights energy and financial diver
   const csv = SustainabilityEngine.exportToCSV(SustainabilityEngine.analyze(queueScenario));
   assert.ok(csv.includes('DRYER_OUTAGE_QUEUE_SPOILAGE'));
   assert.ok(csv.includes('Maintenance'));
+});
+
+test('SustainabilityEngine R18 - Strict wet-mass conservation holds across all supported scenario fixtures', () => {
+  for (const scenario of fixtures) {
+    const analysis = SustainabilityEngine.analyze(scenario);
+    const m = analysis.massBalance;
+    const outputMass = m.moistureEvaporatedKg + m.primeTeaKg + m.downgradedCommercialTeaKg + m.recoverableTeaKg + m.nonRecoverableDiscardKg;
+    assert.equal(
+      outputMass,
+      m.inputLeafKg,
+      `Mass balance must strictly conserve input mass (${m.inputLeafKg} kg) for scenario ${scenario.id}, got ${outputMass} kg`
+    );
+    assert.equal(m.unreconciledKg, 0.0, `Unreconciled mass must be exactly 0.0 for ${scenario.id}`);
+  }
+});
+
+test('SustainabilityEngine R18 - Rejects unsupported or arbitrary input batch masses', () => {
+  const nominal = fixtures.find(s => !s.incident);
+  assert.throws(
+    () => SustainabilityEngine.calculateMassBalance({ ...nominal, inputLeafKg: 100.0 }),
+    /Unsupported inputLeafKg/,
+    'Engine must reject arbitrary/uncalibrated input masses instead of advertising general extrapolation'
+  );
+  assert.throws(
+    () => SustainabilityEngine.calculateMassBalance({ ...nominal, inputLeafKg: -50.0 }),
+    /Invalid inputLeafKg/,
+    'Engine must reject negative or non-finite batch masses'
+  );
 });

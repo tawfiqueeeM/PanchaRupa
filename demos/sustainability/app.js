@@ -115,11 +115,15 @@ function renderMassSegments(mass) {
     </div>
     <div class="mass-segment discard">
       <span><strong>Non-Recoverable Discard (Scrap Spoilage):</strong></span>
-      <span><strong>${mass.nonRecoverableDiscardKg.toFixed(1)} kg</strong> (${((mass.nonRecoverableDiscardKg / mass.inputLeafKg) * 100).toFixed(1)}%)</span>
+      <span><strong>${mass.nonRecoverableDiscardKg.toFixed(1)} kg</strong> (${((mass.nonRecoverableDiscardKg / mass.inputLeafKg) * 100).toFixed(1)}% wet basis${mass.dryDiscardEquivalentKg && mass.dryDiscardEquivalentKg !== mass.nonRecoverableDiscardKg ? `, dry equiv: ${mass.dryDiscardEquivalentKg.toFixed(1)} kg` : ''})</span>
     </div>
     <div class="mass-segment packaging">
       <span><strong>Packaging Waste (Cartons & Defective PET):</strong></span>
       <span><strong>${mass.packagingWasteKg.toFixed(1)} kg</strong></span>
+    </div>
+    <div class="mass-segment" style="border-top:1px dashed var(--color-border); padding-top:6px; margin-top:6px; display:flex; justify-content:space-between; font-weight:700;">
+      <span>Mass Balance Conservation:</span>
+      <span style="color:var(--color-status-success);">Accounted ${mass.outputMassKg.toFixed(1)} kg / ${mass.inputLeafKg.toFixed(1)} kg (Unreconciled: ${mass.unreconciledKg.toFixed(1)} kg)</span>
     </div>
   `;
 }

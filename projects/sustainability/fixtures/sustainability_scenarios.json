@@ -94,11 +94,12 @@
         "telemetryCorroborated": true
       },
       "expectedOutputs": {
-        "moistureEvaporatedKg": 115.5,
+        "moistureEvaporatedKg": 112.5,
         "primeTeaKg": 0.0,
         "downgradedCommercialTeaKg": 33.5,
         "recoverableTeaKg": 4.0,
-        "nonRecoverableDiscardKg": 12.5,
+        "nonRecoverableDiscardKg": 50.0,
+        "dryDiscardEquivalentKg": 12.5,
         "packagingWasteKg": 0.4,
         "totalWastedEnergyKwh": 42.0,
         "financialLossBdt": 9680.0,
