@@ -74,3 +74,18 @@ test("BmsEngine - Specific energy consumption KPI calculation", () => {
     Math.round((snapshot.electricalMetering.cumulativeEnergyKwh / snapshot.productionEnergy.releasedTeaKg) * 100) / 100
   );
 });
+
+test("Regression: Zero production returns null SEC ratio instead of stale value", () => {
+  const engine = new BmsEngine();
+  engine.loadScenario({
+    scenarioId: "ZERO-PRODUCTION",
+    description: "Idle factory zero production",
+    meterPollingActive: true,
+    shiftReleasedTeaKg: 0
+  });
+  engine.stepTime(5.0);
+
+  const snapshot = engine.getSnapshot();
+  assert.equal(snapshot.productionEnergy.releasedTeaKg, 0);
+  assert.equal(snapshot.productionEnergy.kwhPerReleasedKg, null, "SEC ratio must be null when production is 0 kg");
+});

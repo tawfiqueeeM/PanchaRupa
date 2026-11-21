@@ -131,6 +131,8 @@ export class BmsEngine {
     // Specific Energy Consumption
     if (this.releasedTeaKg > 0) {
       this.kwhPerReleasedKg = Math.round((this.cumulativeEnergyKwh / this.releasedTeaKg) * 100) / 100;
+    } else {
+      this.kwhPerReleasedKg = null;
     }
 
     this.checkAlarms();
@@ -151,7 +153,14 @@ export class BmsEngine {
     if (scenario.storageHumidityRh !== undefined) this.setStorageHumidity(scenario.storageHumidityRh);
     if (scenario.storageTempC !== undefined) this.storageTempC = scenario.storageTempC;
     if (scenario.meterPollingActive !== undefined) this.setMeterPolling(scenario.meterPollingActive);
-    if (scenario.shiftReleasedTeaKg !== undefined) this.releasedTeaKg = scenario.shiftReleasedTeaKg;
+    if (scenario.shiftReleasedTeaKg !== undefined) {
+      this.releasedTeaKg = scenario.shiftReleasedTeaKg;
+      if (this.releasedTeaKg <= 0) {
+        this.kwhPerReleasedKg = null;
+      } else {
+        this.kwhPerReleasedKg = Math.round((this.cumulativeEnergyKwh / this.releasedTeaKg) * 100) / 100;
+      }
+    }
 
     if (!scenario.meterPollingActive) {
       this.staleMeterElapsedSec = 20; // force immediate timeout

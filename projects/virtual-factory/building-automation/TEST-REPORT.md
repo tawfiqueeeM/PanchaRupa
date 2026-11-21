@@ -4,7 +4,7 @@
 - **Test Suite:** `projects/virtual-factory/building-automation/tests/bms.test.js`
 - **Execution Command:** `node --test projects/virtual-factory/building-automation/tests/bms.test.js`
 - **Environment:** Node.js native test runner (zero external dependencies)
-- **Status:** PASS (4/4 tests passed, 0 failures, 0 regressions)
+- **Status:** PASS (5/5 tests passed, 0 failures, 0 regressions)
 
 ## Detailed Test Cases
 
@@ -37,3 +37,16 @@
   - Total cumulative energy 58.00 kWh with 40.0 kg released finished tea -> calculated specific energy $1.45\text{ kWh/kg}$.
   - Advancing time integrates additional power and updates specific energy deterministically.
 - **Result:** PASS
+
+### 5. Regression: Zero Production Denominator Protection
+- **Objective:** Verify that when zero production is released, specific energy consumption returns `null` rather than a stale or division-by-zero ratio.
+- **Verification:**
+  - Injected `ZERO-PRODUCTION` scenario with `shiftReleasedTeaKg: 0`.
+  - Stepped simulation time 5 min.
+  - Asserted `productionEnergy.releasedTeaKg === 0` and `productionEnergy.kwhPerReleasedKg === null`.
+- **Result:** PASS
+
+## Browser & Interface Verification
+- **Direct Route Launch:** `http://localhost:8080/demos/building-automation/` loads cleanly without errors.
+- **Responsive Viewport Verification (R22):** Verified via Edge CDP: Desktop (1440px) `scrollWidth: 1401px`, Mobile (390px) `scrollWidth: 390px` with zero horizontal overflow.
+- **Console Errors:** 0 unhandled exceptions.

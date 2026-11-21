@@ -114,11 +114,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 4. Energy KPI
-    specificEnergyVal.textContent = snap.productionEnergy.kwhPerReleasedKg.toFixed(2);
+    const sec = snap.productionEnergy.kwhPerReleasedKg;
+    specificEnergyVal.textContent = sec !== null && Number.isFinite(sec) ? sec.toFixed(2) : "—";
     kpiEnergyReadout.textContent = `${snap.electricalMetering.cumulativeEnergyKwh.toFixed(2)} kWh`;
     kpiMassReadout.textContent = `${snap.productionEnergy.releasedTeaKg.toFixed(1)} kg`;
 
-    if (snap.productionEnergy.kwhPerReleasedKg > 2.0) {
+    if (sec === null || !Number.isFinite(sec)) {
+      kpiStatusBadge.className = "status-indicator warn";
+      kpiStatusBadge.textContent = "N/A (NO PROD)";
+    } else if (sec > 2.0) {
       kpiStatusBadge.className = "status-indicator warn";
       kpiStatusBadge.textContent = "ELEVATED";
     } else {
