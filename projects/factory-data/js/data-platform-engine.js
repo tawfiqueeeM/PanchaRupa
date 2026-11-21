@@ -79,9 +79,17 @@ export class DataPlatformEngine {
       });
     }
 
-    // 2. Check Referential Integrity (Foreign Key Orphans)
+    // 2. Check Referential Integrity (Foreign Key Constraints)
     (data.batches || []).forEach((b, idx) => {
-      if (b.deliveryId && !pkSets.deliveries.has(b.deliveryId)) {
+      if (!b.deliveryId) {
+        errors.push({
+          type: "MISSING_FOREIGN_KEY",
+          table: "batches",
+          field: "deliveryId",
+          index: idx,
+          message: `Batch '${b.batchId}' lacks required foreign key 'deliveryId'`
+        });
+      } else if (!pkSets.deliveries.has(b.deliveryId)) {
         errors.push({
           type: "ORPHAN_FOREIGN_KEY",
           table: "batches",
@@ -95,7 +103,15 @@ export class DataPlatformEngine {
     });
 
     (data.inspections || []).forEach((i, idx) => {
-      if (i.batchId && !pkSets.batches.has(i.batchId)) {
+      if (!i.batchId) {
+        errors.push({
+          type: "MISSING_FOREIGN_KEY",
+          table: "inspections",
+          field: "batchId",
+          index: idx,
+          message: `Inspection '${i.inspectionId}' lacks required foreign key 'batchId'`
+        });
+      } else if (!pkSets.batches.has(i.batchId)) {
         errors.push({
           type: "ORPHAN_FOREIGN_KEY",
           table: "inspections",
@@ -109,7 +125,15 @@ export class DataPlatformEngine {
     });
 
     (data.lots || []).forEach((l, idx) => {
-      if (l.batchId && !pkSets.batches.has(l.batchId)) {
+      if (!l.batchId) {
+        errors.push({
+          type: "MISSING_FOREIGN_KEY",
+          table: "lots",
+          field: "batchId",
+          index: idx,
+          message: `Lot '${l.lotId}' lacks required foreign key 'batchId'`
+        });
+      } else if (!pkSets.batches.has(l.batchId)) {
         errors.push({
           type: "ORPHAN_FOREIGN_KEY",
           table: "lots",
@@ -123,7 +147,15 @@ export class DataPlatformEngine {
     });
 
     (data.packaging || []).forEach((p, idx) => {
-      if (p.lotId && !pkSets.lots.has(p.lotId)) {
+      if (!p.lotId) {
+        errors.push({
+          type: "MISSING_FOREIGN_KEY",
+          table: "packaging",
+          field: "lotId",
+          index: idx,
+          message: `Packaging run '${p.packId}' lacks required foreign key 'lotId'`
+        });
+      } else if (!pkSets.lots.has(p.lotId)) {
         errors.push({
           type: "ORPHAN_FOREIGN_KEY",
           table: "packaging",
@@ -137,7 +169,15 @@ export class DataPlatformEngine {
     });
 
     (data.orders || []).forEach((o, idx) => {
-      if (o.packId && !pkSets.packaging.has(o.packId)) {
+      if (!o.packId) {
+        errors.push({
+          type: "MISSING_FOREIGN_KEY",
+          table: "orders",
+          field: "packId",
+          index: idx,
+          message: `Order '${o.orderId}' lacks required foreign key 'packId'`
+        });
+      } else if (!pkSets.packaging.has(o.packId)) {
         errors.push({
           type: "ORPHAN_FOREIGN_KEY",
           table: "orders",
@@ -152,32 +192,79 @@ export class DataPlatformEngine {
 
     // 3. Check Units & Physical Value Bounds
     (data.deliveries || []).forEach((d, idx) => {
-      if (d.unit && d.unit.toLowerCase() !== "kg") {
+      if (!d.unit || d.unit.toLowerCase() !== "kg") {
         errors.push({
           type: "INVALID_UNIT",
           table: "deliveries",
           field: "unit",
-          value: d.unit,
+          value: d.unit !== undefined ? d.unit : "missing",
           expected: "kg",
           index: idx,
-          message: `Invalid unit '${d.unit}' on delivery '${d.deliveryId}': expected 'kg'`
+          message: `Invalid or missing unit '${d.unit}' on delivery '${d.deliveryId}': expected 'kg'`
         });
       }
 
-      if (d.grossWeightKg <= 0 || d.netWeightKg <= 0) {
+      if (typeof d.grossWeightKg !== "number" || !Number.isFinite(d.grossWeightKg) || d.grossWeightKg <= 0 ||
+          typeof d.netWeightKg !== "number" || !Number.isFinite(d.netWeightKg) || d.netWeightKg <= 0) {
         errors.push({
           type: "NEGATIVE_OR_ZERO_VALUE",
           table: "deliveries",
           field: "weight",
           value: d.grossWeightKg,
           index: idx,
-          message: `Negative or zero weight '${d.grossWeightKg}' detected on delivery '${d.deliveryId}'`
+          message: `Negative, zero, or missing weight '${d.grossWeightKg}' detected on delivery '${d.deliveryId}'`
         });
       }
     });
 
+    (data.lots || []).forEach((l, idx) => {
+      if (typeof l.totalKg !== "number" || !Number.isFinite(l.totalKg) || l.totalKg < 0) {
+        errors.push({
+          type: "NEGATIVE_OR_ZERO_VALUE",
+          table: "lots",
+          field: "totalKg",
+          value: l.totalKg,
+          index: idx,
+          message: `Negative, missing, or invalid stock '${l.totalKg}' on lot '${l.lotId}'`
+        });
+      }
+    });
+
+    const lotPackSums = {};
+    (data.packaging || []).forEach((p, idx) => {
+      if (typeof p.packedKg !== "number" || !Number.isFinite(p.packedKg) || p.packedKg <= 0) {
+        errors.push({
+          type: "NEGATIVE_OR_ZERO_VALUE",
+          table: "packaging",
+          field: "packedKg",
+          value: p.packedKg,
+          index: idx,
+          message: `Negative, missing, or zero packedKg '${p.packedKg}' on packaging run '${p.packId}'`
+        });
+      } else if (p.lotId) {
+        lotPackSums[p.lotId] = (lotPackSums[p.lotId] || 0) + p.packedKg;
+      }
+    });
+
+    // Check pack allocations against lot released quantity
+    const lotsMap = new Map((data.lots || []).map(l => [l.lotId, l]));
+    for (const [lotId, totalPacked] of Object.entries(lotPackSums)) {
+      const lot = lotsMap.get(lotId);
+      if (lot && typeof lot.totalKg === "number" && totalPacked > lot.totalKg) {
+        errors.push({
+          type: "ALLOCATION_EXCEEDS_LOT_STOCK",
+          table: "packaging",
+          field: "packedKg",
+          value: totalPacked,
+          lotStock: lot.totalKg,
+          lotId,
+          message: `Packaging allocation (${totalPacked} kg) exceeds available lot stock (${lot.totalKg} kg) for lot '${lotId}'`
+        });
+      }
+    }
+
     (data.inspections || []).forEach((i, idx) => {
-      if (i.moisturePct < 0 || i.moisturePct > 20.0) {
+      if (typeof i.moisturePct !== "number" || !Number.isFinite(i.moisturePct) || i.moisturePct < 0 || i.moisturePct > 20.0) {
         errors.push({
           type: "OUT_OF_BOUNDS_VALUE",
           table: "inspections",

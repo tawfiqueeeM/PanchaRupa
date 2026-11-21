@@ -72,3 +72,48 @@ test("DataPlatformEngine - Complete lot genealogy trace traversal", () => {
   assert.ok(trace.orders.length > 0, "Must include sales orders");
   assert.equal(trace.orders[0].orderId, "ORD-BULK-01");
 });
+
+test("DataPlatformEngine R20 - Removing batch deliveryId triggers validation failure (missing FK)", () => {
+  const missingLink = structuredClone(cleanData);
+  delete missingLink.batches[0].deliveryId;
+
+  const engine = new DataPlatformEngine();
+  const report = engine.loadDataset(missingLink);
+
+  assert.equal(report.isValid, false, "Dataset with missing FK link must be invalid");
+  const missingFkErr = report.errors.find(e => e.type === "MISSING_FOREIGN_KEY" && e.table === "batches" && e.field === "deliveryId");
+  assert.ok(missingFkErr, "Must detect MISSING_FOREIGN_KEY for batches.deliveryId");
+});
+
+test("DataPlatformEngine R20 - Missing delivery weight/unit and negative lot inventory fail validation", () => {
+  const badWeights = structuredClone(cleanData);
+  delete badWeights.deliveries[0].grossWeightKg;
+  delete badWeights.deliveries[0].netWeightKg;
+  delete badWeights.deliveries[0].unit;
+  badWeights.lots[0].totalKg = -30;
+
+  const engine = new DataPlatformEngine();
+  const report = engine.loadDataset(badWeights);
+
+  assert.equal(report.isValid, false, "Dataset with missing weights and negative stock must be invalid");
+  const unitErr = report.errors.find(e => e.type === "INVALID_UNIT" && e.table === "deliveries");
+  assert.ok(unitErr, "Must detect missing/invalid unit on delivery");
+  const weightErr = report.errors.find(e => e.type === "NEGATIVE_OR_ZERO_VALUE" && e.table === "deliveries");
+  assert.ok(weightErr, "Must detect missing/invalid weight on delivery");
+  const lotErr = report.errors.find(e => e.type === "NEGATIVE_OR_ZERO_VALUE" && e.table === "lots");
+  assert.ok(lotErr, "Must detect negative stock on lots");
+});
+
+test("DataPlatformEngine R20 - Packaging allocation exceeding available lot stock fails validation (overdraw)", () => {
+  const overdraw = structuredClone(cleanData);
+  overdraw.packaging[0].packedKg = 999;
+
+  const engine = new DataPlatformEngine();
+  const report = engine.loadDataset(overdraw);
+
+  assert.equal(report.isValid, false, "Dataset with 999kg packaging against 30kg lot must be invalid");
+  const allocErr = report.errors.find(e => e.type === "ALLOCATION_EXCEEDS_LOT_STOCK");
+  assert.ok(allocErr, "Must detect ALLOCATION_EXCEEDS_LOT_STOCK");
+  assert.equal(allocErr.lotStock, 30.0);
+  assert.ok(allocErr.value > 30.0);
+});
