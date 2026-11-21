@@ -4,7 +4,7 @@
 - **Test Suite:** `projects/maintenance-planning/tests/maintenance.test.js`
 - **Execution Command:** `node --test projects/maintenance-planning/tests/maintenance.test.js`
 - **Environment:** Node.js native test runner (zero external dependencies)
-- **Status:** PASS (4/4 tests passed, 0 failures, 0 regressions)
+- **Status:** PASS (5/5 tests passed, 0 failures, 0 regressions)
 
 ## Detailed Test Cases
 
@@ -34,9 +34,19 @@
 - **Result:** PASS
 
 ### 4. Work Order Completion & Overhaul Reset
-- **Objective:** Verify that completing work order restores asset to `OPERATIONAL` and resets cumulative runtime hours.
+- **Objective:** Verify that completing work order restores asset to `OPERATIONAL` and resets cumulative runtime hours when no other open work orders remain.
 - **Verification:**
   - Work order marked `COMPLETED`.
   - Target asset status restored to `OPERATIONAL`.
   - Runtime hours reset to 0.0.
+- **Result:** PASS
+
+### 5. Multi-Order Asset Status Recomputation (Regression R16)
+- **Objective:** Verify that completing one work order on an asset that has another open corrective order does NOT prematurely restore `OPERATIONAL` status or reset runtime hours.
+- **Verification:**
+  - Injected second corrective work order on `AST-DRY-01`.
+  - Completed first work order (`WO-EM-2026-088`).
+  - Verified `dryer.status` remains `TRIPPED_OUTAGE` and runtime hours are preserved.
+  - Completed second work order (`WO-EM-SECOND-01`).
+  - Verified `dryer.status` transitions to `OPERATIONAL` and runtime hours reset to 0.0 once all active orders are closed.
 - **Result:** PASS

@@ -75,3 +75,41 @@ test("MaintenanceEngine - Completing work order restores asset to OPERATIONAL an
   assert.equal(dryer.status, "OPERATIONAL", "Asset must return to OPERATIONAL");
   assert.equal(dryer.runtimeHours, 0.0, "Runtime hours must be reset to 0 after overhaul");
 });
+
+test("MaintenanceEngine R16 - Completing work order preserves TRIPPED_OUTAGE if another corrective order remains open", () => {
+  const engine = new MaintenanceEngine();
+  const emScenario = fixtures.scenarios.find(s => s.scenarioId === "UNPLANNED-DRYER-BREAKDOWN");
+  engine.loadScenario(emScenario);
+
+  const dryer = engine.assets.find(a => a.assetId === "AST-DRY-01");
+  dryer.runtimeHours = 450.0;
+
+  // Add a second corrective order on the same asset AST-DRY-01
+  const secondWO = engine.createWorkOrder({
+    woId: "WO-EM-SECOND-01",
+    type: "CORRECTIVE",
+    assetId: "AST-DRY-01",
+    title: "SCR secondary thermocouple replacement",
+    priority: "HIGH",
+    startMin: 180,
+    durationMinutes: 45
+  });
+  assert.equal(secondWO.success, true);
+  assert.equal(dryer.status, "TRIPPED_OUTAGE");
+
+  // Complete the first work order (WO-EM-2026-088)
+  const completeFirst = engine.completeWorkOrder("WO-EM-2026-088");
+  assert.equal(completeFirst.success, true);
+
+  // Status must remain TRIPPED_OUTAGE because WO-EM-SECOND-01 is still OPEN
+  assert.equal(dryer.status, "TRIPPED_OUTAGE", "Dryer status must remain TRIPPED_OUTAGE while second corrective order is open");
+  assert.equal(dryer.runtimeHours, 450.0, "Runtime hours must not be reset while asset is still under repair");
+
+  // Complete the second work order
+  const completeSecond = engine.completeWorkOrder("WO-EM-SECOND-01");
+  assert.equal(completeSecond.success, true);
+
+  // Now that all open orders are completed, status must transition to OPERATIONAL
+  assert.equal(dryer.status, "OPERATIONAL", "Dryer status must transition to OPERATIONAL once all open orders are closed");
+  assert.equal(dryer.runtimeHours, 0.0, "Runtime hours reset to 0.0 upon full restoration");
+});

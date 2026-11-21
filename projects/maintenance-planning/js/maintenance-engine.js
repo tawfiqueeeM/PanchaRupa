@@ -54,7 +54,9 @@ export class MaintenanceEngine {
         dispatchDelayMin = durationMinutes;
       }
     } else {
-      asset.status = "MAINTENANCE_PLANNED";
+      if (asset.status !== "TRIPPED_OUTAGE") {
+        asset.status = "MAINTENANCE_PLANNED";
+      }
       // Preventative during pre-shift window creates 0 delay
       if (startMin <= 0) {
         dispatchDelayMin = 0;
@@ -84,6 +86,20 @@ export class MaintenanceEngine {
     return { success: true, workOrder: newWO };
   }
 
+  recomputeAssetStatus(assetId) {
+    const asset = this.assets.find(a => a.assetId === assetId);
+    if (!asset) return null;
+    const openOrders = this.workOrders.filter(w => w.assetId === assetId && w.status === "OPEN");
+    if (openOrders.length === 0) {
+      asset.status = "OPERATIONAL";
+    } else if (openOrders.some(w => w.type === "CORRECTIVE")) {
+      asset.status = "TRIPPED_OUTAGE";
+    } else {
+      asset.status = "MAINTENANCE_PLANNED";
+    }
+    return asset.status;
+  }
+
   completeWorkOrder(woId) {
     const wo = this.workOrders.find(w => w.woId === woId);
     if (!wo) return { success: false, reason: "WO_NOT_FOUND" };
@@ -91,11 +107,13 @@ export class MaintenanceEngine {
     wo.status = "COMPLETED";
     const asset = this.assets.find(a => a.assetId === wo.assetId);
     if (asset) {
-      asset.status = "OPERATIONAL";
-      asset.runtimeHours = 0.0; // Reset after overhaul
+      this.recomputeAssetStatus(asset.assetId);
+      if (asset.status === "OPERATIONAL") {
+        asset.runtimeHours = 0.0; // Reset after overhaul/repairs completed
+      }
     }
 
-    this.log(`Work order ${woId} marked COMPLETED. Asset ${asset ? asset.name : ''} restored to OPERATIONAL`, "ACTION");
+    this.log(`Work order ${woId} marked COMPLETED. Asset ${asset ? asset.name : ''} status is now ${asset ? asset.status : 'UNKNOWN'}`, "ACTION");
     return { success: true, workOrder: wo };
   }
 
