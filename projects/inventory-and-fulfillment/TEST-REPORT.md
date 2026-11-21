@@ -1,10 +1,11 @@
 # Test Report — Inventory Reservation & Fulfillment (Dept 7)
 
 ## Test Execution Summary
+- **Date:** 2026-11-21
 - **Test Suite:** `projects/inventory-and-fulfillment/tests/inventory.test.js`
 - **Execution Command:** `node --test projects/inventory-and-fulfillment/tests/inventory.test.js`
 - **Environment:** Node.js native test runner (zero external dependencies)
-- **Status:** PASS (4/4 tests passed, 0 failures, 0 regressions)
+- **Status:** PASS (5/5 tests passed, 0 failures, 0 regressions)
 
 ## Detailed Test Cases
 
@@ -30,9 +31,24 @@
   - Generates `HELD_LOT_VIOLATION` exception.
 - **Result:** PASS
 
-### 4. Full Lifecycle: RESERVED -> DISPATCHED -> SETTLED
-- **Objective:** Verify complete traceable lifecycle transitions and delayed settlement handling.
+### 4. Full Lifecycle & Delayed Settlement Receivables (R11)
+- **Objective:** Verify complete traceable lifecycle transitions: delayed settlement keeps order open as an overdue receivable (`DISPATCHED` / `OVERDUE_DELAYED`), and subsequent collection transitions order to `SETTLED` / closed.
 - **Verification:**
   - Order transitions from `RESERVED` to `DISPATCHED` (updating lot dispatched balance).
-  - Order transitions from `DISPATCHED` to `SETTLED` with delayed flag setting `OVERDUE_DELAYED`.
+  - Delayed settlement leaves order in `DISPATCHED` state with `settlementStatus: OVERDUE_DELAYED` and `isOverdue: true`.
+  - Subsequent settlement call successfully collects payment and closes order (`SETTLED`).
 - **Result:** PASS
+
+### 5. Quantity Validation Boundary Guard (R10)
+- **Objective:** Verify that non-positive, NaN, or non-numeric allocation quantities are rejected without mutating lot balances.
+- **Verification:**
+  - Tested negative (-15 kg), NaN, and zero allocation attempts.
+  - All calls returned `success = false` with `INVALID_QUANTITY` exception.
+  - Verified `lot.reservedKg` remained unchanged across all invalid requests.
+- **Result:** PASS
+
+## Browser & Interface Verification
+- **Direct Route Launch:** `http://localhost:8080/demos/inventory-and-fulfillment/` loads cleanly without errors.
+- **Header Badge & Identity (R24):** Header badge reflects `Demo 11`, Dept 7 Business Operations.
+- **Responsive Viewport Verification (R22):** Verified via Edge CDP: Desktop (1440px) `scrollWidth: 1401px`, Mobile (390px) `scrollWidth: 390px` with zero horizontal overflow.
+- **Console Errors:** 0 unhandled exceptions.

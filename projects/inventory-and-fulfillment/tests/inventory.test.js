@@ -72,9 +72,41 @@ test("InventoryEngine - Full lifecycle: RESERVED -> DISPATCHED -> SETTLED", () =
   const lot = engine.lots.find(l => l.lotId === order.lotId);
   assert.ok(lot.dispatchedKg >= 26.0, "Dispatched kg must be tracked on lot");
 
-  // 3. Settle with delayed flag
+  // 3. Settle with delayed flag (must keep order open as overdue receivable)
   const settleRes = engine.settleOrder(targetOrderId, true);
-  assert.equal(settleRes.success, true, "Settlement must succeed");
-  assert.equal(settleRes.order.lifecycleState, "SETTLED");
+  assert.equal(settleRes.success, true, "Settlement delay recorded");
+  assert.equal(settleRes.order.lifecycleState, "DISPATCHED", "Delayed settlement must NOT close order as SETTLED");
   assert.equal(settleRes.order.settlementStatus, "OVERDUE_DELAYED");
+  assert.equal(settleRes.order.isOverdue, true);
+
+  // 4. Subsequent collection settles and closes order
+  const collectRes = engine.settleOrder(targetOrderId, false);
+  assert.equal(collectRes.success, true, "Subsequent settlement collection must succeed");
+  assert.equal(collectRes.order.lifecycleState, "SETTLED", "Collected order moves to SETTLED");
+  assert.equal(collectRes.order.settlementStatus, "SETTLED");
+  assert.equal(collectRes.order.isOverdue, false);
+});
+
+test("Regression R10: Reject non-positive or non-finite allocation quantities without mutating stock", () => {
+  const engine = new InventoryEngine();
+  const baseScenario = fixtures.scenarios.find(s => s.scenarioId === "DAY-40-ALLOCATION-BASE");
+  engine.loadScenario(baseScenario);
+
+  const lot = engine.lots.find(l => l.lotId === "LOT-G01-REL");
+  const initialReserved = lot.reservedKg;
+
+  // Attempt negative allocation (-15 kg)
+  const negRes = engine.reserveLot("ORD-NEG-01", "LOT-G01-REL", -15.0);
+  assert.equal(negRes.success, false, "Negative allocation must be rejected");
+  assert.equal(lot.reservedKg, initialReserved, "Reserved mass must not mutate on rejected negative allocation");
+
+  // Attempt NaN / non-numeric allocation
+  const nanRes = engine.reserveLot("ORD-NAN-01", "LOT-G01-REL", NaN);
+  assert.equal(nanRes.success, false, "NaN allocation must be rejected");
+  assert.equal(lot.reservedKg, initialReserved, "Reserved mass must not mutate on rejected NaN allocation");
+
+  // Attempt zero allocation
+  const zeroRes = engine.reserveLot("ORD-ZERO-01", "LOT-G01-REL", 0);
+  assert.equal(zeroRes.success, false, "Zero allocation must be rejected");
+  assert.equal(lot.reservedKg, initialReserved, "Reserved mass must not mutate on rejected zero allocation");
 });

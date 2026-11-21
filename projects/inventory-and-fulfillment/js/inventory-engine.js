@@ -56,6 +56,14 @@ export class InventoryEngine {
   }
 
   reserveLot(orderId, lotId, allocatedKg, channel = "AUCTION_BULK", customer = "Market Order", format = "Tea Sack", unitCount = 1) {
+    const alloc = Number(allocatedKg);
+    if (!Number.isFinite(alloc) || alloc <= 0) {
+      const reason = `Validation Block: Allocation quantity must be a finite positive number (received ${allocatedKg})`;
+      this.exceptions.push({ type: "INVALID_QUANTITY", orderId, lotId, reason });
+      this.log(reason, "ALARM");
+      return { success: false, reason };
+    }
+
     const lot = this.lots.find(l => l.lotId === lotId);
     if (!lot) {
       this.log(`Reservation failed: Lot ${lotId} not found`, "ALARM");
@@ -70,20 +78,20 @@ export class InventoryEngine {
     }
 
     const availableKg = Math.round((lot.totalKg - lot.reservedKg - lot.dispatchedKg) * 10) / 10;
-    if (allocatedKg > availableKg) {
-      const reason = `Over-allocation Block: Requested ${allocatedKg} kg exceeds available unreserved mass (${availableKg} kg) on lot ${lot.lotId}`;
+    if (alloc > availableKg) {
+      const reason = `Over-allocation Block: Requested ${alloc} kg exceeds available unreserved mass (${availableKg} kg) on lot ${lot.lotId}`;
       this.exceptions.push({ type: "EXCESS_ALLOCATION", orderId, lotId, reason });
       this.log(reason, "ALARM");
       return { success: false, reason };
     }
 
-    lot.reservedKg = Math.round((lot.reservedKg + allocatedKg) * 10) / 10;
+    lot.reservedKg = Math.round((lot.reservedKg + alloc) * 10) / 10;
     const newOrder = {
       orderId,
       channel,
       customer,
       lotId,
-      allocatedKg,
+      allocatedKg: alloc,
       format,
       unitCount,
       lifecycleState: "RESERVED",
@@ -92,7 +100,7 @@ export class InventoryEngine {
     };
     this.orders.push(newOrder);
 
-    this.log(`Reserved ${allocatedKg} kg from ${lot.lotId} for ${orderId} (${format})`, "ACTION");
+    this.log(`Reserved ${alloc} kg from ${lot.lotId} for ${orderId} (${format})`, "ACTION");
     return { success: true, order: newOrder };
   }
 
@@ -126,11 +134,21 @@ export class InventoryEngine {
       return { success: false, reason: `Order must be DISPATCHED before settlement (currently ${order.lifecycleState})` };
     }
 
-    order.lifecycleState = "SETTLED";
-    order.settlementStatus = isDelayed ? "OVERDUE_DELAYED" : "SETTLED";
-    if (isDelayed) order.settlementDays += 21;
+    if (isDelayed) {
+      order.lifecycleState = "DISPATCHED"; // Remains open receivable
+      order.settlementStatus = "OVERDUE_DELAYED";
+      order.isOverdue = true;
+      order.settlementDays += 21;
+      this.log(`FINANCIAL DELAY: Order ${order.orderId} settlement delayed (+21 days, Status: OVERDUE_DELAYED). Receivable remains OPEN.`, "WARN");
+      return { success: true, order };
+    }
 
-    this.log(`FINANCIAL SETTLEMENT: Order ${order.orderId} settled (Status: ${order.settlementStatus}, Cycle: ${order.settlementDays} days)`, "INFO");
+    // Normal or overdue settlement collection
+    order.lifecycleState = "SETTLED";
+    order.settlementStatus = "SETTLED";
+    order.isOverdue = false;
+
+    this.log(`FINANCIAL SETTLEMENT: Order ${order.orderId} fully settled and closed (Cycle: ${order.settlementDays} days)`, "ACTION");
     return { success: true, order };
   }
 
