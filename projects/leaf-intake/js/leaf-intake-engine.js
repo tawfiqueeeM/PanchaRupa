@@ -62,17 +62,39 @@ export class LeafIntakeEngine {
   }
 
   setGrossWeight(gross) {
-    this.activeLot.grossKg = Number(gross) || 0;
+    if (this.activeLot.transferStatus === "IN_TRANSIT" || this.activeLot.transferStatus === "COMPLETED") {
+      this.logEvent("Cannot modify gross weight: Transfer is in progress or completed.", "WARN");
+      return { success: false, reason: "TRANSFER_LOCKED" };
+    }
+    const val = Number(gross);
+    this.activeLot.grossKg = Number.isFinite(val) ? val : 0;
     this.computeNet();
+    if (this.activeLot.disposition === "ACCEPTED") {
+      this.activeLot.disposition = "PENDING";
+      this.activeLot.transferStatus = "IDLE";
+      this.logEvent("Gross weight modified: Approval revoked, lot status reset to PENDING.", "WARN");
+    }
+    return { success: true };
   }
 
   setTareWeight(tare) {
-    this.activeLot.tareKg = Number(tare) || 0;
+    if (this.activeLot.transferStatus === "IN_TRANSIT" || this.activeLot.transferStatus === "COMPLETED") {
+      this.logEvent("Cannot modify tare weight: Transfer is in progress or completed.", "WARN");
+      return { success: false, reason: "TRANSFER_LOCKED" };
+    }
+    const val = Number(tare);
+    this.activeLot.tareKg = Number.isFinite(val) ? val : 0;
     this.computeNet();
+    if (this.activeLot.disposition === "ACCEPTED") {
+      this.activeLot.disposition = "PENDING";
+      this.activeLot.transferStatus = "IDLE";
+      this.logEvent("Tare weight modified: Approval revoked, lot status reset to PENDING.", "WARN");
+    }
+    return { success: true };
   }
 
   computeNet() {
-    if (this.activeLot.grossKg <= this.activeLot.tareKg) {
+    if (this.activeLot.grossKg <= this.activeLot.tareKg || this.activeLot.tareKg <= 0) {
       this.activeLot.netKg = 0;
     } else {
       this.activeLot.netKg = Math.round((this.activeLot.grossKg - this.activeLot.tareKg) * 100) / 100;
@@ -81,10 +103,10 @@ export class LeafIntakeEngine {
 
   validateWeights() {
     const errors = [];
-    if (this.activeLot.tareKg <= 0) {
-      errors.push("Tare weight must be greater than zero.");
+    if (typeof this.activeLot.tareKg !== 'number' || !Number.isFinite(this.activeLot.tareKg) || this.activeLot.tareKg <= 0) {
+      errors.push("Tare weight must be a positive finite number greater than zero.");
     }
-    if (this.activeLot.grossKg <= this.activeLot.tareKg) {
+    if (typeof this.activeLot.grossKg !== 'number' || !Number.isFinite(this.activeLot.grossKg) || this.activeLot.grossKg <= this.activeLot.tareKg) {
       errors.push("Gross weight must be strictly greater than Tare weight.");
     }
     if (this.activeLot.netKg > 250) {
@@ -152,9 +174,22 @@ export class LeafIntakeEngine {
   }
 
   startTransfer() {
+    if (this.activeLot.transferStatus === "COMPLETED") {
+      this.logEvent("Cannot start transfer: Lot is already COMPLETED and delivered.", "WARN");
+      return { success: false, reason: "LOT_ALREADY_COMPLETED" };
+    }
     if (this.activeLot.disposition !== "ACCEPTED") {
       this.logEvent("Cannot start transfer: Lot is not in ACCEPTED state.", "WARN");
       return { success: false, reason: "LOT_NOT_ACCEPTED" };
+    }
+    // Revalidate weights immediately before dispatch
+    const weightValidation = this.validateWeights();
+    if (!weightValidation.isValid) {
+      this.activeLot.disposition = "PENDING";
+      this.activeLot.transferStatus = "IDLE";
+      this.transferInterlock.commandActive = false;
+      this.logEvent(`Transfer rejected: Invalid weights detected (${weightValidation.errors.join(", ")}). Approval revoked.`, "ALARM");
+      return { success: false, reason: "INVALID_WEIGHTS", errors: weightValidation.errors };
     }
     if (!this.destinationBuffer.isClear) {
       this.transferInterlock.commandActive = false;
@@ -173,6 +208,11 @@ export class LeafIntakeEngine {
   }
 
   jogTransfer(stepDelta = 25) {
+    if (this.activeLot.transferStatus === "COMPLETED") {
+      this.logEvent("Cannot jog transfer: Lot is already COMPLETED and delivered.", "WARN");
+      return { success: false, reason: "LOT_ALREADY_COMPLETED" };
+    }
+
     if (!this.transferInterlock.commandActive) {
       const res = this.startTransfer();
       if (!res.success) return res;

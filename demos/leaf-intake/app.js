@@ -157,6 +157,28 @@ function render() {
     elInterlockNotice.classList.remove("active");
   }
 
+  // Input and button gating
+  const isCompleted = lot.transferStatus === "COMPLETED";
+  const isInTransit = lot.transferStatus === "IN_TRANSIT";
+  const isLocked = isCompleted || isInTransit;
+
+  elInpGrossKg.disabled = isLocked;
+  elInpTareKg.disabled = isLocked;
+  elInpVendorId.disabled = isLocked;
+  elInpLotId.disabled = isLocked;
+  elSelTeaType.disabled = isLocked;
+
+  elBtnAcceptLot.disabled = isCompleted || lot.disposition === "ACCEPTED";
+  elBtnRejectLot.disabled = isCompleted || lot.disposition === "REJECTED";
+  elBtnJogTransfer.disabled = isCompleted || lot.disposition !== "ACCEPTED" || !buffer.isClear;
+  elBtnAutoTransfer.disabled = isCompleted || lot.disposition !== "ACCEPTED" || !buffer.isClear;
+
+  if (isCompleted && autoTransferTimer) {
+    clearInterval(autoTransferTimer);
+    autoTransferTimer = null;
+    elBtnAutoTransfer.textContent = "▶ Auto Transfer (100%)";
+  }
+
   // Transfer command & progress
   if (interlock.commandActive) {
     elValTransferCmd.textContent = "RUNNING (%Q0.0)";

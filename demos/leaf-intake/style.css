@@ -79,3 +79,13 @@
 .validation-box.active {
   display: block;
 }
+
+@media (max-width: 480px) {
+  .scale-readout-main {
+    font-size: 1.75rem;
+  }
+  .scale-readout-sub {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}

@@ -1,26 +1,48 @@
 # Test Report — Leaf Intake & Buffer Interlock (Project 01)
 
-## Environment & Execution
-- **Date:** 2026-11-19
-- **Platform:** Windows (PowerShell / Node.js v20.18.0)
-- **Git Branch:** `subproject/01-leaf-intake`
-- **Lead Department:** Dept 1 Production Engineering
-- **Test Command:** `node --test projects/leaf-intake/tests/leaf-intake.test.js`
+## 1. Test Execution Summary
+- **Execution Date:** 2026-11-21
+- **Command:** `node --test projects/leaf-intake/tests/leaf-intake.test.js`
+- **Runner:** Node.js native test runner (`node:test`)
+- **Total Test Cases:** 6
+- **Passed:** 6
+- **Failed:** 0
+- **Duration:** ~160 ms
+- **Status:** PASS
 
-## Test Execution Matrix
+---
 
-| Test Suite / Assertion | Scenario / Condition | Expected Result | Observed Result | Status |
-|---|---|---|---|---|
-| Nominal Scale Computation | Gross: 125.0 kg, Tare: 5.0 kg | Net: 120.00 kg, Valid lot accepted, assigned to `DRUM_INFEED_HOPPER` | Net: 120.00 kg, `disposition: ACCEPTED`, status `READY` | PASS |
-| Scale Weight Validation | Gross: 10.0 kg, Tare: 15.0 kg (Gross <= Tare) | Acceptance rejected, validation error returned | `isValid: false`, error flagged: "Gross weight must be strictly greater than Tare weight." | PASS |
-| Buffer Sensor Interlock Trip | Transfer running (`%Q0.0 = TRUE`), Destination sensor trips (`%I0.3 = FALSE`) | Transfer command `%Q0.0` immediately drops to FALSE; lot remains assigned; no mass issued | `%Q0.0` dropped to FALSE, `interlockTripped: true`, lot retained in hopper, history empty | PASS |
-| Buffer Recovery & Mass Conservation | Destination sensor restored (`%I0.3 = TRUE`), transfer restarted | Eligibility restored, transfer completes, single 120.0 kg batch recorded without duplicate mass | `interlockTripped: false`, completed at 100%, exactly 1 dispatched record (120.0 kg) | PASS |
-| Quality Rejection Gate | Gross: 60.0 kg, Tare: 5.0 kg, Reason: `HIGH_MOISTURE` | Marked `REJECTED`, diverted to quarantine, transfer inhibited | Status `QUARANTINED`, reason recorded, transfer attempt returned failure | PASS |
+## 2. Test Case Breakdown
 
-## Browser & Interface Verification
-- **Direct Route Launch:** `http://localhost:8080/demos/leaf-intake/index.html` loads directly without dependency on other routes.
-- **Header Controls:** "View Project Source" links directly to `subproject/01-leaf-intake/projects/leaf-intake/`; "View Test Evidence" links to test report; "Reset Demo" restores baseline.
-- **Scenario Presets:** Seamless switching between Nominal Day-40 (V-01), Day-40 Golden (V-02), Buffer Blocked Fault, and Quality Rejection.
-- **Export Functionality:** `leaf-intake-events-*.csv` exports active ledger; `leaf-intake-state-*.json` exports complete machine snapshot.
-- **Responsiveness & Keyboard Accessibility:** Verified clean stacking on 360px viewport; all buttons focusable and triggerable via Enter/Space.
-- **Console Errors:** 0 unhandled exceptions.
+### 1. LeafIntakeEngine - Nominal scale computation and lot acceptance
+- **Objective:** Verify gross minus tare computation and acceptance state transition.
+- **Result:** PASS (Net = 120.0 kg, Disposition = ACCEPTED, Destination = DRUM_INFEED_HOPPER).
+
+### 2. LeafIntakeEngine - Validation error on gross <= tare or negative tare
+- **Objective:** Verify boundary failure when gross <= tare.
+- **Result:** PASS (Errors raised, net = 0).
+
+### 3. LeafIntakeEngine - Downstream buffer interlock drop and recovery
+- **Objective:** Simulate downstream hopper full (%I0.3 = FALSE) during transfer.
+- **Result:** PASS (Motor contactor dropped immediately, batch retained in hopper, restored on clear).
+
+### 4. LeafIntakeEngine - Quality rejection diverted to quarantine
+- **Objective:** Verify leaf failing quality check is quarantined.
+- **Result:** PASS (Transfer blocked, reason logged, diverted to quarantine).
+
+### 5. LeafIntakeEngine - Regression R04: Completed transfer is idempotent
+- **Objective:** Verify accepting 120 kg lot L-001 and performing 4 jogs (100% completion) followed by 5 additional jogs does NOT duplicate dispatches.
+- **Result:** PASS (Extra jogs return `LOT_ALREADY_COMPLETED`, dispatched history length strictly 1, total delivered strictly 120 kg).
+
+### 6. LeafIntakeEngine - Regression R05: Weight mutation after acceptance invalidates approval and negative tare is blocked
+- **Objective:** Verify modifying tare weight to -100 kg after acceptance revokes approval back to PENDING, and subsequent transfer is rejected with zero material dispatched.
+- **Result:** PASS (Disposition revoked to PENDING, transfer blocked, zero records in history).
+
+---
+
+## 3. Browser & HMI Verification
+- **Desktop (1440x1000):** Initial layout verified (scrollWidth: 1401px <= innerWidth: 1416px).
+- **Mobile (390x844):** Verified viewport responsiveness (scrollWidth: 390px === innerWidth: 390px, 0px horizontal overflow).
+- **Browser Action Replay:**
+  - 5-jog click sequence: Completed transfer correctly disabled jog button (`disabled: true`), history table contains exactly 1 row (`120.00 kg`).
+  - Negative tare sequence (`tare = -100`): Displayed validation banner, disabled jog button, prevented dispatch.

@@ -84,3 +84,52 @@ test("LeafIntakeEngine - Quality rejection diverted to quarantine", () => {
   const transferResult = engine.startTransfer();
   assert.equal(transferResult.success, false);
 });
+
+test("LeafIntakeEngine - Regression R04: Completed transfer is idempotent, additional jogs do not duplicate deliveries", () => {
+  const engine = new LeafIntakeEngine();
+  engine.setGrossWeight(125.0);
+  engine.setTareWeight(5.0);
+  const acceptRes = engine.acceptLot();
+  assert.equal(acceptRes.success, true);
+
+  // 4 jogs at 25% complete the transfer (100%)
+  for (let i = 0; i < 4; i++) {
+    const r = engine.jogTransfer(25);
+    assert.equal(r.success, true);
+  }
+  assert.equal(engine.getSnapshot().activeLot.transferStatus, "COMPLETED");
+  assert.equal(engine.dispatchedHistory.length, 1);
+  assert.equal(engine.dispatchedHistory[0].netKg, 120.0);
+
+  // Additional jogs must be rejected and must NOT create duplicate deliveries
+  for (let i = 0; i < 5; i++) {
+    const extraJog = engine.jogTransfer(25);
+    assert.equal(extraJog.success, false);
+    assert.equal(extraJog.reason, "LOT_ALREADY_COMPLETED");
+  }
+
+  // History and mass must remain strictly 1 delivery of 120 kg
+  assert.equal(engine.dispatchedHistory.length, 1);
+  const totalDelivered = engine.dispatchedHistory.reduce((s, x) => s + x.netKg, 0);
+  assert.equal(totalDelivered, 120.0, "Total delivered mass must remain 120 kg, not duplicate to 240 kg");
+});
+
+test("LeafIntakeEngine - Regression R05: Weight mutation after acceptance invalidates approval and negative tare is blocked", () => {
+  const engine = new LeafIntakeEngine();
+  engine.setGrossWeight(125.0);
+  engine.setTareWeight(5.0);
+  engine.acceptLot();
+  assert.equal(engine.getSnapshot().activeLot.disposition, "ACCEPTED");
+
+  // Changing tare weight after acceptance must revoke approval
+  engine.setTareWeight(-100.0);
+  const snapshot = engine.getSnapshot();
+  assert.equal(snapshot.activeLot.disposition, "PENDING", "Disposition must be invalidated to PENDING upon weight edit");
+  assert.equal(snapshot.activeLot.transferStatus, "IDLE");
+
+  // Attempting transfer with invalid tare must fail and not issue material
+  const transferRes = engine.jogTransfer(100);
+  assert.equal(transferRes.success, false);
+  assert.equal(engine.dispatchedHistory.length, 0, "No material issued on invalid tare");
+  assert.equal(engine.validateWeights().isValid, false, "Tare <= 0 must fail validation");
+});
