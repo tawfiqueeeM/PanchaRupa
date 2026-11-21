@@ -75,7 +75,7 @@ test('IntegratedFactoryEngine - Multi-config comparison metrics, 10x labor produ
   const nav = IntegratedFactoryEngine.getNavigationDirectory();
   assert.equal(nav.length, 20, 'Covers all 20 subproject modules');
   assert.ok(nav.some(m => m.id === 'BMS' && m.route === '/demos/building-automation/'));
-  assert.ok(nav.some(m => m.id === '20' && m.route === '/demos/virtual-factory/'));
+  assert.ok(nav.some(m => m.id === '14' && m.route === '/demos/virtual-factory/'), 'Capstone must retain canonical ID 14');
 
   // Verify CSV export
   const csv = IntegratedFactoryEngine.exportToCSV(comparison);

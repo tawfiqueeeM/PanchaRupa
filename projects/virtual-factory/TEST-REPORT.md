@@ -1,10 +1,10 @@
-# Test Report — Integrated Factory Capstone (Row 20)
+# Test Report — Integrated Factory Capstone (Demo 14 / Row 20)
 
 ## 1. Test Execution Summary
-- **Execution Date:** 2026-11-19
+- **Execution Date:** 2026-11-21
 - **Command:** `node --test projects/virtual-factory/tests/integrated-factory.test.js`
-- **Runner:** Node.js v22.14.0 native test runner
-- **Duration:** ~66 ms
+- **Runner:** Node.js native test runner
+- **Duration:** ~75 ms
 - **Total Test Cases:** 4
 - **Passed:** 4
 - **Failed:** 0

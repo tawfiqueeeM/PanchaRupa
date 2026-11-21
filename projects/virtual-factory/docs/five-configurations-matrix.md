@@ -23,32 +23,33 @@ To evaluate technical and economic scale-up, the factory is modeled across five 
 ### 2.1 Explicit Boundary
 - **Founder-Reported Benchmark (Pilot Phase):** Exactly 100 kg/month pilot capacity achieved with manual/drum processing, high labor reliance, batch-level yield fluctuations.
 - **Founder-Reported Target (Design Phase):** 1,000 kg/month design baseline for active plucking months (March through November).
-- **Modeled Simulation:** Evaluates queue dynamics, machine mutual exclusion, energy consumption, and unit costs dynamically under synthetic inputs. Never back-fits or fakes model constants to forcibly match founder figures.
+- **Modeled Simulation Scope:** Evaluates static comparative fixture specifications across five configurations based on synthetic assumed capacities, labor intensities (e.g. 4.20 vs 0.42 worker-hrs/kg 10x ratio), specific energies, and absorption costs. It does **not** evaluate live queue dynamics, schedules, or machine mutual exclusion (which are modeled independently on individual subproject branches). All cross-engine dynamic integrations remain pending unified implementation.
 
 ---
 
-## 3. Capstone Integration Status & Domain Sub-Engine Architecture
+## 3. Subproject Architecture & Integration Status Registry
 
-Because each subproject is engineered on its dedicated isolated git branch to maintain clean separation of concerns, the Capstone Simulator in `subproject/14-integrated-factory` provides an integrated umbrella architecture:
+Each subproject is engineered on its dedicated isolated git branch to maintain clean separation of concerns. The Capstone in `subproject/14-integrated-factory` provides an umbrella comparison based on assumed fixture parameters; full cross-branch runtime dynamic integration is marked pending:
 
-| Subproject / Domain | Source Git Branch | Native Engine Location | Capstone Integration Mechanism |
+| Subproject / Domain | Source Git Branch | Native Engine Location | Capstone Status & Scope |
 | :--- | :--- | :--- | :--- |
-| **01 Leaf Intake** | `subproject/01-leaf-intake` | `projects/leaf-intake/` | Integrated: Intake fine leaf gate and truck tare weighing parameters |
-| **02 Green Tea Sequence** | `subproject/02-green-tea-processing` | `projects/green-tea-sequence/` | Integrated: Panning fixation and moisture reduction curve |
-| **03 Dryer Controls** | `subproject/03-dryer-controls` | `projects/dryer-control/` | Integrated: Two-stage drying temperature and moisture sensor feedback |
-| **04 Withering Airflow** | `subproject/04-withering` | `projects/withering-airflow/` | Integrated: Air velocity and bed moisture loss dynamics |
-| **05 Golden Tea Sequence** | `subproject/05-golden-tea-sequence` | `projects/golden-tea-sequence/` | Integrated: Solar withering and light oxidation protocol |
-| **06 Grading & Routing** | `subproject/06-grading-and-routing` | `projects/grading-and-routing/` | Integrated: Sieve screen fraction cut and bin allocation |
-| **07 Packing & Reject** | `subproject/07-packing-and-dispatch` | `projects/packing-and-reject/` | Integrated: Checkweigher tolerance and defect scrap logic |
-| **08 Leaf Procurement** | `subproject/08-procurement` | `projects/leaf-procurement/` | Integrated: MRP conversion ratio ($\text{FreshLeaf} = \text{Demand} / \eta$) |
-| **09 Production Scheduling**| `subproject/09-production-scheduling` | `projects/production-scheduling/` | Integrated: Shared Roller & Dryer mutual exclusion with 15m cleaning |
-| **10 Shifts & Skills** | `subproject/10-shifts-and-skills` | `projects/worker-shift-planning/` | Integrated: Crew labor hours and concurrency overlap prevention |
-| **11 Inventory & Fulfillment**| `subproject/11-inventory-and-fulfilment`| `projects/inventory-and-fulfillment/`| Integrated: DAY-40 pack split benchmark and batch reservation |
-| **12 Costing & Finance** | `subproject/12-costing-and-finance` | `projects/costing-and-margin/` | Integrated: Absorption cost bridge (BDT 181.63/kg target baseline) |
-| **13 Maintenance** | `subproject/13-maintenance` | `projects/maintenance-planning/` | Integrated: Asset MTBF, planned PM, and 120m unplanned outage |
-| **15 Robotic Packing** | `subproject/15-robotic-packing` | `projects/robotic-packing/` | Integrated: High-speed delta robot pick rates (40 bpm) vs manual packaging |
-| **16 Factory Data Platform**| `subproject/16-factory-data-platform`| `projects/factory-data/` | Integrated: Relational data dictionary and lot trace link |
-| **17 Sustainability & Waste**| `subproject/17-sustainability-and-waste`| `projects/sustainability/` | Integrated: Mass balance separation of moisture loss vs scrap |
-| **BMS / SD-anlegg** | `subproject/factory-and-bms` | `projects/virtual-factory/building-automation/` | Integrated: Factory floor environmental setpoints and ventilation proof |
-| **Staffing & Payroll** | `subproject/staffing-and-payroll` | `projects/staffing-and-payroll/` | Integrated: Labor payroll cost and profit vs cash bridge |
-| **Tea Auction Planning** | `subproject/tea-auction-planning` | `projects/tea-auction-planning/` | Integrated: Auction broker sales realization and freight break-even |
+| **01 Leaf Intake** | `subproject/01-leaf-intake` | `projects/leaf-intake/` | Assumed Input: Intake fine leaf gate (Live demo isolated on branch; dynamic integration pending) |
+| **02 Green Tea Sequence** | `subproject/02-green-tea-processing` | `projects/green-tea-sequence/` | Assumed Input: Panning fixation curve (Live demo isolated on branch; dynamic integration pending) |
+| **03 Dryer Controls** | `subproject/03-dryer-controls` | `projects/dryer-control/` | Assumed Input: Two-stage drying setpoints (Live demo isolated on branch; dynamic integration pending) |
+| **04 Withering Airflow** | `subproject/04-withering` | `projects/withering-airflow/` | Assumed Input: Air velocity and bed moisture (Live demo isolated on branch; dynamic integration pending) |
+| **05 Golden Tea Sequence** | `subproject/05-golden-tea-sequence` | `projects/golden-tea-sequence/` | Assumed Input: Solar withering protocol (Live demo isolated on branch; dynamic integration pending) |
+| **06 Grading & Routing** | `subproject/06-grading-and-routing` | `projects/grading-and-routing/` | Assumed Input: Sieve fraction cuts (Live demo isolated on branch; dynamic integration pending) |
+| **07 Packing & Reject** | `subproject/07-packing-and-dispatch` | `projects/packing-and-dispatch/` | Assumed Input: Checkweigher reject logic (Live demo isolated on branch; dynamic integration pending) |
+| **08 Leaf Procurement** | `subproject/08-procurement` | `projects/leaf-procurement/` | Assumed Input: MRP conversion ratio (FreshLeaf = Demand / eta) (Live demo isolated on branch; dynamic integration pending) |
+| **09 Production Scheduling**| `subproject/09-production-scheduling` | `projects/production-scheduling/` | Assumed Input: Shared machine scheduling constraints (Live demo isolated on branch; dynamic integration pending) |
+| **10 Shifts & Skills** | `subproject/10-shifts-and-skills` | `projects/worker-shift-planning/` | Assumed Input: Crew labor hours and coverage (Live demo isolated on branch; dynamic integration pending) |
+| **11 Inventory & Fulfillment**| `subproject/11-inventory-and-fulfilment`| `projects/inventory-and-fulfillment/`| Assumed Input: DAY-40 pack split benchmark (Live demo isolated on branch; dynamic integration pending) |
+| **12 Costing & Finance** | `subproject/12-costing-and-finance` | `projects/costing-and-margin/` | Assumed Input: Absorption cost benchmark (BDT 181.63/kg) (Live demo isolated on branch; dynamic integration pending) |
+| **13 Maintenance** | `subproject/13-maintenance` | `projects/maintenance-planning/` | Assumed Input: Asset MTBF and planned PM (Live demo isolated on branch; dynamic integration pending) |
+| **14 Integrated Factory** | `subproject/14-integrated-factory` | `projects/virtual-factory/` | Active Capstone: Five-configuration comparative fixture simulator |
+| **15 Robotic Packing** | `subproject/15-robotic-packing` | `projects/robotic-packing/` | Assumed Input: Delta robot pick rate parameters (Live demo isolated on branch; dynamic integration pending) |
+| **16 Factory Data Platform**| `subproject/16-factory-data-platform`| `projects/factory-data/` | Assumed Input: Relational data dictionary schema (Live demo isolated on branch; dynamic integration pending) |
+| **17 Sustainability & Waste**| `subproject/17-sustainability-and-waste`| `projects/sustainability/` | Assumed Input: Thermodynamic mass balance parameters (Live demo isolated on branch; dynamic integration pending) |
+| **BMS / SD-anlegg** | `subproject/factory-and-bms` | `projects/virtual-factory/building-automation/` | Assumed Input: Factory floor environmental setpoints (Live demo isolated on branch; dynamic integration pending) |
+| **Staffing & Payroll** | `subproject/staffing-and-payroll` | `projects/staffing-and-payroll/` | Assumed Input: Labor payroll cost model (Live demo isolated on branch; dynamic integration pending) |
+| **Tea Auction Planning** | `subproject/tea-auction-planning` | `projects/tea-auction-planning/` | Assumed Input: Auction broker sales realization (Live demo isolated on branch; dynamic integration pending) |

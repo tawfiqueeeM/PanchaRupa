@@ -186,11 +186,12 @@ function renderScaleupSummary() {
   const insights = currentComparison.summaryInsights;
   const container = document.getElementById('scaleupSummary');
   container.innerHTML = `
-    <strong>Scale-Up Progression Summary (Configuration 1 Manual ➔ Configuration 5 Coordinated):</strong><br>
-    • <strong>Labor Productivity Gain:</strong> ${insights.laborProductivityFactor}x productivity increase (${insights.laborSavingsWorkerHours.toLocaleString()} worker-hours saved at full capacity).<br>
-    • <strong>Manufacturing Cost Reduction:</strong> BDT ${insights.unitCostReductionBdt} / kg saved (-31.5% cost reduction achieved via scale economies and mechanization).<br>
-    • <strong>Throughput Scalability:</strong> ${insights.capacityScaleMultiplier}x monthly capacity expansion (120 kg/mo artisanal ceiling ➔ 1,200 kg/mo modern throughput).<br>
-    • <strong>Bottleneck Progression:</strong> Hand Rolling Fatigue (Configs 1–3) ➔ Dryer Thermal Queue (Config 4) ➔ Coordinated System Balance (Config 5).
+    <strong>Scale-Up Progression Summary (Assumed Model Fixture Comparison: Config 1 Manual ➔ Config 5 Coordinated):</strong><br>
+    • <strong>Assumed Labor Productivity Ratio:</strong> ${insights.laborProductivityFactor}x productivity factor based on assumed fixture intensities (${insights.laborSavingsWorkerHours.toLocaleString()} worker-hours modeled differential at design load).<br>
+    • <strong>Modeled Cost Absorption Curve:</strong> BDT ${insights.unitCostReductionBdt} / kg lower unit cost modeled (-31.5% from scale economies and assumed mechanization).<br>
+    • <strong>Nominal Capacity Envelope:</strong> ${insights.capacityScaleMultiplier}x monthly capacity envelope (120 kg/mo artisanal assumption ➔ 1,200 kg/mo coordinated line).<br>
+    • <strong>Modeled Bottleneck Progression:</strong> Hand Rolling Fatigue (Configs 1–3) ➔ Dryer Thermal Queue (Config 4) ➔ Coordinated System Balance (Config 5).<br>
+    <em>Note: These figures reflect synthetic comparative fixture parameters for evolutionary analysis; live unified dynamic cross-engine execution remains deferred pending shared integration.</em>
   `;
 }
 
@@ -198,17 +199,26 @@ function renderNavDrawer() {
   const container = document.getElementById('navGridContainer');
   const modules = IntegratedFactoryEngine.getNavigationDirectory();
 
-  container.innerHTML = modules.map(m => `
-    <a href="${m.route}" class="nav-item" target="_blank" rel="noopener noreferrer">
-      <div>
-        <div style="font-weight:700;">${m.name}</div>
-        <div style="font-size:0.75rem; color:var(--color-text-muted);">${m.dept} · <code>${m.branch}</code></div>
-      </div>
-      <span style="font-size:0.75rem; background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:700;">
-        ${m.status}
-      </span>
-    </a>
-  `).join('');
+  container.innerHTML = modules.map(m => {
+    const isLive = m.liveOnThisBranch;
+    const targetUrl = isLive ? m.route : m.sourceUrl;
+    const badgeStyle = isLive ? 'background:#dcfce7; color:#166534;' : 'background:#fef3c7; color:#92400e;';
+    const badgeText = isLive ? 'LIVE DEMO (ACTIVE)' : 'BRANCH REPO LINK';
+    const note = isLive ? 'Active demo on current branch' : 'Lives on isolated git branch';
+
+    return `
+      <a href="${targetUrl}" class="nav-item" target="_blank" rel="noopener noreferrer">
+        <div>
+          <div style="font-weight:700;">[Demo ${m.id}] ${m.name}</div>
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">${m.dept} · <code>${m.branch}</code></div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted); margin-top:2px;">${note}</div>
+        </div>
+        <span style="font-size:0.75rem; ${badgeStyle} padding:2px 6px; border-radius:4px; font-weight:700; white-space:nowrap;">
+          ${badgeText}
+        </span>
+      </a>
+    `;
+  }).join('');
 }
 
 function downloadFile(content, filename, mimeType) {
