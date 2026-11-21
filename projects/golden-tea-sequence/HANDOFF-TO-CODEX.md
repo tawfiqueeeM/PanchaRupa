@@ -8,7 +8,7 @@
 - **Assigned Directories:**
   - Logic & Specification: `projects/golden-tea-sequence/`
   - Interactive Demo: `demos/golden-tea-sequence/`
-- **Tested Implementation Revision:** `88440b2` (plus corrective commit on branch)
+- **Tested Implementation Revision:** `baaede8af8893eb845bcb6330edea0098beb6a87`
 - **Shared Foundation Fix:** `88440b2` (cherry-picked from `7f18e1c`)
 
 ---
