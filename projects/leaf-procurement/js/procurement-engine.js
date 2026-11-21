@@ -120,8 +120,8 @@ export class ProcurementEngine {
           });
         }
 
-        // Logistics delivery slot validation
-        if (p.estimatedArrivalHour > p.scheduledSlotHour) {
+        // Logistics delivery slot validation (applies only when net leaf delivery is needed)
+        if (netDemandKg > 0 && freshLeafNeededKg > 0 && p.estimatedArrivalHour > p.scheduledSlotHour) {
           isShortage = true;
           delayHours = p.estimatedArrivalHour - p.scheduledSlotHour;
           shortages.push({

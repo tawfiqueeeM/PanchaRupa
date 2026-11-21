@@ -81,3 +81,23 @@ test("ProcurementEngine - Winter dormancy halts fresh leaf procurement and alert
   assert.ok(winterShortage, "Must report WINTER_BUFFER_DEFICIT");
   assert.equal(winterShortage.netDemandKg, 25.0, "Deficit must be 25.0 kg");
 });
+
+test("Regression R17: Zero net demand covered by released stock does not trigger logistics shortage", () => {
+  const engine = new ProcurementEngine();
+  const baseScenario = fixtures.scenarios.find(s => s.scenarioId === "DAY-40-MRP-BASE");
+  engine.loadScenario(baseScenario);
+
+  // Set released stock to fully cover Golden Tea demand (10 kg stock >= 10 kg gross demand)
+  engine.updateReleasedStock("GOLDEN_TEA", 10.0);
+  // Simulate late arrival on Golden Tea (14:00 > 08:00)
+  engine.updateDeliveryTime("GOLDEN_TEA", 14);
+
+  const mrp = engine.mrpResults;
+  const goldenProd = mrp.products.find(p => p.productId === "GOLDEN_TEA");
+  assert.equal(goldenProd.netDemandKg, 0.0);
+  assert.equal(goldenProd.freshLeafNeededKg, 0.0);
+  assert.equal(goldenProd.isShortage, false, "Late arrival must NOT trigger shortage when net demand is 0 kg");
+
+  const goldenShortage = mrp.shortages.find(s => s.productId === "GOLDEN_TEA");
+  assert.equal(goldenShortage, undefined, "No shortage exception should be generated for satisfied net demand");
+});

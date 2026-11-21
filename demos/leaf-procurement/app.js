@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     kpiFreshLeaf.textContent = `${mrp.totalFreshLeafNeededKg.toFixed(1)} kg`;
     kpiNetDemand.textContent = `${mrp.totalNetDemandKg.toFixed(1)} kg`;
-    kpiNetDemandSub = `Gross ${mrp.totalGrossDemandKg.toFixed(1)} kg − ${mrp.totalReleasedStockKg.toFixed(1)} kg Stock`;
+    kpiNetDemandSub.textContent = `Gross ${mrp.totalGrossDemandKg.toFixed(1)} kg − ${mrp.totalReleasedStockKg.toFixed(1)} kg Stock`;
 
     kpiSeason.textContent = mrp.month;
     kpiSeasonSub.textContent = mrp.isWinterDormancy ? "Bush Dormancy (0kg harvest)" : "Active Harvest Season";
