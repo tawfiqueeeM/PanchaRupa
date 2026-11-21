@@ -1,24 +1,28 @@
-# Golden Tea Processing Sequence (Project 05 / Order 4)
+# Golden Tea Processing Sequence (Project 05)
 
 ## Overview
-Interactive process automation, recipe control, and shared equipment arbitration model for the specialty Golden Tea production line (Withering → Rolling → Oxidation → Drying).
+Standalone interactive industrial automation demo and sequence progression engine for the PanchaRupa virtual tea factory specialty golden/black tea processing line.
 
-- **Lead Department:** Dept 1 Production Engineering
-- **Target Roles:** Batch Automation, Process Commissioning, Resource Scheduling
+- **Lead Department:** Dept 2 Capacity & Operations (with Dept 1 Production Engineering & Dept 4 Quality)
+- **Target Roles:** Process Operations, Industrial Automation, Plant Capacity Planning
 - **Demo Route:** `demos/golden-tea-sequence/index.html`
 - **Direct GitHub Branch:** `subproject/05-golden-tea-processing`
 
 ## Key Capabilities
-- Leaf eligibility enforcement: Strictly requires tender young shoots (`GOLDEN_ELIGIBLE`); rejects coarse standard leaf at the intake gate.
-- 4-stage sequential progression: Withering Trays (120 min) → Shared Roller (30 min) → Oxidation Racks (90 min) → Shared Final Dryer (60 min).
-- Selectable oxidation profiles: `OX-LIGHT-01` (Light Flush), `OX-MED-02` (Classic Amber), `OX-DEEP-03` (Deep Muscatel) with distinct liquor colors and parameters.
-- Shared Dryer mutual exclusion: Prevents cross-contamination by locking the shared final dryer. If occupied by Green Tea Batch `B-G01`, the Golden batch is held at oxidation discharge with retained batch ID and mass until the dryer is cleared.
-- Animated browser HMI with step/auto-run controls, live station status cards, event ledger, and CSV/JSON data exports.
+- Mandatory leaf eligibility validation gate (`GOLDEN_ELIGIBLE` qualification required).
+- 4-stage sequential machine flow: Withering Trays → Shared Roller → Oxidation Racks → Shared Final Dryer.
+- Profile-driven oxidation control (`OX-LIGHT-01`, `OX-MED-02`, `OX-DEEP-03`) with target humidity, temperatures, and liquor characteristics.
+- Shared Final Dryer mutual exclusion arbitration preventing simultaneous ownership by Green and Golden batches.
+- Output conservation: Finished golden tea increments only upon final dryer discharge.
+- Mobile viewport responsive layout (tested at 390px width without horizontal document overflow).
 
 ## Running Locally
 ```bash
+# Start zero-dependency static server
 python shared/serve.py 8080
-# Open: http://localhost:8080/demos/golden-tea-sequence/
+
+# Navigate in browser to
+http://localhost:8080/demos/golden-tea-sequence/
 ```
 
 ## Running Tests

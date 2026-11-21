@@ -80,3 +80,24 @@ test("GoldenTeaEngine - Shared dryer mutual exclusion blocks second batch and av
   assert.equal(unblockedSnapshot.sharedDryer.state, "BUSY_GOLDEN");
   assert.equal(unblockedSnapshot.sharedDryer.ownerBatchId, "B-O01");
 });
+
+test("GoldenTeaEngine - Regression: Dryer ownership cannot be stolen during active drying, completed batch restart guarded", () => {
+  const engine = new GoldenTeaEngine();
+  // Advance through to DRYER
+  for (let i = 0; i < 4; i++) engine.stepLine();
+  assert.equal(engine.getSnapshot().activeBatch.currentStage, "DRYER");
+  assert.equal(engine.getSnapshot().sharedDryer.ownerBatchId, "B-O01");
+
+  // Attempting external lock while Golden batch is actively drying must be rejected
+  const lockRes = engine.setDryerExternalLock(true, "B-G01");
+  assert.equal(lockRes.success, false);
+  assert.equal(engine.getSnapshot().sharedDryer.ownerBatchId, "B-O01", "Owner must remain B-O01");
+
+  // Complete batch
+  engine.stepLine();
+  assert.equal(engine.getSnapshot().activeBatch.currentStage, "COMPLETED");
+
+  // Prohibit restart without new ID
+  const restartRes = engine.startBatch();
+  assert.equal(restartRes.success, false);
+});

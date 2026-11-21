@@ -105,15 +105,14 @@ export class GoldenTeaEngine {
 
   setDryerExternalLock(isLockedByGreen, greenBatchId = "B-G01") {
     if (isLockedByGreen) {
+      if (this.activeBatch.currentStage === "DRYER") {
+        this.logEvent(`External lock rejected: Shared Dryer currently executing Golden Tea Batch ${this.activeBatch.batchId}.`, "WARN");
+        return { success: false, reason: "DRYER_BUSY_GOLDEN" };
+      }
       this.sharedDryer.state = "BUSY_GREEN";
       this.sharedDryer.ownerBatchId = greenBatchId;
       this.logEvent(`Shared Dryer occupied by Green Tea Batch ${greenBatchId} (%I2.0 locked)`, "WARN");
-
-      // If active golden batch was waiting or in dryer, hold it
-      if (this.activeBatch.currentStage === "DRYER") {
-        this.activeBatch.currentStage = "WAITING_FOR_DRYER";
-        this.activeBatch.waitingReason = `Shared dryer seized by Green Tea Batch ${greenBatchId}`;
-      }
+      return { success: true };
     } else {
       this.sharedDryer.state = "FREE";
       this.sharedDryer.ownerBatchId = null;
@@ -123,10 +122,23 @@ export class GoldenTeaEngine {
         this.logEvent("Dryer freed! Advancing waiting Golden Tea batch into Shared Dryer", "ACTION");
         this.transitionToDryer();
       }
+      return { success: true };
     }
   }
 
-  startBatch() {
+  startBatch(newBatchId = null, newFreshKg = null) {
+    if (this.activeBatch.currentStage === "COMPLETED") {
+      if (!newBatchId || newBatchId === this.activeBatch.batchId) {
+        this.logEvent(`Cannot restart completed batch ${this.activeBatch.batchId}: Batch is already finished. Reset demo or supply a distinct batch ID.`, "WARN");
+        return { success: false, reason: "BATCH_ALREADY_COMPLETED" };
+      }
+      this.activeBatch.batchId = newBatchId;
+      this.activeBatch.freshKg = newFreshKg || 40.0;
+    } else if (this.activeBatch.currentStage !== "IDLE") {
+      this.logEvent("Cannot start new batch: line is currently active.", "WARN");
+      return { success: false, reason: "LINE_ACTIVE" };
+    }
+
     if (!this.activeBatch.isLeafEligible) {
       this.logEvent(`START INHIBITED: Lot ${this.activeBatch.lotId} does not meet Golden Tea tender shoot qualification!`, "ALARM");
       return { success: false, reason: "LEAF_INELIGIBLE" };
