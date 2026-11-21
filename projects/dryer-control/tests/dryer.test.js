@@ -73,3 +73,57 @@ test("DryerEngine - Strict safety reset: Acknowledge alone cannot restore heat c
   assert.equal(resumedSnapshot.heatEnabled, true);
   assert.ok(resumedSnapshot.heatCommandPercent > 0.0, "Heating successfully resumed post-deliberate restart");
 });
+
+test("Regression R06: Dryer does not complete batch during permanent unheated fault trip", () => {
+  const engine = new DryerEngine();
+  engine.startBatch();
+  engine.setFanProof(false); // Immediate trip
+
+  // Step 60 minutes while unheated
+  for (let i = 0; i < 60; i++) {
+    engine.stepTime(1.0);
+  }
+
+  const snapshot = engine.getSnapshot();
+  assert.equal(snapshot.batchComplete, false, "Batch must NOT be declared complete when unheated");
+  assert.equal(snapshot.batchStatus, "FAULTED_INCOMPLETE");
+  assert.equal(snapshot.batchElapsedMin, 0, "Processing time must not accumulate during fault trip");
+  assert.equal(snapshot.measuredTempC, 25.0, "Temperature remains at ambient");
+  assert.equal(snapshot.alarmLatched, true);
+  assert.equal(snapshot.heatEnabled, false);
+});
+
+test("Regression R06: deliberateRestart cannot energize an inactive stopped batch", () => {
+  const engine = new DryerEngine();
+  engine.startBatch();
+  engine.stepTime(1.0);
+  engine.setFanProof(false);
+  engine.acknowledgeAlarm();
+  engine.stopBatch();
+  engine.setFanProof(true);
+
+  // Attempt deliberate restart on stopped batch
+  const rearmed = engine.deliberateRestart();
+  assert.equal(rearmed, false, "Restart must fail on inactive stopped batch");
+  
+  engine.stepTime(1.0);
+  const snapshot = engine.getSnapshot();
+  assert.equal(snapshot.batchActive, false);
+  assert.equal(snapshot.heatEnabled, false);
+  assert.equal(snapshot.heatCommandPercent, 0.0, "Heaters must remain de-energized");
+});
+
+test("Regression R06: Nominal 60-minute cycle completes with operating temperature", () => {
+  const engine = new DryerEngine();
+  engine.startBatch();
+  for (let i = 0; i < 60; i++) {
+    engine.stepTime(1.0);
+  }
+
+  const snapshot = engine.getSnapshot();
+  assert.equal(snapshot.batchComplete, true, "Nominal batch completes after 60 min");
+  assert.equal(snapshot.batchStatus, "COMPLETE");
+  assert.ok(snapshot.measuredTempC >= 70.0, "Chamber temperature reached operating drying range");
+  assert.equal(snapshot.heatEnabled, false, "Heaters shut off after completion");
+  assert.equal(snapshot.heatCommandPercent, 0.0);
+});

@@ -23,6 +23,7 @@ export class DryerEngine {
     this.batchElapsedMin = 0;
     this.targetDurationMin = 60;
     this.batchComplete = false;
+    this.batchStatus = "IDLE"; // IDLE, RUNNING, FAULTED_INCOMPLETE, COMPLETE, STOPPED
 
     this.alarmLatched = false;
     this.alarmAcked = false;
@@ -47,6 +48,7 @@ export class DryerEngine {
 
     this.batchActive = true;
     this.batchComplete = false;
+    this.batchStatus = "RUNNING";
     this.batchElapsedMin = 0;
     this.heatEnabled = true;
     this.logEvent(`Batch ${this.batchId} STARTED: Heating enabled to ${this.setpointC}°C`, "ACTION");
@@ -57,6 +59,9 @@ export class DryerEngine {
     this.batchActive = false;
     this.heatEnabled = false;
     this.heatCommandPercent = 0.0;
+    if (!this.batchComplete) {
+      this.batchStatus = this.alarmLatched ? "FAULTED_INCOMPLETE" : "STOPPED";
+    }
     this.logEvent("Dryer batch manually stopped. Heaters de-energized.", "INFO");
   }
 
@@ -71,6 +76,9 @@ export class DryerEngine {
         this.heatEnabled = false;
         this.heatCommandPercent = 0.0;
         this.alarmReason = "Circulating fan differential pressure switch lost (%I3.0 TRIPPED)";
+        if (this.batchActive && !this.batchComplete) {
+          this.batchStatus = "FAULTED_INCOMPLETE";
+        }
         this.logEvent(`EMERGENCY TRIP: ${this.alarmReason}! Heaters forced to 0.0% immediately. Alarm siren active.`, "ALARM");
       } else {
         this.logEvent("Fan proof sensor dropped FALSE while idle.", "WARN");
@@ -103,23 +111,42 @@ export class DryerEngine {
       return false;
     }
 
+    if (!this.batchActive || this.batchComplete) {
+      this.alarmLatched = false;
+      this.alarmAcked = false;
+      this.alarmReason = null;
+      this.heatEnabled = false;
+      this.logEvent("Alarm cleared, but batch is not active. Heaters remain OFF.", "INFO");
+      return false;
+    }
+
     // Success reset
     this.alarmLatched = false;
     this.alarmAcked = false;
     this.alarmReason = null;
     this.heatEnabled = true;
+    this.batchStatus = "RUNNING";
     this.logEvent("DELIBERATE RESTART ACCEPTED (%I3.2): Burner safety loop re-armed. Heating resumed.", "ACTION");
     return true;
   }
 
   stepTime(dtMin = 1.0) {
     if (this.batchActive && !this.batchComplete) {
-      this.batchElapsedMin += dtMin;
-      if (this.batchElapsedMin >= this.targetDurationMin) {
-        this.batchComplete = true;
-        this.heatEnabled = false;
-        this.heatCommandPercent = 0.0;
-        this.logEvent(`BATCH COMPLETE: 60 min dry cycle completed. Heaters shut down. Cooling fan running.`, "ACTION");
+      const isHeatingAndProof = this.heatEnabled && this.fanProof && !this.alarmLatched;
+      if (isHeatingAndProof) {
+        this.batchElapsedMin += dtMin;
+        if (this.batchElapsedMin >= this.targetDurationMin && this.measuredTempC >= 80.0) {
+          this.batchComplete = true;
+          this.batchActive = false;
+          this.batchStatus = "COMPLETE";
+          this.heatEnabled = false;
+          this.heatCommandPercent = 0.0;
+          this.logEvent(`BATCH COMPLETE: ${this.targetDurationMin} min dry cycle completed at ${this.measuredTempC}°C. Heaters shut down. Cooling fan running.`, "ACTION");
+        }
+      } else {
+        if (this.alarmLatched) {
+          this.batchStatus = "FAULTED_INCOMPLETE";
+        }
       }
     }
 
@@ -173,6 +200,7 @@ export class DryerEngine {
       fanProof: this.fanProof,
       heatEnabled: this.heatEnabled,
       batchActive: this.batchActive,
+      batchStatus: this.batchStatus,
       batchElapsedMin: this.batchElapsedMin,
       batchComplete: this.batchComplete,
       alarmLatched: this.alarmLatched,
