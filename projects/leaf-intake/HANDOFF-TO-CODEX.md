@@ -8,7 +8,7 @@
 - **Assigned Directories:**
   - Logic & Engine: `projects/leaf-intake/`
   - Interactive HMI Demo: `demos/leaf-intake/`
-- **Tested Implementation Revision:** `7f18e1c6ae79bb7d0a2730303ba787265be72d82` (plus corrective commit on branch)
+- **Tested Implementation Revision:** `3719e785dac0a5dc93c4be95f68959552ac5fb8a`
 - **Shared Foundation Fix:** `7f18e1c6ae79bb7d0a2730303ba787265be72d82`
 
 ---
