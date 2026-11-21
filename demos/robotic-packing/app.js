@@ -120,7 +120,7 @@ function render() {
         <td class="font-mono" style="font-weight:700;">${c.cartonId}</td>
         <td>${c.formatId}</td>
         <td class="font-mono" style="color:#15803d; font-weight:700;">${c.bottlesPacked} bottles</td>
-        <td><span class="status-badge normal">SEALED</span></td>
+        <td><span class="status-badge ${c.status === "SEALED_AND_DISPATCHED" ? "normal" : "alarm"}">${c.status === "SEALED_AND_DISPATCHED" ? "SEALED" : "REWORK"}</span></td>
       </tr>
     `).join("");
   }

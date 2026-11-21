@@ -64,6 +64,34 @@ export class RoboticPackingEngine {
 
   switchFormat(formatId) {
     if (!FORMAT_CONFIGS[formatId]) return false;
+    if (this.armState === "INTERRUPTED_HOLD") {
+      this.logEvent("Format change REJECTED: Robot is halted in fault hold! Must execute 'Purge & Home' recovery before format changeover.", "ALARM");
+      return false;
+    }
+    if (this.armState === "INDEXING" || this.armState === "GRIPPING" || this.armState === "TRANSIT") {
+      this.logEvent("Format change REJECTED: Robot arm in motion (%I5.1/5.2 active). Wait for safe IDLE/HOME state.", "WARN");
+      return false;
+    }
+    if (formatId === this.selectedFormat.formatId) return true;
+
+    // Account for partial carton in completedCartons as diverted to rework to preserve bottle traceability
+    if (this.counts.bottlesInCurrentCarton > 0) {
+      const partialCartonId = `CTN-${this.selectedFormat.formatId === "FORMAT_50G" ? "50G" : "100G"}-${String(this.cartonSerial).padStart(3, "0")}-PARTIAL-REWORK`;
+      const bottles = this.cartonSlots.filter(s => s.filled).map(s => s.bottleId);
+      const reworkRecord = {
+        timestamp: new Date().toISOString(),
+        cartonId: partialCartonId,
+        formatId: this.selectedFormat.formatId,
+        bottlesPacked: this.counts.bottlesInCurrentCarton,
+        bottleIds: bottles,
+        status: "DIVERTED_TO_REWORK"
+      };
+      this.completedCartons.unshift(reworkRecord);
+      this.counts.cartonsCompleted += 1;
+      this.cartonSerial += 1;
+      this.logEvent(`INTERLOCK ACTION: Format changeover initiated with partial carton. Diverted ${bottles.length} bottle(s) [${bottles.join(", ")}] in ${partialCartonId} to rework buffer.`, "WARN");
+    }
+
     this.selectedFormat = FORMAT_CONFIGS[formatId];
     this.counts.bottlesInCurrentCarton = 0;
     this.cartonSlots = this.generateCartonSlots(this.selectedFormat.bottlesPerCarton);
