@@ -48,6 +48,31 @@ python -m http.server 8080
 # Open http://localhost:8080/demos/virtual-factory/
 ```
 
+## All 20 Interactive Modules (GitHub Pages)
+
+| Module # | Project Title | Engineering Domain / Tools | Live GitHub Pages URL |
+| :--- | :--- | :--- | :--- |
+| `01` | Leaf Intake & Weighbridge | Dept 1 · Tare Deduction, Fine Leaf %, Buffer Gate (`%I0.1`) | https://tawfiqueeem.github.io/PanchaRupa/demos/leaf-intake/ |
+| `02` | Green Tea Steaming & Rolling | Dept 1 · Enzyme Kill, Drum Roaster, Machine Lock | https://tawfiqueeem.github.io/PanchaRupa/demos/green-tea-sequence/ |
+| `03` | Fluidized Bed Dryer Controls | Dept 1 · IEC 61131-3, Burner Safety (`%I3.0`), 3-Phase Reset | https://tawfiqueeem.github.io/PanchaRupa/demos/dryer-control/ |
+| `04` | Withering Trough Airflow | Dept 1 · Psychrometrics, VFD Airflow (`%IW70`), Sensor Watchdog | https://tawfiqueeem.github.io/PanchaRupa/demos/withering-airflow/ |
+| `05` | Orthodox Golden Tea & Fermentation | Dept 1 · Theaflavin/TR, Oxidation Bed, Shared Dryer | https://tawfiqueeem.github.io/PanchaRupa/demos/golden-tea-sequence/ |
+| `06` | Tea Grading & Mesh Routing | Dept 1 · Mesh Sieving, Bin Interlock, Idempotent Gate | https://tawfiqueeem.github.io/PanchaRupa/demos/grading-and-routing/ |
+| `07` | Packing & Reject Routing | Dept 4 · Checkweigher, Underfill Reject, Ledger Audit | https://tawfiqueeem.github.io/PanchaRupa/demos/packing-and-reject/ |
+| `08` | Smallholder Leaf Procurement | Dept 7 · Smallholders, 25% Yield, Winter Buffer | https://tawfiqueeem.github.io/PanchaRupa/demos/leaf-procurement/ |
+| `09` | Production Scheduling | Dept 2 · Makespan Gantt, Changeover Window, Machine Calendar | https://tawfiqueeem.github.io/PanchaRupa/demos/production-scheduling/ |
+| `10` | Worker Shift Planning & Skills | Dept 2 · Skill Matrix, Roster Coverage, Absence Alarm | https://tawfiqueeem.github.io/PanchaRupa/demos/worker-shift-planning/ |
+| `11` | Inventory & Fulfillment | Dept 2 · Warehouse WMS, Quality Hold, Order Settlement | https://tawfiqueeem.github.io/PanchaRupa/demos/inventory-and-fulfillment/ |
+| `12` | Costing, Margins & Break-Even | Dept 7 · Absorption Cost (`BDT 181.63`), Break-Even | https://tawfiqueeem.github.io/PanchaRupa/demos/costing-and-margin/ |
+| `13` | Preventive Maintenance | Dept 2 · CMMS Orders, Runtime Hours, Outage Isolation | https://tawfiqueeem.github.io/PanchaRupa/demos/maintenance-planning/ |
+| `14` | Integrated Virtual Factory Simulator (3D Capstone) | Dept 5 · Three.js 3D Digital Twin, DB/PLC/DES Snapshot | https://tawfiqueeem.github.io/PanchaRupa/demos/virtual-factory/ |
+| `15` | Delta Robot Packing Cell | Dept 4 · Delta Kinematics, Carton Changeover, Fault Recovery | https://tawfiqueeem.github.io/PanchaRupa/demos/robotic-packing/ |
+| `16` | Factory Data Platform | Dept 3 · Relational DDL, Foreign Keys, Lot Genealogy | https://tawfiqueeem.github.io/PanchaRupa/demos/factory-data/ |
+| `17` | Sustainability & Waste Balance | Dept 4 · Mass Balance, Biomass Furnace, Energy Waste | https://tawfiqueeem.github.io/PanchaRupa/demos/sustainability/ |
+| `18` | Building Automation & BMS | Dept 3 · BACnet / Modbus, AHU Flow, kWh/kg SEC | https://tawfiqueeem.github.io/PanchaRupa/demos/building-automation/ |
+| `19` | Staffing & 4-Tier Payroll Close | Dept 7 · 4-Tier Approval, Meal Allowance, Cash Recon | https://tawfiqueeem.github.io/PanchaRupa/demos/staffing-and-payroll/ |
+| `20` | Multi-Center Tea Auction Planning | Dept 7 · Chattogram CGP, Freight Premium, Reserve Deficit | https://tawfiqueeem.github.io/PanchaRupa/demos/tea-auction-planning/ |
+
 ## Verification
 
 Run the verification suites across all four layers:
