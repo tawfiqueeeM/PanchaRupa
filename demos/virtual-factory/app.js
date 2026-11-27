@@ -16,7 +16,7 @@ const STATION_SPECS = {
     fallbackCode: `(* Leaf Intake Weighbridge & Genealogy Edge *)\nIF bGateClosed AND (rGrossKg > rTareKg) THEN\n  rNetLeafKg := rGrossKg - rTareKg;\n  bHopperRelease AT %Q1.0 := NOT bQuarantineHold;\nEND_IF;\n\n-- db/queries.sql: Trace SUPPLIER -> DELIVERY\nINSERT INTO genealogy_edges (parent_entity_type, child_entity_type)\nVALUES ('SUPPLIER', 'DELIVERY');`,
   },
   withering: {
-    guide: 'Adjust the VFD Fan Speed slider and Target Moisture setpoint to regulate trough airflow across the withered leaf bed. Toggle "Simulate Probe Fault" to test the %Q3.3 capacitive sensor out-of-range cutoff.',
+    guide: 'Adjust the VFD Fan Speed slider and Target Moisture setpoint to regulate trough airflow across FN-01..04. Toggle "Simulate Probe Fault" to test the %Q3.3 capacitive sensor out-of-range cutoff.',
     hardware: ['Siemens SIMATIC S7-1500', 'SINAMICS G120 VFD (%QW64)', 'Capacitive Moisture Probe (%IW70)', 'PROFINET IO'],
     language: 'IEC 61131-3 Structured Text (ST)',
     codeLabel: 'plc/FB_WitheringAirflowControl.st',
@@ -31,15 +31,15 @@ const STATION_SPECS = {
     fallbackCode: `(* Mutual-Exclusion Roller & Oxidation Timer *)\nCASE eRollStep OF\n  STEP_LOAD: IF bRollerFree THEN bClampActive := TRUE; END_IF;\n  STEP_ROLL: tonRollTimer(IN := TRUE, PT := tRollDuration);\n             rDrumRpm := rPressureBar * 12.0;\n  STEP_OXIDIZE: bOxidationMist := TRUE;\nEND_CASE;`,
   },
   dryer: {
-    guide: 'Set the Inlet Temp Setpoint (50–130 °C) to modulate SCR thyristor heater glow, or click "Test Over-Temp / E-Stop Trip" to trigger the %Q3.1 red strobe alarm. Use "Acknowledge & Reset" to clear the latched trip.',
-    hardware: ['Siemens SIMATIC S7-1500F', 'PT100 RTD (%IW60)', 'SCR Thyristor (%QW60)', 'ATEX Dust/Temp Interlocks', 'PROFINET'],
+    guide: 'Set the Inlet Temp Setpoint (50–130 °C) to modulate SCR thyristor heater glow, or trigger Dryer Over-Temp (>115°C) / Airflow Loss (FS-401) to test %Q3.1 safety interlocks. Use Reset Safety Latch to clear latched trips.',
+    hardware: ['Siemens SIMATIC S7-1500F', 'PT100 RTD (%IW60)', 'SCR Thyristor (%QW60)', 'ATEX Zone 22 Interlocks', 'PROFINET'],
     language: 'IEC 61131-3 Structured Text (ST)',
     codeLabel: 'plc/FB_DryerSafetyControl.st',
     stPath: '../../plc/FB_DryerSafetyControl.st',
-    fallbackCode: `FUNCTION_BLOCK FB_DryerSafetyControl\n(* Enforces %I3.0 fan proof & 140C runaway cut *)\nIF bSafetyFaultActive THEN\n  bAlarmLatched := TRUE; rHeatCmdPercent := 0.0;\nEND_IF;`,
+    fallbackCode: `FUNCTION_BLOCK FB_DryerSafetyControl\n(* Enforces %I3.0 fan proof & 115C/140C runaway cut *)\nIF bSafetyFaultActive THEN\n  bAlarmLatched := TRUE; rHeatCmdPercent := 0.0;\nEND_IF;`,
   },
   warehouse: {
-    guide: 'Toggle the Pre-Winter Buffer (400 kg) policy to dynamically stack or release reserve tea pallets in the 3D warehouse. Click "Dispatch 10 kg Order" to simulate finished-goods fulfillment.',
+    guide: 'Toggle the Pre-Winter Buffer (400 kg) policy to dynamically stack or release reserve tea pallets in the 3D warehouse. Switch to Winter Dormancy (Jan-Feb) to observe buffer drawdown.',
     hardware: ['Robotic Palletizer Cell', 'Barcode / RFID Lot Scanner', 'OPC UA / REST Telemetry', 'SimPy DES Engine'],
     language: 'Python DES + SQL Recursive CTE',
     codeLabel: 'sim/factory_des.py · Winter Buffer & Dispatch',
@@ -114,11 +114,13 @@ let activePolicyKey = 'seasonal_buffer';
 let activeStationId = 'intake';
 let isPlaying = true;
 let simSpeed = 1.0;
+let isaTagsVisible = true;
 let scene3d = null;
 const stCodeCache = {};
 
-// Interactive Operator HMI state
+// Interactive Operator HMI & ISA-18.2 Alarm State
 const hmiState = {
+  operatingMode: 'normal', // 'normal' | 'winter'
   intakeDeltaKg: 0,
   intakeQuarantine: false,
   witherFanSpeedPct: 75,
@@ -127,10 +129,107 @@ const hmiState = {
   rollPressureBar: 2.8,
   rollTimerMin: 35,
   dryerTempSpDegC: 95,
+  rInletTempDegC: 95.0,
   dryerTripped: false,
-  dryerAcked: false,
+  airflowLossFault: false,
+  bSafetyTrip: false,
   warehouseDispatchedKg: 0,
 };
+
+// ISA-18.2 Alarm Registry
+const alarmList = new Map();
+
+function formatTime(date = new Date()) {
+  return date.toTimeString().slice(0, 8);
+}
+
+function syncAlarms() {
+  const manageAlarm = (tag, active, severity, message) => {
+    if (active) {
+      if (!alarmList.has(tag)) {
+        alarmList.set(tag, {
+          tag,
+          severity,
+          message,
+          timestamp: formatTime(),
+          acked: false,
+        });
+      }
+    } else {
+      alarmList.delete(tag);
+    }
+  };
+
+  manageAlarm(
+    'TT-401',
+    hmiState.dryerTripped,
+    'CRITICAL',
+    `Dryer DR-01 Over-Temp Trip (${hmiState.rInletTempDegC.toFixed(1)} °C > 115 °C) · %QW60=0%`
+  );
+  manageAlarm(
+    'FS-401',
+    hmiState.airflowLossFault,
+    'CRITICAL',
+    'Dryer Airflow Proof Loss (%I3.0=FALSE) · Safety Latch Engaged'
+  );
+  manageAlarm(
+    'MT-201',
+    hmiState.witherSensorFault,
+    'HIGH',
+    'Withering Moisture Probe Out-of-Range (%Q3.3) · VFD Fan %QW64=0'
+  );
+  manageAlarm(
+    'QI-101',
+    hmiState.intakeQuarantine,
+    'WARNING',
+    'Intake Quarantine Gate Active (%Q1.0=FALSE) · Hopper Locked'
+  );
+
+  renderAlarmBanner();
+}
+
+function renderAlarmBanner() {
+  const strip = document.getElementById('isaAlarmStrip');
+  const pill = document.getElementById('alarmPriorityPill');
+  const tagEl = document.getElementById('alarmTagId');
+  const tsEl = document.getElementById('alarmTimestamp');
+  const msgEl = document.getElementById('alarmMessage');
+  const countEl = document.getElementById('alarmCountBadge');
+  const ackBtn = document.getElementById('btnAckAlarm');
+  if (!strip) return;
+
+  const alarms = Array.from(alarmList.values());
+  if (alarms.length === 0) {
+    strip.className = 'isa-alarm-strip isa-alarm-strip--nominal';
+    pill.className = 'alarm-pill alarm-pill--nominal';
+    pill.textContent = hmiState.operatingMode === 'winter' ? 'STANDBY · WINTER' : 'ISA-18.2 NOMINAL';
+    tagEl.textContent = 'SYS-00';
+    tsEl.textContent = '--:--:--';
+    msgEl.textContent =
+      hmiState.operatingMode === 'winter'
+        ? 'Winter Dormancy (Jan–Feb) · Intake & drying in standby · Drawing from 400 kg buffer'
+        : 'All safety interlocks satisfied · No active plant alarms';
+    countEl.textContent = '0 Active';
+    ackBtn.disabled = true;
+    return;
+  }
+
+  const priorityRank = { CRITICAL: 3, HIGH: 2, WARNING: 1 };
+  alarms.sort((a, b) => (priorityRank[b.severity] || 0) - (priorityRank[a.severity] || 0));
+  const top = alarms[0];
+  const anyUnacked = alarms.some((a) => !a.acked);
+
+  strip.className = `isa-alarm-strip ${
+    anyUnacked ? 'isa-alarm-strip--unacked' : 'isa-alarm-strip--acked'
+  }`;
+  pill.className = `alarm-pill alarm-pill--${top.severity.toLowerCase()}`;
+  pill.textContent = `${top.severity}${top.acked ? ' · ACK' : ' · UNACK'}`;
+  tagEl.textContent = top.tag;
+  tsEl.textContent = top.timestamp;
+  msgEl.textContent = top.message;
+  countEl.textContent = `${alarms.length} Active`;
+  ackBtn.disabled = !anyUnacked;
+}
 
 async function loadFactorySnapshot() {
   try {
@@ -182,33 +281,75 @@ function getActivePolicyData() {
   return policies[activePolicyKey] || policies.seasonal_buffer || Object.values(policies)[0];
 }
 
+function computeDerivedPlcTags() {
+  const isWinter = hmiState.operatingMode === 'winter';
+  hmiState.bSafetyTrip = hmiState.dryerTripped || hmiState.airflowLossFault;
+
+  const effectiveFanPct =
+    isWinter || hmiState.witherSensorFault || hmiState.airflowLossFault
+      ? 0
+      : hmiState.witherFanSpeedPct;
+  const nFanSpeedRef = Math.round((effectiveFanPct / 100) * 27648);
+
+  if (hmiState.dryerTripped) {
+    hmiState.rInletTempDegC = Math.max(122.4, hmiState.dryerTempSpDegC + 25);
+  } else if (isWinter) {
+    hmiState.rInletTempDegC = 22.0;
+  } else {
+    hmiState.rInletTempDegC = Number(hmiState.dryerTempSpDegC);
+  }
+
+  return { isWinter, effectiveFanPct, nFanSpeedRef };
+}
+
 function renderHudAnd3D() {
   const policy = getActivePolicyData();
   const op = policy?.kpis?.operationalKpis || {};
   const wr = policy?.kpis?.winterDormancyResilience || {};
-  const lc = policy?.kpis?.laborAndCostingKpis || {};
-  const plcPassed = Boolean(factorySnapshot.checks?.plc?.passed) && !hmiState.dryerTripped;
+  const { isWinter, effectiveFanPct, nFanSpeedRef } = computeDerivedPlcTags();
+  const plcPassed = Boolean(factorySnapshot.checks?.plc?.passed) && !hmiState.bSafetyTrip;
 
-  const leafKg = Number(op.annualFreshLeafProcessedKg ?? 41775.6) + hmiState.intakeDeltaKg;
+  const leafKg = isWinter
+    ? 0
+    : Number(op.annualFreshLeafProcessedKg ?? 41775.6) + hmiState.intakeDeltaKg;
   const dryKg = Number(op.annualFinishedTeaProducedKg ?? 10443.9);
-  const dryerUtil = Number(op.averageDryerUtilizationPct ?? 41.4);
+  const dryerUtil = isWinter ? 0.0 : Number(op.averageDryerUtilizationPct ?? 41.4);
   const isBuffer = activePolicyKey.includes('buffer');
-  const stockKg = Math.max(0, (isBuffer ? 400 + Math.round(dryKg * 0.04) : Math.round(dryKg * 0.02)) - hmiState.warehouseDispatchedKg);
+  const stockKg = Math.max(
+    0,
+    (isBuffer ? 400 + Math.round(dryKg * 0.04) : Math.round(dryKg * 0.02)) -
+      hmiState.warehouseDispatchedKg
+  );
 
   const station = stationsList.find((s) => s.id === activeStationId) || stationsList[0];
-  document.getElementById('hudLeafIntake').textContent = `${Math.round(leafKg).toLocaleString()} kg/yr`;
+  document.getElementById('hudLeafIntake').textContent = isWinter
+    ? '0 kg/day (Dormancy)'
+    : `${Math.round(leafKg).toLocaleString()} kg/yr`;
   document.getElementById('hudActiveStage').textContent = station.name;
+
+  // Mode buttons state
+  const btnNormal = document.getElementById('btnModeNormal');
+  const btnWinter = document.getElementById('btnModeWinter');
+  if (btnNormal && btnWinter) {
+    btnNormal.classList.toggle('hmi-btn-primary', !isWinter);
+    btnWinter.classList.toggle('hmi-btn-primary', isWinter);
+  }
 
   // Telemetry inside left panel
   document.getElementById('leftPanelTitle').textContent = station.name;
-  document.getElementById('inspLeafArrived').textContent = `${Math.round(leafKg).toLocaleString()} kg/yr`;
-  const anyAlarm = hmiState.dryerTripped || hmiState.witherSensorFault || hmiState.intakeQuarantine;
+  document.getElementById('inspLeafArrived').textContent = isWinter
+    ? '0 kg/day (Jan–Feb)'
+    : `${Math.round(leafKg).toLocaleString()} kg/yr`;
+  const anyAlarm = hmiState.bSafetyTrip || hmiState.witherSensorFault || hmiState.intakeQuarantine;
   document.getElementById('inspBatchStatus').textContent = anyAlarm
     ? `ALARM HOLD · ${station.shortName}`
-    : isPlaying
-      ? `ACTIVE · ${station.shortName}`
-      : `PAUSED · ${station.shortName}`;
-  document.getElementById('inspPlcState').textContent = plcPassed && !hmiState.witherSensorFault ? 'SAFE · INTERLOCK OK' : 'TRIP / FAULT LATCHED';
+    : isWinter
+      ? `STANDBY · WINTER DORMANCY`
+      : isPlaying
+        ? `ACTIVE · ${station.shortName}`
+        : `PAUSED · ${station.shortName}`;
+  document.getElementById('inspPlcState').textContent =
+    plcPassed && !hmiState.witherSensorFault ? 'SAFE · INTERLOCK OK' : 'TRIP / FAULT LATCHED';
   document.getElementById('inspDryerUtil').textContent = `${dryerUtil.toFixed(1)}%`;
   document.getElementById('inspFinishedStock').textContent = `${stockKg.toLocaleString()} kg`;
 
@@ -225,33 +366,65 @@ function renderHudAnd3D() {
     headerPill.className = 'status-pill status-pill--fail';
   }
 
+  syncAlarms();
+
   // Update 3D Scene
   if (scene3d) {
     const throughputScale = activePolicyKey.startsWith('seasonal') ? 1.15 : 0.95;
+    const dailyIntake = isWinter ? 0 : Math.round(leafKg / 306);
     scene3d.updateSimulationState({
       playing: isPlaying,
       speed: simSpeed,
       throughputScale,
+      operatingMode: hmiState.operatingMode,
       dryerUtilPct: dryerUtil,
-      dryerTempSpDegC: hmiState.dryerTempSpDegC,
-      witheringFanSpeedPct: hmiState.witherSensorFault ? 0 : hmiState.witherFanSpeedPct,
+      dryerTempSpDegC: hmiState.rInletTempDegC,
+      witheringFanSpeedPct: effectiveFanPct,
       rollingSpeedScale: hmiState.rollPressureBar / 2.8,
-      intakeSpeedScale: hmiState.intakeQuarantine ? 0 : 1.0,
+      intakeSpeedScale: hmiState.intakeQuarantine || isWinter ? 0 : 1.0,
       plcSafe: plcPassed,
       bufferMode: isBuffer,
       stationAlarms: {
         intake: hmiState.intakeQuarantine,
-        withering: hmiState.witherSensorFault,
+        withering: hmiState.witherSensorFault || hmiState.airflowLossFault,
         rolling: false,
-        dryer: hmiState.dryerTripped,
+        dryer: hmiState.bSafetyTrip,
+        warehouse: false,
+      },
+      stationStandby: {
+        intake: isWinter,
+        withering: isWinter,
+        rolling: isWinter,
+        dryer: isWinter,
         warehouse: false,
       },
       labelMetrics: {
-        intake: hmiState.intakeQuarantine ? 'QUARANTINE HOLD' : `${Math.round(leafKg / 306)} kg/day`,
-        withering: hmiState.witherSensorFault ? '%Q3.3 SENSOR FAULT' : `Fan ${hmiState.witherFanSpeedPct}% · Target ${hmiState.witherTargetMoisturePct}%`,
-        rolling: `${hmiState.rollPressureBar.toFixed(1)} bar · ${hmiState.rollTimerMin}m`,
-        dryer: hmiState.dryerTripped ? '%Q3.1 SAFETY TRIP' : `${hmiState.dryerTempSpDegC}°C SP · ${dryerUtil.toFixed(1)}% util`,
+        intake: hmiState.intakeQuarantine
+          ? 'QUARANTINE HOLD'
+          : isWinter
+            ? 'WINTER STANDBY · 0 kg/d'
+            : `${dailyIntake} kg/day`,
+        withering: hmiState.witherSensorFault
+          ? '%Q3.3 SENSOR FAULT'
+          : isWinter
+            ? 'STANDBY · Fan 0%'
+            : `Fan ${effectiveFanPct}% · Target ${hmiState.witherTargetMoisturePct}%`,
+        rolling: isWinter
+          ? 'STANDBY · Idle'
+          : `${hmiState.rollPressureBar.toFixed(1)} bar · ${hmiState.rollTimerMin}m`,
+        dryer: hmiState.bSafetyTrip
+          ? '%Q3.1 SAFETY TRIP'
+          : isWinter
+            ? 'STANDBY · 22.0°C'
+            : `${hmiState.rInletTempDegC.toFixed(0)}°C · ${dryerUtil.toFixed(1)}% util`,
         warehouse: `${stockKg.toLocaleString()} kg · BDT ${Math.round(wr.minimumWinterCashBalanceBdt ?? 0).toLocaleString()}`,
+      },
+      isaTagValues: {
+        'SC-01': hmiState.intakeQuarantine ? 'HOLD' : `${dailyIntake} kg/d`,
+        'FN-01': `${effectiveFanPct}% (${nFanSpeedRef})`,
+        'RL-01': isWinter ? '0.0 bar' : `${hmiState.rollPressureBar.toFixed(1)} bar`,
+        'TT-401': `${hmiState.rInletTempDegC.toFixed(1)} °C`,
+        'PK-01': `${stockKg.toLocaleString()} kg`,
       },
     });
   }
@@ -263,7 +436,6 @@ function renderStationPanels() {
   const spec = STATION_SPECS[activeStationId] || STATION_SPECS.intake;
   document.getElementById('operatorGuideText').textContent = spec.guide;
 
-  // Build station-specific HMI controls
   const hmiBox = document.getElementById('hmiControlsContainer');
   if (activeStationId === 'intake') {
     hmiBox.innerHTML = `
@@ -339,24 +511,10 @@ function renderStationPanels() {
         <div class="hmi-control-row-header"><span>Inlet Temp Setpoint (rTempSpDegC)</span><strong id="valDryerSp">${hmiState.dryerTempSpDegC} °C</strong></div>
         <input id="sliderDryerTempSp" type="range" min="50" max="130" step="5" value="${hmiState.dryerTempSpDegC}">
       </div>
-      <div class="hmi-btn-row">
-        <button id="btnDryerTrip" class="hmi-btn hmi-btn-danger" type="button">Test Over-Temp / E-Stop</button>
-        <button id="btnDryerReset" class="hmi-btn hmi-btn-primary" type="button">Acknowledge &amp; Reset</button>
-      </div>
     `;
     document.getElementById('sliderDryerTempSp').addEventListener('input', (e) => {
       hmiState.dryerTempSpDegC = Number(e.target.value);
       document.getElementById('valDryerSp').textContent = `${hmiState.dryerTempSpDegC} °C`;
-      renderHudAnd3D();
-    });
-    document.getElementById('btnDryerTrip').addEventListener('click', () => {
-      hmiState.dryerTripped = true;
-      hmiState.dryerAcked = false;
-      renderHudAnd3D();
-    });
-    document.getElementById('btnDryerReset').addEventListener('click', () => {
-      hmiState.dryerTripped = false;
-      hmiState.dryerAcked = true;
       renderHudAnd3D();
     });
   } else if (activeStationId === 'warehouse') {
@@ -400,39 +558,49 @@ function renderStationPanels() {
 function renderLivePlcVars() {
   const varsEl = document.getElementById('plcLiveVars');
   if (!varsEl) return;
-  let items = [];
+  const { isWinter, effectiveFanPct, nFanSpeedRef } = computeDerivedPlcTags();
+
+  // Always show core safety/telemetry PLC tags + station-specific tags
+  const coreVars = [
+    { k: 'bSafetyTrip', v: String(hmiState.bSafetyTrip), alarm: hmiState.bSafetyTrip },
+    { k: 'nFanSpeedRef (%QW64)', v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
+    { k: 'rInletTemp (TT-401)', v: `${hmiState.rInletTempDegC.toFixed(1)} °C`, alarm: hmiState.dryerTripped },
+  ];
+
+  let stationVars = [];
   if (activeStationId === 'intake') {
-    items = [
+    stationVars = [
       { k: 'rDeltaIntakeKg', v: `+${hmiState.intakeDeltaKg} kg` },
-      { k: 'bHopperRelease AT %Q1.0', v: String(!hmiState.intakeQuarantine), alarm: hmiState.intakeQuarantine },
+      { k: 'bHopperRelease AT %Q1.0', v: String(!hmiState.intakeQuarantine && !isWinter), alarm: hmiState.intakeQuarantine },
     ];
   } else if (activeStationId === 'withering') {
-    const rawRef = hmiState.witherSensorFault ? 0 : Math.round((hmiState.witherFanSpeedPct / 100) * 27648);
-    items = [
+    stationVars = [
       { k: 'rTargetMoisture', v: `${hmiState.witherTargetMoisturePct.toFixed(1)} %` },
-      { k: 'nFanSpeedRef AT %QW64', v: `${rawRef} (${hmiState.witherSensorFault ? 0 : hmiState.witherFanSpeedPct}%)` },
       { k: 'bSensorFault AT %Q3.3', v: String(hmiState.witherSensorFault), alarm: hmiState.witherSensorFault },
     ];
   } else if (activeStationId === 'rolling') {
-    items = [
+    stationVars = [
       { k: 'rPressureBar', v: `${hmiState.rollPressureBar.toFixed(1)} bar` },
       { k: 'tRollDuration', v: `T#${hmiState.rollTimerMin}M` },
     ];
   } else if (activeStationId === 'dryer') {
-    const heatCmd = hmiState.dryerTripped ? 0.0 : Math.min(100, Math.round((hmiState.dryerTempSpDegC / 130) * 100));
-    items = [
-      { k: 'rTempSpDegC', v: `${hmiState.dryerTempSpDegC.toFixed(1)} °C` },
+    const heatCmd =
+      hmiState.bSafetyTrip || isWinter
+        ? 0.0
+        : Math.min(100, Math.round((hmiState.dryerTempSpDegC / 130) * 100));
+    stationVars = [
       { k: 'rHeatCmdPercent (%QW60)', v: `${heatCmd.toFixed(1)} %` },
-      { k: 'bAlarmBeacon AT %Q3.1', v: hmiState.dryerTripped ? 'TRUE (TRIPPED)' : 'FALSE', alarm: hmiState.dryerTripped },
-      { k: 'eState', v: hmiState.dryerTripped ? 'STATE_SAFETY_TRIP' : 'STATE_RUNNING', alarm: hmiState.dryerTripped },
+      { k: 'bAirflowProof (FS-401)', v: String(!hmiState.airflowLossFault), alarm: hmiState.airflowLossFault },
+      { k: 'bAlarmBeacon AT %Q3.1', v: hmiState.bSafetyTrip ? 'TRUE (TRIPPED)' : 'FALSE', alarm: hmiState.bSafetyTrip },
     ];
   } else if (activeStationId === 'warehouse') {
-    items = [
+    stationVars = [
       { k: 'inv_mode', v: activePolicyKey.includes('buffer') ? '"buffer" (400 kg)' : '"standard"' },
       { k: 'dispatched_session_kg', v: `${hmiState.warehouseDispatchedKg} kg` },
     ];
   }
-  varsEl.innerHTML = items
+
+  varsEl.innerHTML = [...coreVars, ...stationVars]
     .map((it) => `<div class="plc-var-item ${it.alarm ? 'plc-var-item--alarm' : ''}"><span>${it.k}</span><strong>${it.v}</strong></div>`)
     .join('');
 }
@@ -499,7 +667,7 @@ function renderDrawer() {
       const minCash = Number(wr.minimumWinterCashBalanceBdt ?? 0);
       const isSelected = key === activePolicyKey;
       return `
-        <tr style="${isSelected ? 'background: rgba(22, 101, 52, 0.25);' : ''}">
+        <tr style="${isSelected ? 'background: rgba(15, 118, 110, 0.25);' : ''}">
           <td><strong>${p.label}</strong></td>
           <td>${Number(op.annualFinishedTeaProducedKg ?? 0).toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</td>
           <td>${Number(op.averageDryerUtilizationPct ?? 0).toFixed(1)}%</td>
@@ -537,6 +705,14 @@ function bindEvents() {
     renderDrawer();
   });
 
+  document.getElementById('btnToggleIsaTags').addEventListener('click', (e) => {
+    isaTagsVisible = !isaTagsVisible;
+    e.currentTarget.textContent = `ISA-5.1 Tags: ${isaTagsVisible ? 'ON' : 'OFF'}`;
+    e.currentTarget.setAttribute('aria-pressed', String(isaTagsVisible));
+    e.currentTarget.classList.toggle('hud-btn-active', isaTagsVisible);
+    if (scene3d) scene3d.setIsaTagsVisible(isaTagsVisible);
+  });
+
   document.getElementById('btnPlayPause').addEventListener('click', (e) => {
     isPlaying = !isPlaying;
     e.currentTarget.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
@@ -545,6 +721,44 @@ function bindEvents() {
 
   document.getElementById('speedSelect').addEventListener('change', (e) => {
     simSpeed = parseFloat(e.target.value) || 1.0;
+    renderHudAnd3D();
+  });
+
+  // ISA-18.2 Alarm ACK
+  document.getElementById('btnAckAlarm').addEventListener('click', () => {
+    alarmList.forEach((alarm) => {
+      alarm.acked = true;
+    });
+    renderAlarmBanner();
+  });
+
+  // Operating Mode & Safety Interlock Controls
+  document.getElementById('btnModeNormal').addEventListener('click', () => {
+    hmiState.operatingMode = 'normal';
+    renderHudAnd3D();
+  });
+  document.getElementById('btnModeWinter').addEventListener('click', () => {
+    hmiState.operatingMode = 'winter';
+    renderHudAnd3D();
+  });
+  document.getElementById('btnFaultOverTemp').addEventListener('click', () => {
+    hmiState.dryerTripped = true;
+    hmiState.rInletTempDegC = 122.5;
+    if (scene3d) scene3d.focusStation('dryer');
+    selectStation('dryer');
+  });
+  document.getElementById('btnFaultAirflow').addEventListener('click', () => {
+    hmiState.airflowLossFault = true;
+    if (scene3d) scene3d.focusStation('dryer');
+    selectStation('dryer');
+  });
+  document.getElementById('btnResetSafetyLatch').addEventListener('click', () => {
+    hmiState.dryerTripped = false;
+    hmiState.airflowLossFault = false;
+    hmiState.witherSensorFault = false;
+    hmiState.intakeQuarantine = false;
+    hmiState.bSafetyTrip = false;
+    renderStationPanels();
     renderHudAnd3D();
   });
 
@@ -572,7 +786,7 @@ function bindEvents() {
   toggleBtn.addEventListener('click', () => setDrawerOpen(drawer.hidden));
   document.getElementById('btnCloseDrawer').addEventListener('click', () => setDrawerOpen(false));
 
-  // Horizontal wheel, touch swipe, and keyboard station navigation
+  // Horizontal wheel, touch swipe, and keyboard station navigation (0..5 + ArrowLeft/ArrowRight)
   let lastStationStepAt = 0;
   const STATION_STEP_COOLDOWN_MS = 350;
 
@@ -633,13 +847,32 @@ function bindEvents() {
     { passive: true }
   );
 
+  const SHORTCUT_MAP = {
+    '0': 'overview',
+    '1': 'intake',
+    '2': 'withering',
+    '3': 'rolling',
+    '4': 'dryer',
+    '5': 'warehouse',
+  };
+
   window.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
     if (!drawer.hidden) return;
-    e.preventDefault();
-    stepStation(e.key === 'ArrowRight' ? 1 : -1);
+
+    if (SHORTCUT_MAP[e.key]) {
+      e.preventDefault();
+      const targetId = SHORTCUT_MAP[e.key];
+      if (scene3d) scene3d.focusStation(targetId);
+      selectStation(targetId);
+      return;
+    }
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      stepStation(e.key === 'ArrowRight' ? 1 : -1);
+    }
   });
 }
 
@@ -660,6 +893,7 @@ async function init() {
       labelsContainer: document.getElementById('labelsOverlay'),
       onStationSelect: (stId) => selectStation(stId),
     });
+    scene3d.setIsaTagsVisible(isaTagsVisible);
     renderHudAnd3D();
   } catch (err) {
     console.warn('3D WebGL scene unavailable; HUD and snapshot data hydrated:', err);
