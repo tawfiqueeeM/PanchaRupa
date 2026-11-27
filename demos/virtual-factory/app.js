@@ -1,59 +1,60 @@
 const DEFAULT_STATIONS = [
-  { id: 'intake', name: '1. Raw Leaf Reception & Weighing', shortName: 'Room 01: Intake' },
+  { id: 'intake', name: '1. Raw Leaf Reception & Diverter', shortName: 'Room 01: Intake' },
   { id: 'withering', name: '2. Climate-Controlled Withering Hall', shortName: 'Room 02: Withering' },
-  { id: 'rolling', name: '3. Rolling & Oxidation Room', shortName: 'Room 03: Rolling' },
+  { id: 'rolling', name: '3. Fixation, Rolling & Oxidation Room', shortName: 'Room 03: Rolling' },
   { id: 'dryer', name: '4. Thermal Drying Room (ATEX Zone 22)', shortName: 'Room 04: Dryer' },
-  { id: 'warehouse', name: '5. Dry Grading & Export Packaging Cleanroom', shortName: 'Room 05: Packaging' },
+  { id: 'sorting', name: '5. Vibratory Grading & Optical Sorting', shortName: 'Room 05: Sorting' },
+  { id: 'warehouse', name: '6. Cleanroom Weigh-Fill & Foil Packaging', shortName: 'Room 06: Packaging' },
 ];
 let stationsList = DEFAULT_STATIONS;
 
 const STATION_SPECS = {
   intake: {
-    guide: 'Room 01 (SC-01): Trigger a +40 kg weighbridge batch or toggle the Quarantine Gate to test the %Q1.0 hopper interlock.',
+    guide: 'Room 01 (SC-01, DV-01A/B): Weighs raw shoots and splits flow between Path 1 (01→02 Golden Tea buffer) and Path 2 (01→03 Green Tea direct bypass).',
     equipmentSpec: [
       { k: 'PLC / I/O', v: 'Siemens S7-1214C DC/DC/DC · SM 1231 AI' },
-      { k: 'Load Cell', v: 'Mettler Toledo 0–500 kg (4–20 mA / AI0)' },
-      { k: 'Drive / Motor', v: '1.5 kW Intake Conveyor (DOL + VFD)' },
-      { k: 'Electrical', v: '400V 3-Ph / 24V DC Control · IP65' },
+      { k: 'Load Cell & Diverters', v: 'Mettler Toledo SC-01 · Pneumatic DV-01A/B' },
+      { k: 'Drive / Motor', v: '1.5 kW Intake Conveyor + Bypass Belt' },
+      { k: 'Electrical', v: '400V 3-Ph / 24V DC Solenoids · IP65' },
     ],
     hardware: ['PROFINET / Modbus TCP', 'SQLite Lot Genealogy'],
     language: 'Ladder Logic (LAD) + SQL Recursive CTE',
-    codeLabel: 'Intake Weighbridge & Genealogy Logic (LAD/SQL)',
-    fallbackCode: `(* Leaf Intake Weighbridge & Genealogy Edge *)\nIF bGateClosed AND (rGrossKg > rTareKg) THEN\n  rNetLeafKg := rGrossKg - rTareKg;\n  bHopperRelease AT %Q1.0 := NOT bQuarantineHold;\nEND_IF;\n\n-- db/queries.sql: Trace SUPPLIER -> DELIVERY\nINSERT INTO genealogy_edges (parent_entity_type, child_entity_type)\nVALUES ('SUPPLIER', 'DELIVERY');`,
+    codeLabel: 'Intake Weighbridge & DV-01A/B Diverter Logic',
+    fallbackCode: `(* Dual-Path Diverter DV-01A/B Priority Interlock *)\nIF bGateClosed AND (rGrossKg > rTareKg) THEN\n  rNetLeafKg := rGrossKg - rTareKg;\n  bDiverterDV01A := TRUE; (* Feed Room 02 Golden Buffer *)\n  bDiverterDV01B := NOT bGoldenBatchReady; (* Pause Bypass on Handover *)\nEND_IF;`,
   },
   withering: {
-    guide: 'Room 02 (T-01..04, FN-01..04): Adjust %QW64 VFD fan speed and target moisture, or inject %Q3.3 capacitive probe fault.',
+    guide: 'Room 02 (T-01..04, FN-01..04): Accumulates Golden Tea leaf up to 250 kg (rWitheringBufferKg). Click "Force Golden Batch Ready (02→03)" to trigger priority handover.',
     equipmentSpec: [
       { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · ET200SP Remote I/O' },
       { k: 'VFD & Motors', v: '4× SINAMICS G120 (FN-01..04, 2.2 kW Axial)' },
-      { k: 'Sensors', v: 'Capacitive Moisture Probe (%IW70, 4–20 mA)' },
-      { k: 'Electrical', v: '400V 3-Ph · 0–10V / PROFINET %QW64' },
+      { k: 'Sensors', v: 'Capacitive Moisture (%IW70) · Load Buffer (250 kg)' },
+      { k: 'Electrical', v: '400V 3-Ph · PROFINET %QW64' },
     ],
     hardware: ['SINAMICS G120 (%QW64)', 'PROFINET IO'],
     language: 'IEC 61131-3 Structured Text (ST)',
     codeLabel: 'plc/FB_WitheringAirflowControl.st',
     stPath: '../../plc/FB_WitheringAirflowControl.st',
-    fallbackCode: `FUNCTION_BLOCK FB_WitheringAirflowControl\n(* Scaled %IW70 moisture -> %QW64 VFD cutoff at 65% target *)\nIF bSensorFault THEN\n  rFanSpeedPct := 0.0; nFanSpeedRef := 0;\nEND_IF;`,
+    fallbackCode: `FUNCTION_BLOCK FB_WitheringAirflowControl\n(* Scaled %IW70 moisture -> %QW64 VFD cutoff at 65% target *)\nIF rWitheringBufferKg >= 250.0 THEN\n  bGoldenBatchReady := TRUE;\nEND_IF;`,
   },
   rolling: {
-    guide: 'Room 03 (RL-01..02): Adjust roller pressure (bar) and cycle timer to modulate orthodox drum RPM and oxidation.',
+    guide: 'Room 03 (RL-01..02): Processes Green Tea bypass (Path 2) continuously until Room 02 signals bGoldenBatchReady (Path 3 priority handover).',
     equipmentSpec: [
       { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · Safety Relay 3SK1' },
       { k: 'Drives & Motors', v: '2× 5.5 kW Orthodox Brass Roller Geared Motors' },
       { k: 'Instrumentation', v: 'Pneumatic Pressure Regulator (0–6 bar) + RH%' },
       { k: 'Electrical', v: '400V 3-Ph · 6 bar Compressed Air · IP54' },
     ],
-    hardware: ['OPC UA / SFC', 'Mutual-Exclusion Interlock'],
+    hardware: ['OPC UA / SFC', 'Priority Handover Interlock'],
     language: 'Sequential Function Chart (SFC) / ST',
-    codeLabel: 'Rolling & Oxidation Sequence (SFC/ST)',
-    fallbackCode: `(* Mutual-Exclusion Roller & Oxidation Timer *)\nCASE eRollStep OF\n  STEP_LOAD: IF bRollerFree THEN bClampActive := TRUE; END_IF;\n  STEP_ROLL: tonRollTimer(IN := TRUE, PT := tRollDuration);\n             rDrumRpm := rPressureBar * 12.0;\n  STEP_OXIDIZE: bOxidationMist := TRUE;\nEND_CASE;`,
+    codeLabel: 'Rolling & Oxidation Priority Sequence (SFC/ST)',
+    fallbackCode: `(* Priority Handover: Pause Path 2 (01->03) when bGoldenBatchReady *)\nIF bGoldenBatchReady THEN\n  eActiveLine := LINE_GOLDEN_HANDOVER;\n  bDiverterDV01B := FALSE;\nELSE\n  eActiveLine := LINE_GREEN_BYPASS;\nEND_IF;`,
   },
   dryer: {
-    guide: 'Room 04 (DR-01, ATEX Zone 22): Test Over-Temp (>115°C) or Airflow Loss (FS-401) to trigger %Q3.1 safety trip, then Reset Latch.',
+    guide: 'Room 04 (DR-01, ATEX Zone 22): Fires leaves to 3% moisture. Test Over-Temp (>115°C) or Airflow Loss (FS-401) to verify %Q3.1 safety trip.',
     equipmentSpec: [
       { k: 'Fail-Safe PLC', v: 'Siemens S7-1512SP F-1 PN (SIL 2 / PL d)' },
       { k: 'Sensors', v: '2× PT100 RTD (TT-401/402, %IW60) · FS-401 (%I3.0)' },
-      { k: 'Heater Control', v: '3-Ph SCR Thyristor (%QW60, 36 kW) + Exhaust Fan' },
+      { k: 'Heater Control', v: '3-Ph SCR Thyristor (%QW60, 36 kW) + Exhaust Stack' },
       { k: 'ATEX Rating', v: 'ATEX Zone 22 (Ex tc IIIB T135°C Dc) · Dust-Tight' },
     ],
     hardware: ['PROFINET PROFIsafe', 'Hardwired E-Stop Loop'],
@@ -62,10 +63,23 @@ const STATION_SPECS = {
     stPath: '../../plc/FB_DryerSafetyControl.st',
     fallbackCode: `FUNCTION_BLOCK FB_DryerSafetyControl\n(* Enforces %I3.0 fan proof & 115C/140C runaway cut *)\nIF bSafetyFaultActive THEN\n  bAlarmLatched := TRUE; rHeatCmdPercent := 0.0;\nEND_IF;`,
   },
-  warehouse: {
-    guide: 'Room 05 (PK-01): Toggle the Pre-Winter Buffer (400 kg) policy or switch to Winter Dormancy to test buffer drawdown.',
+  sorting: {
+    guide: 'Room 05 (GR-01, OS-01, RJ-01): Multi-deck vibratory grader and RGB optical color sorter divert stalks and scorched dust into Reject Bin RJ-01.',
     equipmentSpec: [
-      { k: 'PLC / Cell', v: 'Siemens S7-1215C · Robotic Palletizer Cell' },
+      { k: 'PLC / Vision', v: 'Siemens S7-1215C · Optical Sorter OS-01 Controller' },
+      { k: 'Grader & Sorter', v: 'GR-01 4-Deck Vibratory + RGB Line-Scan & Air-Jet Manifold' },
+      { k: 'Reject Handling', v: 'RJ-01 Pneumatic Reject Bin · Load Cell Weigher' },
+      { k: 'Electrical', v: '400V 3-Ph + 7 bar Dry Instrument Air · IP65' },
+    ],
+    hardware: ['PROFINET Vision', 'High-Speed Air-Jet Ejectors'],
+    language: 'IEC 61131-3 ST · Quality Gate',
+    codeLabel: 'Optical Sorter OS-01 & Reject Alarm ALM-502',
+    fallbackCode: `(* Room 05 Optical Color Sorter Quality Gate *)\nrRejectRatePct := (rRejectedKg / MAX(1.0, rAcceptedKg + rRejectedKg)) * 100.0;\nIF rRejectRatePct > 8.0 THEN\n  bAlm502OpticalSpike := TRUE; (* ISA-18.2 Warning *)\nEND_IF;`,
+  },
+  warehouse: {
+    guide: 'Room 06 (PK-01): Cleanroom weigh-fill seals clean graded tea into 250g kraft-and-foil pouches. Toggle Pre-Winter Buffer (400 kg) or dispatch orders.',
+    equipmentSpec: [
+      { k: 'PLC / Cell', v: 'Siemens S7-1215C · Weigh-Fill & Foil Sealer PK-01' },
       { k: 'Instrumentation', v: 'Checkweigher PK-01 · Barcode/RFID Lot Scanner' },
       { k: 'Environment', v: 'Cleanroom Dehumidifier (<55% RH) · HEPA Intake' },
       { k: 'Electrical', v: '230V/400V · OPC UA / REST + SimPy DES' },
@@ -141,7 +155,7 @@ const FALLBACK_SNAPSHOT = {
 let factorySnapshot = FALLBACK_SNAPSHOT;
 let snapshotIsLive = false;
 let activePolicyKey = 'seasonal_buffer';
-let activeStationId = 'overview'; // Start in unobstructed bird's-eye Overview
+let activeStationId = 'overview';
 let isPlaying = true;
 let simSpeed = 1.0;
 let isaTagsVisible = true;
@@ -154,7 +168,41 @@ let currentTheme = (() => {
   }
 })();
 let scene3d = null;
+let renderLeafSwatchFn = null;
 const stCodeCache = {};
+
+const LEAF_STAGE_SPECS = {
+  intake: {
+    moisture: '78% (Fresh)',
+    texture: 'Turgid serrated leaf + silvery bud',
+    state: 'DV-01A/B Dual-Path Split',
+  },
+  withering: {
+    moisture: '68% (Withered)',
+    texture: 'Limp, folded olive-green',
+    state: 'Golden Tea Buffer (250 kg)',
+  },
+  rolling: {
+    moisture: '65% (Oxidized)',
+    texture: 'Twisted glossy copper-brown / emerald',
+    state: 'Path 2 Green / Path 3 Golden',
+  },
+  dryer: {
+    moisture: '3% (Fired)',
+    texture: 'Crisp curled black + golden tips',
+    state: 'Hot-air fired · TT-401',
+  },
+  sorting: {
+    moisture: '3.0% (Sorted)',
+    texture: 'Clean tea vs. pale/scorched rejects',
+    state: 'GR-01 + OS-01 → RJ-01 Bin',
+  },
+  warehouse: {
+    moisture: '3.0% (Packaged)',
+    texture: 'Graded BOP/OP + golden tips',
+    state: 'Sealed 250g Kraft-Foil',
+  },
+};
 
 function applyTheme(mode, persist = true) {
   currentTheme = mode === 'dark' ? 'dark' : 'light';
@@ -175,12 +223,14 @@ function applyTheme(mode, persist = true) {
   }
 }
 
-// Interactive Operator HMI & ISA-18.2 Alarm State
+// Interactive Operator HMI, Dual-Path Routing, Optical Sorting & ISA-18.2 Alarm State
 const hmiState = {
   operatingMode: 'normal', // 'normal' | 'winter'
   controlMode: 'AUTO', // 'AUTO' | 'MANUAL'
   intakeDeltaKg: 0,
   intakeQuarantine: false,
+  witheringBufferKg: 145.0, // Accumulates to 250 kg threshold for Golden Tea handover
+  bGoldenBatchReady: false, // TRUE = Path 3 (02->03) priority handover active, Path 2 paused
   witherFanSpeedPct: 75,
   witherTargetMoisturePct: 65,
   witherSensorFault: false,
@@ -191,6 +241,10 @@ const hmiState = {
   dryerTripped: false,
   airflowLossFault: false,
   bSafetyTrip: false,
+  rRejectRatePct: 3.2,
+  rRejectedKg: 14.4,
+  rAcceptedKg: 435.6,
+  rejectSpikeActive: false,
   warehouseDispatchedKg: 0,
 };
 
@@ -237,6 +291,12 @@ function syncAlarms() {
     'Withering Moisture Probe Out-of-Range (%Q3.3) · VFD Fan %QW64=0'
   );
   manageAlarm(
+    'ALM-502',
+    hmiState.rejectSpikeActive,
+    'WARNING',
+    `ALM-502: Optical Sorter Reject Rate > 8.0% (${hmiState.rRejectRatePct.toFixed(1)}%) · Diverting to RJ-01`
+  );
+  manageAlarm(
     'QI-101',
     hmiState.intakeQuarantine,
     'WARNING',
@@ -265,8 +325,8 @@ function renderAlarmBanner() {
     tsEl.textContent = '--:--:--';
     msgEl.textContent =
       hmiState.operatingMode === 'winter'
-        ? 'Winter Dormancy (Jan–Feb) · Rooms 01–04 in standby · Drawing from 400 kg buffer'
-        : 'All safety interlocks satisfied · Click any room or press 1–5 to inspect';
+        ? 'Winter Dormancy (Jan–Feb) · Rooms 01–05 in standby · Drawing from 400 kg buffer'
+        : 'All safety & quality interlocks satisfied · Click any room or press 1–6 to inspect';
     countEl.textContent = '0 Active';
     ackBtn.disabled = true;
     return;
@@ -379,13 +439,20 @@ function renderHudAnd3D() {
       hmiState.warehouseDispatchedKg
   );
 
+  const routeSummary = isWinter
+    ? 'STANDBY (Winter)'
+    : hmiState.bGoldenBatchReady
+      ? 'Path 3 · Golden (02→03)'
+      : 'Path 1+2 · Green Bypass';
+
   const station = stationsList.find((s) => s.id === activeStationId);
+  document.getElementById('hudActiveRoute').textContent = routeSummary;
   document.getElementById('hudLeafIntake').textContent = isWinter
     ? '0 kg/day (Dormancy)'
     : `${Math.round(leafKg).toLocaleString()} kg/yr`;
   document.getElementById('hudActiveStage').textContent = station
     ? station.shortName
-    : 'Plant Overview (5 Rooms)';
+    : 'Plant Overview (6 Rooms)';
 
   // Mode & tactile buttons state
   const btnNormal = document.getElementById('btnModeNormal');
@@ -408,20 +475,15 @@ function renderHudAnd3D() {
   // Telemetry inside left panel
   if (station) {
     document.getElementById('leftPanelTitle').textContent = station.name;
-    document.getElementById('inspLeafArrived').textContent = isWinter
-      ? '0 kg/day (Jan–Feb)'
-      : `${Math.round(leafKg).toLocaleString()} kg/yr`;
-    const anyAlarm = hmiState.bSafetyTrip || hmiState.witherSensorFault || hmiState.intakeQuarantine;
-    document.getElementById('inspBatchStatus').textContent = anyAlarm
-      ? `ALARM HOLD · ${station.shortName}`
-      : isWinter
-        ? 'STANDBY · WINTER DORMANCY'
-        : isPlaying
-          ? `RUNNING (${hmiState.controlMode})`
-          : 'STOPPED · OPERATOR HOLD';
+    document.getElementById('leafSpecRoute').textContent =
+      activeStationId === 'sorting'
+        ? `Reject ${hmiState.rRejectRatePct.toFixed(1)}% (${hmiState.rRejectedKg.toFixed(1)} kg)`
+        : routeSummary;
+    document.getElementById('inspWitherBuffer').textContent = `${hmiState.witheringBufferKg.toFixed(0)} / 250 kg`;
+    document.getElementById('inspRouteState').textContent = routeSummary;
+    document.getElementById('inspRejectRate').textContent = `${hmiState.rRejectRatePct.toFixed(1)}% (${hmiState.rRejectedKg.toFixed(1)} kg rej)`;
     document.getElementById('inspPlcState').textContent =
       plcPassed && !hmiState.witherSensorFault ? 'SAFE · INTERLOCK OK' : 'TRIP / FAULT LATCHED';
-    document.getElementById('inspDryerUtil').textContent = `${dryerUtil.toFixed(1)}%`;
     document.getElementById('inspFinishedStock').textContent = `${stockKg.toLocaleString()} kg`;
   }
 
@@ -449,6 +511,9 @@ function renderHudAnd3D() {
       speed: simSpeed,
       throughputScale,
       operatingMode: hmiState.operatingMode,
+      goldenHandoverActive: hmiState.bGoldenBatchReady,
+      rejectSpikeActive: hmiState.rejectSpikeActive,
+      rejectRatePct: hmiState.rRejectRatePct,
       dryerUtilPct: dryerUtil,
       dryerTempSpDegC: hmiState.rInletTempDegC,
       witheringFanSpeedPct: effectiveFanPct,
@@ -461,6 +526,7 @@ function renderHudAnd3D() {
         withering: hmiState.witherSensorFault || hmiState.airflowLossFault,
         rolling: false,
         dryer: hmiState.bSafetyTrip,
+        sorting: false,
         warehouse: false,
       },
       stationStandby: {
@@ -468,6 +534,7 @@ function renderHudAnd3D() {
         withering: isWinter,
         rolling: isWinter,
         dryer: isWinter,
+        sorting: isWinter,
         warehouse: false,
       },
       labelMetrics: {
@@ -475,20 +542,23 @@ function renderHudAnd3D() {
           ? 'QUARANTINE HOLD'
           : isWinter
             ? 'WINTER STANDBY · 0 kg/d'
-            : `${dailyIntake} kg/day`,
+            : `${dailyIntake} kg/d · ${hmiState.bGoldenBatchReady ? 'DV-01B CLOSED' : 'BYPASS 01→03'}`,
         withering: hmiState.witherSensorFault
           ? '%Q3.3 SENSOR FAULT'
           : isWinter
             ? 'STANDBY · Fan 0%'
-            : `Fan ${effectiveFanPct}% · Target ${hmiState.witherTargetMoisturePct}%`,
+            : `${hmiState.witheringBufferKg.toFixed(0)}/250 kg · ${hmiState.bGoldenBatchReady ? 'HANDOVER 02→03' : `Fan ${effectiveFanPct}%`}`,
         rolling: isWinter
           ? 'STANDBY · Idle'
-          : `${hmiState.rollPressureBar.toFixed(1)} bar · ${hmiState.rollTimerMin}m`,
+          : `${hmiState.bGoldenBatchReady ? 'GOLDEN TEA' : 'GREEN TEA'} · ${hmiState.rollPressureBar.toFixed(1)} bar`,
         dryer: hmiState.bSafetyTrip
           ? '%Q3.1 SAFETY TRIP'
           : isWinter
             ? 'STANDBY · 22.0°C'
             : `${hmiState.rInletTempDegC.toFixed(0)}°C · ${dryerUtil.toFixed(1)}% util`,
+        sorting: hmiState.rejectSpikeActive
+          ? `ALM-502 · ${hmiState.rRejectRatePct.toFixed(1)}% REJECT`
+          : `OS-01 · ${hmiState.rRejectRatePct.toFixed(1)}% Reject`,
         warehouse: `${stockKg.toLocaleString()} kg · BDT ${Math.round(wr.minimumWinterCashBalanceBdt ?? 0).toLocaleString()}`,
       },
       isaTagValues: {
@@ -496,6 +566,7 @@ function renderHudAnd3D() {
         'FN-01': `${effectiveFanPct}% (${nFanSpeedRef})`,
         'RL-01': isWinter ? '0.0 bar' : `${hmiState.rollPressureBar.toFixed(1)} bar`,
         'TT-401': `${hmiState.rInletTempDegC.toFixed(1)} °C`,
+        'OS-01': `${hmiState.rRejectRatePct.toFixed(1)}% Rej`,
         'PK-01': `${stockKg.toLocaleString()} kg`,
       },
     });
@@ -504,9 +575,41 @@ function renderHudAnd3D() {
   renderLivePlcVars();
 }
 
+function triggerGoldenHandover() {
+  hmiState.witheringBufferKg = 250.0;
+  hmiState.bGoldenBatchReady = true;
+  renderHudAnd3D();
+  // Automatically transfer Golden Tea batch from Room 02 to Room 03, then resume Path 2
+  setTimeout(() => {
+    if (hmiState.bGoldenBatchReady) {
+      hmiState.bGoldenBatchReady = false;
+      hmiState.witheringBufferKg = 45.0;
+      renderHudAnd3D();
+    }
+  }, 6000);
+}
+
+function triggerRejectSpike() {
+  hmiState.rejectSpikeActive = true;
+  hmiState.rRejectRatePct = 11.4;
+  hmiState.rRejectedKg += 18.5;
+  renderHudAnd3D();
+}
+
 function renderStationPanels() {
   if (activeStationId === 'overview') return;
   const spec = STATION_SPECS[activeStationId] || STATION_SPECS.intake;
+  const leafSpec = LEAF_STAGE_SPECS[activeStationId] || LEAF_STAGE_SPECS.intake;
+  document.getElementById('leafSpecMoisture').textContent = leafSpec.moisture;
+  document.getElementById('leafSpecTexture').textContent = leafSpec.texture;
+  document.getElementById('leafSpecState').textContent = leafSpec.state;
+  if (renderLeafSwatchFn) {
+    const swatchId =
+      activeStationId === 'rolling' && !hmiState.bGoldenBatchReady
+        ? 'rolling_green'
+        : activeStationId;
+    renderLeafSwatchFn(document.getElementById('leafStageSwatch'), swatchId);
+  }
   document.getElementById('operatorGuideText').textContent = spec.guide;
 
   const hmiBox = document.getElementById('hmiControlsContainer');
@@ -522,7 +625,12 @@ function renderStationPanels() {
     `;
     document.getElementById('btnTriggerWeighIn').addEventListener('click', () => {
       hmiState.intakeDeltaKg += 40;
-      renderHudAnd3D();
+      hmiState.witheringBufferKg = Math.min(250, hmiState.witheringBufferKg + 25);
+      if (hmiState.witheringBufferKg >= 250) {
+        triggerGoldenHandover();
+      } else {
+        renderHudAnd3D();
+      }
     });
     document.getElementById('chkIntakeFault').addEventListener('change', (e) => {
       hmiState.intakeQuarantine = e.target.checked;
@@ -537,6 +645,9 @@ function renderStationPanels() {
       <div class="hmi-control-row">
         <div class="hmi-control-row-header"><span>Target Moisture (rTargetMoisture)</span><strong id="valWitherTarget">${hmiState.witherTargetMoisturePct}%</strong></div>
         <input id="sliderWitherTarget" type="range" min="45" max="75" step="1" value="${hmiState.witherTargetMoisturePct}">
+      </div>
+      <div class="hmi-btn-row">
+        <button id="btnRoomForceGolden" class="hmi-btn hmi-btn-primary" type="button">Force Golden Batch Ready (02→03)</button>
       </div>
       <label class="hmi-toggle-label">
         <span>Simulate Probe Fault (%Q3.3)</span>
@@ -553,6 +664,7 @@ function renderStationPanels() {
       document.getElementById('valWitherTarget').textContent = `${hmiState.witherTargetMoisturePct}%`;
       renderHudAnd3D();
     });
+    document.getElementById('btnRoomForceGolden').addEventListener('click', triggerGoldenHandover);
     document.getElementById('chkWitherFault').addEventListener('change', (e) => {
       hmiState.witherSensorFault = e.target.checked;
       renderHudAnd3D();
@@ -603,6 +715,16 @@ function renderStationPanels() {
       hmiState.airflowLossFault = true;
       renderHudAnd3D();
     });
+  } else if (activeStationId === 'sorting') {
+    hmiBox.innerHTML = `
+      <div class="hmi-btn-row">
+        <button id="btnRoomRejectSpike" class="hmi-btn hmi-btn-warn" type="button">Simulate High Reject Spike (&gt;8%)</button>
+      </div>
+      <div class="hmi-control-row">
+        <div class="hmi-control-row-header"><span>Accepted / Rejected</span><strong>${hmiState.rAcceptedKg.toFixed(1)} kg / ${hmiState.rRejectedKg.toFixed(1)} kg</strong></div>
+      </div>
+    `;
+    document.getElementById('btnRoomRejectSpike').addEventListener('click', triggerRejectSpike);
   } else if (activeStationId === 'warehouse') {
     const isBuffer = activePolicyKey.includes('buffer');
     hmiBox.innerHTML = `
@@ -655,6 +777,8 @@ function renderLivePlcVars() {
 
   const coreVars = [
     { k: 'bSafetyTrip', v: String(hmiState.bSafetyTrip), alarm: hmiState.bSafetyTrip },
+    { k: 'bGoldenBatchReady', v: String(hmiState.bGoldenBatchReady) },
+    { k: 'bDiverterDV01B (01→03)', v: String(!hmiState.bGoldenBatchReady && !isWinter) },
     { k: 'nFanSpeedRef (%QW64)', v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
     { k: 'rInletTemp (TT-401)', v: `${hmiState.rInletTempDegC.toFixed(1)} °C`, alarm: hmiState.dryerTripped },
   ];
@@ -667,13 +791,13 @@ function renderLivePlcVars() {
     ];
   } else if (activeStationId === 'withering') {
     stationVars = [
-      { k: 'rTargetMoisture', v: `${hmiState.witherTargetMoisturePct.toFixed(1)} %` },
+      { k: 'rWitheringBufferKg', v: `${hmiState.witheringBufferKg.toFixed(1)} / 250.0 kg` },
       { k: 'bSensorFault AT %Q3.3', v: String(hmiState.witherSensorFault), alarm: hmiState.witherSensorFault },
     ];
   } else if (activeStationId === 'rolling') {
     stationVars = [
       { k: 'rPressureBar', v: `${hmiState.rollPressureBar.toFixed(1)} bar` },
-      { k: 'tRollDuration', v: `T#${hmiState.rollTimerMin}M` },
+      { k: 'eActiveLine', v: hmiState.bGoldenBatchReady ? 'GOLDEN_HANDOVER' : 'GREEN_BYPASS' },
     ];
   } else if (activeStationId === 'dryer') {
     const heatCmd =
@@ -684,6 +808,12 @@ function renderLivePlcVars() {
       { k: 'rHeatCmdPercent (%QW60)', v: `${heatCmd.toFixed(1)} %` },
       { k: 'bAirflowProof (FS-401)', v: String(!hmiState.airflowLossFault), alarm: hmiState.airflowLossFault },
       { k: 'bAlarmBeacon AT %Q3.1', v: hmiState.bSafetyTrip ? 'TRUE (TRIPPED)' : 'FALSE', alarm: hmiState.bSafetyTrip },
+    ];
+  } else if (activeStationId === 'sorting') {
+    stationVars = [
+      { k: 'rRejectRatePct (OS-01)', v: `${hmiState.rRejectRatePct.toFixed(1)} %`, alarm: hmiState.rejectSpikeActive },
+      { k: 'rRejectedKg / rAcceptedKg', v: `${hmiState.rRejectedKg.toFixed(1)} / ${hmiState.rAcceptedKg.toFixed(1)} kg` },
+      { k: 'bAlm502OpticalSpike', v: String(hmiState.rejectSpikeActive), alarm: hmiState.rejectSpikeActive },
     ];
   } else if (activeStationId === 'warehouse') {
     stationVars = [
@@ -799,6 +929,9 @@ function triggerActiveRoomFault() {
     hmiState.intakeQuarantine = true;
   } else if (activeStationId === 'withering') {
     hmiState.witherSensorFault = true;
+  } else if (activeStationId === 'sorting') {
+    triggerRejectSpike();
+    return;
   } else if (activeStationId === 'dryer') {
     hmiState.dryerTripped = true;
     hmiState.rInletTempDegC = 122.5;
@@ -849,11 +982,9 @@ function bindEvents() {
 
   document.getElementById('btnExitRoom').addEventListener('click', exitRoomToOverview);
 
-  // ISA-18.2 Alarm ACK (banner + left HMI panel)
   document.getElementById('btnAckAlarm').addEventListener('click', ackAllAlarms);
   document.getElementById('btnHmiAckAlarm').addEventListener('click', ackAllAlarms);
 
-  // Tactile Industrial Operator Buttons
   document.getElementById('btnCmdRun').addEventListener('click', () => {
     isPlaying = true;
     document.getElementById('btnPlayPause').textContent = '⏸ Pause';
@@ -868,6 +999,8 @@ function bindEvents() {
     hmiState.controlMode = hmiState.controlMode === 'AUTO' ? 'MANUAL' : 'AUTO';
     renderHudAnd3D();
   });
+  document.getElementById('btnForceGoldenBatch').addEventListener('click', triggerGoldenHandover);
+  document.getElementById('btnSimRejectSpike').addEventListener('click', triggerRejectSpike);
   document.getElementById('btnCmdTestFault').addEventListener('click', triggerActiveRoomFault);
 
   document.getElementById('btnModeNormal').addEventListener('click', () => {
@@ -883,6 +1016,8 @@ function bindEvents() {
     hmiState.airflowLossFault = false;
     hmiState.witherSensorFault = false;
     hmiState.intakeQuarantine = false;
+    hmiState.rejectSpikeActive = false;
+    hmiState.rRejectRatePct = 3.2;
     hmiState.bSafetyTrip = false;
     renderStationPanels();
     renderHudAnd3D();
@@ -912,7 +1047,7 @@ function bindEvents() {
   toggleBtn.addEventListener('click', () => setDrawerOpen(drawer.hidden));
   document.getElementById('btnCloseDrawer').addEventListener('click', () => setDrawerOpen(false));
 
-  // Horizontal wheel, touch swipe, and keyboard navigation (0..5, Escape, ArrowLeft/Right)
+  // Horizontal wheel, touch swipe, and keyboard navigation (0..6, Escape, ArrowLeft/Right)
   let lastStationStepAt = 0;
   const STATION_STEP_COOLDOWN_MS = 350;
 
@@ -979,7 +1114,8 @@ function bindEvents() {
     '2': 'withering',
     '3': 'rolling',
     '4': 'dryer',
-    '5': 'warehouse',
+    '5': 'sorting',
+    '6': 'warehouse',
   };
 
   window.addEventListener('keydown', (e) => {
@@ -1022,7 +1158,8 @@ async function init() {
   renderDrawer();
 
   try {
-    const { createFactory3D, FACTORY_STATIONS } = await import('./factory-3d.js');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js');
+    renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;
     }

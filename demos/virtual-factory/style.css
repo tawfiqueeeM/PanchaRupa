@@ -540,6 +540,12 @@ body {
   color: #ffffff;
 }
 
+.hmi-btn-warn {
+  background: #d97706;
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
 .hmi-toggle-label {
   display: flex;
   align-items: center;
@@ -693,6 +699,56 @@ body {
   background: var(--accent);
   color: #ffffff;
   border-color: var(--accent);
+}
+
+.leaf-transform-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.leaf-transform-body {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.leaf-swatch-canvas {
+  width: 88px;
+  height: 88px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  display: block;
+}
+
+.leaf-spec-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+}
+
+.leaf-spec-grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.72rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+}
+
+.leaf-spec-grid dt {
+  color: var(--text-muted);
+}
+
+.leaf-spec-grid dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
 }
 
 .tactile-btn-grid {

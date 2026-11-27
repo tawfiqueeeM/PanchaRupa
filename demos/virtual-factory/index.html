@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PanchaRupa 3D Virtual Tea Factory — 5-Room Digital Twin HMI</title>
+  <title>PanchaRupa 3D Virtual Tea Factory — 6-Room Digital Twin HMI</title>
   <link rel="stylesheet" href="../../shared/css/tokens.css">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
@@ -27,7 +27,7 @@
       <span id="alarmPriorityPill" class="alarm-pill alarm-pill--nominal">ISA-18.2 NOMINAL</span>
       <span id="alarmTagId" class="alarm-tag">SYS-00</span>
       <span id="alarmTimestamp" class="alarm-ts">--:--:--</span>
-      <span id="alarmMessage" class="alarm-msg">All safety interlocks satisfied · No active plant alarms</span>
+      <span id="alarmMessage" class="alarm-msg">All safety interlocks satisfied · Click any room or press 1–6 to inspect</span>
     </div>
     <div class="alarm-strip-actions">
       <span id="alarmCountBadge" class="alarm-count">0 Active</span>
@@ -39,18 +39,22 @@
   <header class="hud-top-bar" aria-label="Factory Live Controls">
     <div class="hud-brand">
       <button id="btnExitRoom" class="hud-btn hud-btn-exit" type="button" hidden>&larr; Exit Room (Esc)</button>
-      <span class="hud-badge">ISA-101 · 5-Room Twin</span>
+      <span class="hud-badge">ISA-101 · 6-Room Twin</span>
       <strong>PanchaRupa Tea Factory</strong>
     </div>
 
     <div class="hud-metrics">
+      <div class="hud-stat">
+        <span class="hud-stat-label">Active Route</span>
+        <strong id="hudActiveRoute">Path 1+2 · Green Bypass</strong>
+      </div>
       <div class="hud-stat">
         <span class="hud-stat-label">Live Leaf Intake</span>
         <strong id="hudLeafIntake">—</strong>
       </div>
       <div class="hud-stat">
         <span class="hud-stat-label">Active View</span>
-        <strong id="hudActiveStage">Plant Overview (5 Rooms)</strong>
+        <strong id="hudActiveStage">Plant Overview (6 Rooms)</strong>
       </div>
     </div>
 
@@ -79,8 +83,8 @@
     </div>
   </header>
 
-  <!-- Left Panel: Buttoned Operator HMI (Closed in Overview) -->
-  <aside id="leftHmiPanel" class="side-panel side-panel-left" hidden aria-label="Operator HMI and Quick Guide">
+  <!-- Left Panel: Buttoned Operator HMI & Leaf Stage Preview (Closed in Overview) -->
+  <aside id="leftHmiPanel" class="side-panel side-panel-left" hidden aria-label="Operator HMI and Leaf Stage Preview">
     <div class="side-panel-header">
       <div>
         <span class="panel-eyebrow">OPERATOR HMI · ISA-101</span>
@@ -90,14 +94,30 @@
     </div>
 
     <div class="side-panel-body">
+      <!-- Leaf Transformation & Quality Spec Card -->
+      <div id="leafTransformationCard" class="leaf-transform-card">
+        <div class="section-label">Leaf Transformation &amp; Quality Spec</div>
+        <div class="leaf-transform-body">
+          <canvas id="leafStageSwatch" class="leaf-swatch-canvas" width="160" height="160" aria-label="Tea leaf stage visual preview"></canvas>
+          <dl class="leaf-spec-grid">
+            <div><dt>Moisture</dt><dd id="leafSpecMoisture">—</dd></div>
+            <div><dt>Texture</dt><dd id="leafSpecTexture">—</dd></div>
+            <div><dt>State</dt><dd id="leafSpecState">—</dd></div>
+            <div><dt>Route / Reject</dt><dd id="leafSpecRoute">—</dd></div>
+          </dl>
+        </div>
+      </div>
+
       <!-- Tactile Industrial Control Buttons -->
       <div class="hmi-controls-box">
         <div class="section-label">Industrial Operator Controls</div>
         <div class="tactile-btn-grid">
-          <button id="btnCmdRun" class="hmi-btn hmi-btn-primary" type="button">RUN / START</button>
+          <button id="btnCmdRun" class="hmi-btn hmi-btn-primary" type="button">START</button>
           <button id="btnCmdStop" class="hmi-btn" type="button">STOP</button>
-          <button id="btnCmdAutoManual" class="hmi-btn" type="button">MODE: AUTO</button>
-          <button id="btnCmdTestFault" class="hmi-btn hmi-btn-danger" type="button">TEST INTERLOCK / FAULT</button>
+          <button id="btnCmdAutoManual" class="hmi-btn" type="button">AUTO / MAN</button>
+          <button id="btnForceGoldenBatch" class="hmi-btn hmi-btn-primary" type="button">FORCE GOLDEN BATCH</button>
+          <button id="btnSimRejectSpike" class="hmi-btn hmi-btn-warn" type="button">SIMULATE REJECT SPIKE</button>
+          <button id="btnCmdTestFault" class="hmi-btn hmi-btn-danger" type="button">TEST SAFETY INTERLOCK</button>
           <button id="btnResetSafetyLatch" class="hmi-btn hmi-btn-primary" type="button">RESET LATCH</button>
           <button id="btnHmiAckAlarm" class="hmi-btn" type="button">ACK ALARM</button>
         </div>
@@ -108,17 +128,17 @@
       </div>
 
       <div class="hmi-controls-box">
-        <div class="section-label">Room Setpoints &amp; Speed Controls</div>
+        <div class="section-label">Room Setpoints &amp; Controls</div>
         <div id="hmiControlsContainer" class="hmi-controls-list"></div>
       </div>
 
       <div class="telemetry-box">
-        <div class="section-label">Live Sensor Readouts</div>
+        <div class="section-label">Live Sensor &amp; Route Telemetry</div>
         <dl class="inspector-grid">
-          <div><dt>Fresh Leaves Arrived</dt><dd id="inspLeafArrived">—</dd></div>
-          <div><dt>Active Batch &amp; Status</dt><dd id="inspBatchStatus">—</dd></div>
+          <div><dt>Withering Buffer</dt><dd id="inspWitherBuffer">—</dd></div>
+          <div><dt>Active Route</dt><dd id="inspRouteState">—</dd></div>
+          <div><dt>Optical Reject Rate</dt><dd id="inspRejectRate">—</dd></div>
           <div><dt>PLC Safety Interlock</dt><dd id="inspPlcState">—</dd></div>
-          <div><dt>Dryer Utilization</dt><dd id="inspDryerUtil">—</dd></div>
           <div><dt>Finished Tea Stock</dt><dd id="inspFinishedStock">—</dd></div>
         </dl>
       </div>
@@ -159,14 +179,15 @@
     </div>
   </aside>
 
-  <!-- Minimal Bottom Zone-Selector Bar with 1-Click Camera Presets & Keyboard Shortcuts -->
+  <!-- Minimal Bottom Zone-Selector Bar with 1-Click Camera Presets & Keyboard Shortcuts (0..6) -->
   <nav class="hud-bottom-bar" aria-label="Factory Room Waypoints">
     <button class="zone-btn active" data-station="overview" type="button"><kbd>0</kbd> Overview</button>
-    <button class="zone-btn" data-station="intake" type="button"><kbd>1</kbd> Room 01: Intake</button>
-    <button class="zone-btn" data-station="withering" type="button"><kbd>2</kbd> Room 02: Withering</button>
-    <button class="zone-btn" data-station="rolling" type="button"><kbd>3</kbd> Room 03: Rolling</button>
-    <button class="zone-btn" data-station="dryer" type="button"><kbd>4</kbd> Room 04: Dryer</button>
-    <button class="zone-btn" data-station="warehouse" type="button"><kbd>5</kbd> Room 05: Packaging</button>
+    <button class="zone-btn" data-station="intake" type="button"><kbd>1</kbd> R01: Intake</button>
+    <button class="zone-btn" data-station="withering" type="button"><kbd>2</kbd> R02: Withering</button>
+    <button class="zone-btn" data-station="rolling" type="button"><kbd>3</kbd> R03: Rolling</button>
+    <button class="zone-btn" data-station="dryer" type="button"><kbd>4</kbd> R04: Dryer</button>
+    <button class="zone-btn" data-station="sorting" type="button"><kbd>5</kbd> R05: Sorting</button>
+    <button class="zone-btn" data-station="warehouse" type="button"><kbd>6</kbd> R06: Packaging</button>
   </nav>
 
   <!-- Single Collapsible Verification & Benchmark Drawer -->
