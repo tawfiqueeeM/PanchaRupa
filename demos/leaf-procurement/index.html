@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Leaf Procurement & MRP Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🍃</span>
+          <span>PanchaRupa Leaf Procurement & Material Planning</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 08</span>
+        </h1>
+        <p class="demo-subtitle">Dept 7 Business Operations — Net MRP Requirements, Yield Conversions, Supplier Eligibility & Dormancy Gating</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="procurementStatusPill">● REQUIREMENT MET</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Procurement Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="DAY-40-MRP-BASE">1. DAY-40 Baseline (20kg Net at 25% Yield = 80kg Fresh Leaf)</option>
+        <option value="SUPPLIER-LEAD-TIME-SHORTAGE">2. Supplier Lead-Time Shortage (Golden Leaf 6h Late Arrival)</option>
+        <option value="WINTER-DORMANCY-JANUARY">3. January Winter Bush Dormancy (0kg Fresh Leaf Plucking)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <label style="font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="chkWintrDormancy">
+        Winter Dormancy Mode (Jan/Feb)
+      </label>
+      <button class="bms-btn" id="btnReset">↺ Reset</button>
+    </div>
+  </section>
+
+  <!-- KPI Row -->
+  <section class="mrp-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Procurement Feasibility</span>
+      <span class="kpi-value" id="kpiFeasibility" style="color:var(--color-status-success);">FEASIBLE</span>
+      <span class="kpi-sub" id="kpiFeasibilitySub">All required leaf arrives on schedule</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Fresh Green Leaf Order</span>
+      <span class="kpi-value" id="kpiFreshLeaf">120.0 kg</span>
+      <span class="kpi-sub" id="kpiFreshLeafSub">Green: 80.0 kg | Golden: 40.0 kg</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Net Finished Demand</span>
+      <span class="kpi-value" id="kpiNetDemand">30.0 kg</span>
+      <span class="kpi-sub" id="kpiNetDemandSub">Gross 40.0 kg − 10.0 kg Released Stock</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Operating Season</span>
+      <span class="kpi-value" id="kpiSeason">APRIL</span>
+      <span class="kpi-sub" id="kpiSeasonSub">Active harvest season (25% yield)</span>
+    </div>
+  </section>
+
+  <!-- Shortage Alert Banner -->
+  <div id="mrpAlertBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="mrpAlertMsg">MATERIAL STARVATION / SHORTAGE DETECTED</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Container -->
+  <section class="panel-container">
+    <!-- Green Tea MRP Card -->
+    <div class="mrp-card">
+      <div class="mrp-card-header">
+        <span class="mrp-card-title">🍵 Green Tea MRP (Standard Fine Leaf)</span>
+        <span class="status-indicator ok" id="greenStatusBadge">ON SCHEDULE</span>
+      </div>
+      <div class="mrp-card-body">
+        <div class="mrp-formula-box" id="greenFormulaBox">
+          <div>Gross Demand: <strong id="greenGrossReadout">30.0 kg</strong></div>
+          <div>Less Released Stock: <strong id="greenStockReadout">- 10.0 kg</strong></div>
+          <div style="border-top:1px dashed var(--color-border); padding-top:4px;">
+            Net Requirement: <strong id="greenNetReadout" style="color:var(--color-brand-primary);">20.0 kg</strong>
+          </div>
+          <div style="font-size:0.95rem; font-weight:700; color:#059669; margin-top:4px;">
+            Fresh Leaf Needed: <span id="greenFreshReadout">80.0 kg</span> (@ 25.0% yield)
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Finished Tea Gross Demand: <span id="greenGrossVal" style="font-family:var(--font-mono); font-weight:700;">30 kg</span>
+          </label>
+          <input type="range" id="greenGrossSlider" min="0" max="100" value="30" step="5" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Released Stock Buffer: <span id="greenStockVal" style="font-family:var(--font-mono); font-weight:700;">10 kg</span>
+          </label>
+          <input type="range" id="greenStockSlider" min="0" max="60" value="10" step="5" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Assumed Processing Yield: <span id="greenYieldVal" style="font-family:var(--font-mono); font-weight:700;">25.0%</span>
+          </label>
+          <input type="range" id="greenYieldSlider" min="20" max="30" value="25" step="0.5" style="width:100%;">
+        </div>
+
+        <div style="padding-top:10px; border-top:1px dashed var(--color-border); font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Contracted Supplier:</span>
+            <strong id="greenSupplierName">Tetulia Green Cooperative</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Plucking Grade:</span>
+            <span style="font-family:var(--font-mono); font-weight:700; color:#059669;">STANDARD_FINE</span>
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:2px; font-weight:600;">
+              Estimated Arrival Slot: <span id="greenArrivalVal" style="font-family:var(--font-mono); font-weight:700;">06:00</span> (Slot: 08:00)
+            </label>
+            <input type="range" id="greenArrivalSlider" min="4" max="18" value="6" step="1" style="width:100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Golden Tea MRP Card -->
+    <div class="mrp-card">
+      <div class="mrp-card-header">
+        <span class="mrp-card-title">✨ Golden Tea MRP (Tender Clonal Bud)</span>
+        <span class="status-indicator ok" id="goldenStatusBadge">ON SCHEDULE</span>
+      </div>
+      <div class="mrp-card-body">
+        <div class="mrp-formula-box" id="goldenFormulaBox">
+          <div>Gross Demand: <strong id="goldenGrossReadout">10.0 kg</strong></div>
+          <div>Less Released Stock: <strong id="goldenStockReadout">- 0.0 kg</strong></div>
+          <div style="border-top:1px dashed var(--color-border); padding-top:4px;">
+            Net Requirement: <strong id="goldenNetReadout" style="color:var(--color-brand-primary);">10.0 kg</strong>
+          </div>
+          <div style="font-size:0.95rem; font-weight:700; color:#d97706; margin-top:4px;">
+            Fresh Leaf Needed: <span id="goldenFreshReadout">40.0 kg</span> (@ 25.0% yield)
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Finished Tea Gross Demand: <span id="goldenGrossVal" style="font-family:var(--font-mono); font-weight:700;">10 kg</span>
+          </label>
+          <input type="range" id="goldenGrossSlider" min="0" max="60" value="10" step="5" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Released Stock Buffer: <span id="goldenStockVal" style="font-family:var(--font-mono); font-weight:700;">0 kg</span>
+          </label>
+          <input type="range" id="goldenStockSlider" min="0" max="30" value="0" step="5" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:2px;">
+            Assumed Processing Yield: <span id="goldenYieldVal" style="font-family:var(--font-mono); font-weight:700;">25.0%</span>
+          </label>
+          <input type="range" id="goldenYieldSlider" min="20" max="30" value="25" step="0.5" style="width:100%;">
+        </div>
+
+        <div style="padding-top:10px; border-top:1px dashed var(--color-border); font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Contracted Supplier:</span>
+            <strong id="goldenSupplierName">Kazi Tea Estate</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Plucking Grade:</span>
+            <span style="font-family:var(--font-mono); font-weight:700; color:#d97706;">GOLDEN_TENDER_BUD</span>
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:2px; font-weight:600;">
+              Estimated Arrival Slot: <span id="goldenArrivalVal" style="font-family:var(--font-mono); font-weight:700;">07:00</span> (Slot: 08:00)
+            </label>
+            <input type="range" id="goldenArrivalSlider" min="4" max="18" value="7" step="1" style="width:100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Purchase Orders & Exceptions Section -->
+  <section style="padding: var(--space-lg);">
+    <div class="mrp-card">
+      <div class="mrp-card-header">
+        <span class="mrp-card-title">📑 Generated Purchase Orders & Material Traceability</span>
+        <span style="font-size:0.8rem; color:var(--color-text-muted);">Real-time MRP Dispatch Schedule</span>
+      </div>
+      <div class="mrp-card-body" style="padding:0;">
+        <table class="po-table">
+          <thead>
+            <tr>
+              <th>PO Number</th>
+              <th>Product Line</th>
+              <th>Certified Supplier</th>
+              <th>Required Grade</th>
+              <th>Fresh Leaf Qty</th>
+              <th>Arrival Slot</th>
+              <th>Procurement Status</th>
+            </tr>
+          </thead>
+          <tbody id="poTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

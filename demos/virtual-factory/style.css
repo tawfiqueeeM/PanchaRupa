@@ -1,0 +1,584 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior-x: none;
+  background: #0b1510;
+  color: #e2e8f0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.viewport-3d {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.labels-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.station-3d-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(11, 21, 16, 0.82);
+  backdrop-filter: blur(8px);
+  color: #f8fafc;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.station-3d-label:hover {
+  border-color: #c98818;
+}
+
+.station-3d-label .label-name {
+  font-weight: 700;
+  color: #bbf7d0;
+}
+
+.station-3d-label .label-metric {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+}
+
+/* Compact Minimal Top HUD Bar */
+.hud-top-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(11, 21, 16, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hud-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.hud-badge {
+  background: #14532d;
+  color: #86efac;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hud-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.hud-stat-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.hud-stat strong {
+  font-size: 0.85rem;
+  color: #f8fafc;
+}
+
+.hud-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-control-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.hud-controls select,
+.hud-btn {
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.hud-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(20, 83, 45, 0.75);
+  border-color: rgba(134, 239, 172, 0.35);
+}
+
+/* Dual-Sided Engineering Showcase Panels (Left: HMI, Right: PLC Code) */
+.side-panel {
+  position: fixed;
+  top: 72px;
+  bottom: 68px;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  background: rgba(11, 21, 16, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.side-panel[hidden] {
+  display: none;
+}
+
+.side-panel-left {
+  left: 12px;
+}
+
+.side-panel-right {
+  right: 12px;
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(20, 40, 30, 0.72);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.panel-eyebrow {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #86efac;
+}
+
+.side-panel-header strong {
+  font-size: 0.92rem;
+  color: #f8fafc;
+}
+
+.side-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.guide-box,
+.hmi-controls-box,
+.telemetry-box,
+.hw-box,
+.plc-vars-box,
+.plc-code-box {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.guide-text {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  color: #e2e8f0;
+}
+
+.hmi-controls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hmi-control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.hmi-control-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #cbd5e1;
+}
+
+.hmi-control-row input[type="range"] {
+  width: 100%;
+  accent-color: #22c55e;
+  cursor: pointer;
+}
+
+.hmi-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hmi-btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hmi-btn-primary {
+  background: #166534;
+  border-color: #4ade80;
+}
+
+.hmi-btn-danger {
+  background: #991b1b;
+  border-color: #f87171;
+}
+
+.hmi-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.hw-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.hw-chip {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  color: #e2e8f0;
+}
+
+.hw-chip--lang {
+  background: rgba(20, 83, 45, 0.7);
+  border-color: rgba(74, 222, 128, 0.4);
+  color: #bbf7d0;
+  font-weight: 700;
+}
+
+.plc-vars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.plc-var-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.plc-var-item--alarm {
+  background: rgba(153, 27, 27, 0.45);
+  color: #fecaca;
+}
+
+.plc-code-pre {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 6px;
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.69rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  white-space: pre;
+}
+
+.st-kw { color: #93c5fd; font-weight: 700; }
+.st-type { color: #fcd34d; }
+.st-addr { color: #4ade80; font-weight: 700; }
+.st-comment { color: #64748b; font-style: italic; }
+
+.inspector-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 0;
+}
+
+.inspector-grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  padding-bottom: 4px;
+}
+
+.inspector-grid dt {
+  color: #94a3b8;
+}
+
+.inspector-grid dd {
+  margin: 0;
+  font-weight: 600;
+  color: #f8fafc;
+  text-align: right;
+}
+
+/* Bottom Zone-Selector Bar */
+.hud-bottom-bar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: calc(100vw - 24px);
+  padding: 6px 10px;
+  background: rgba(11, 21, 16, 0.84);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 9999px;
+}
+
+.zone-btn {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.zone-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.zone-btn.active {
+  background: #166534;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+
+/* Collapsible Verification Drawer */
+.verification-drawer {
+  position: fixed;
+  top: 72px;
+  left: 12px;
+  right: 12px;
+  bottom: 66px;
+  z-index: 30;
+  overflow-y: auto;
+  background: rgba(11, 21, 16, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.drawer-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.05rem;
+  color: #f8fafc;
+}
+
+.drawer-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.drawer-status-card {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.drawer-table-wrap {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.comparison-table th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #cbd5e1;
+}
+
+.status-pill {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-pill--pass {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill--fallback {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill--fail {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-founder,
+.badge-simulated {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-founder {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-simulated {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 900px) {
+  .side-panel {
+    top: auto;
+    bottom: 68px;
+    max-height: 44vh;
+    width: calc(50vw - 18px);
+  }
+}
+
+@media (max-width: 680px) {
+  .side-panel-left,
+  .side-panel-right {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 36vh;
+  }
+  .hud-bottom-bar {
+    border-radius: 14px;
+  }
+}

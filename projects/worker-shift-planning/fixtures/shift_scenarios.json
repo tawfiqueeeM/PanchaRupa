@@ -1,0 +1,126 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-FULL-CREW",
+      "description": "Nominal peak-flush shift: full 4-person crew present with complete skill coverage across all workstations",
+      "rosterMode": "SEASONAL",
+      "workers": [
+        {
+          "id": "W-01",
+          "name": "Lead Tea Master",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["WITHERING", "FIXATION", "ROLLING", "OXIDATION", "DRYING"]
+        },
+        {
+          "id": "W-02",
+          "name": "Process Operator",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["FIXATION", "ROLLING", "DRYING"]
+        },
+        {
+          "id": "W-03",
+          "name": "Packaging Specialist",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["LEAF_INTAKE", "PACKING"]
+        },
+        {
+          "id": "W-04",
+          "name": "Seasonal Assistant",
+          "type": "SEASONAL",
+          "isPresent": true,
+          "skills": ["LEAF_INTAKE", "WITHERING", "PACKING"]
+        }
+      ],
+      "shiftTasks": [
+        { "taskId": "TSK-01", "station": "LEAF_INTAKE", "requiredSkill": "LEAF_INTAKE", "startMin": 0, "endMin": 90, "assignedWorkerId": "W-03" },
+        { "taskId": "TSK-02", "station": "WITHERING", "requiredSkill": "WITHERING", "startMin": 0, "endMin": 180, "assignedWorkerId": "W-04" },
+        { "taskId": "TSK-03", "station": "FIXATION", "requiredSkill": "FIXATION", "startMin": 60, "endMin": 120, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-04", "station": "ROLLING", "requiredSkill": "ROLLING", "startMin": 120, "endMin": 180, "assignedWorkerId": "W-02" },
+        { "taskId": "TSK-05", "station": "OXIDATION", "requiredSkill": "OXIDATION", "startMin": 180, "endMin": 270, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-06", "station": "DRYING", "requiredSkill": "DRYING", "startMin": 270, "endMin": 360, "assignedWorkerId": "W-02" },
+        { "taskId": "TSK-07", "station": "PACKING", "requiredSkill": "PACKING", "startMin": 360, "endMin": 480, "assignedWorkerId": "W-03" }
+      ]
+    },
+    {
+      "scenarioId": "ABSENT-OPERATOR-DEFICIT",
+      "description": "Unplanned absence of Process Operator (W-02) creating critical staffing deficit in Rolling and Drying",
+      "rosterMode": "FIXED",
+      "workers": [
+        {
+          "id": "W-01",
+          "name": "Lead Tea Master",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["WITHERING", "FIXATION", "ROLLING", "OXIDATION", "DRYING"]
+        },
+        {
+          "id": "W-02",
+          "name": "Process Operator",
+          "type": "FIXED",
+          "isPresent": false,
+          "skills": ["FIXATION", "ROLLING", "DRYING"]
+        },
+        {
+          "id": "W-03",
+          "name": "Packaging Specialist",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["LEAF_INTAKE", "PACKING"]
+        },
+        {
+          "id": "W-04",
+          "name": "Seasonal Assistant",
+          "type": "SEASONAL",
+          "isPresent": false,
+          "skills": ["LEAF_INTAKE", "WITHERING", "PACKING"]
+        }
+      ],
+      "shiftTasks": [
+        { "taskId": "TSK-01", "station": "LEAF_INTAKE", "requiredSkill": "LEAF_INTAKE", "startMin": 0, "endMin": 90, "assignedWorkerId": "W-03" },
+        { "taskId": "TSK-02", "station": "WITHERING", "requiredSkill": "WITHERING", "startMin": 0, "endMin": 180, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-03", "station": "FIXATION", "requiredSkill": "FIXATION", "startMin": 60, "endMin": 120, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-04", "station": "ROLLING", "requiredSkill": "ROLLING", "startMin": 120, "endMin": 180, "assignedWorkerId": "W-02" },
+        { "taskId": "TSK-05", "station": "OXIDATION", "requiredSkill": "OXIDATION", "startMin": 180, "endMin": 270, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-06", "station": "DRYING", "requiredSkill": "DRYING", "startMin": 270, "endMin": 360, "assignedWorkerId": "W-02" },
+        { "taskId": "TSK-07", "station": "PACKING", "requiredSkill": "PACKING", "startMin": 360, "endMin": 480, "assignedWorkerId": "W-03" }
+      ]
+    },
+    {
+      "scenarioId": "OVERLAP-CONFLICT-TEST",
+      "description": "Double-booking conflict: Lead Tea Master assigned to simultaneous Rolling and Oxidation tasks",
+      "rosterMode": "FIXED",
+      "workers": [
+        {
+          "id": "W-01",
+          "name": "Lead Tea Master",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["WITHERING", "FIXATION", "ROLLING", "OXIDATION", "DRYING"]
+        },
+        {
+          "id": "W-02",
+          "name": "Process Operator",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["FIXATION", "ROLLING", "DRYING"]
+        },
+        {
+          "id": "W-03",
+          "name": "Packaging Specialist",
+          "type": "FIXED",
+          "isPresent": true,
+          "skills": ["LEAF_INTAKE", "PACKING"]
+        }
+      ],
+      "shiftTasks": [
+        { "taskId": "TSK-01", "station": "LEAF_INTAKE", "requiredSkill": "LEAF_INTAKE", "startMin": 0, "endMin": 90, "assignedWorkerId": "W-03" },
+        { "taskId": "TSK-02", "station": "ROLLING", "requiredSkill": "ROLLING", "startMin": 120, "endMin": 200, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-03", "station": "OXIDATION", "requiredSkill": "OXIDATION", "startMin": 160, "endMin": 240, "assignedWorkerId": "W-01" },
+        { "taskId": "TSK-04", "station": "PACKING", "requiredSkill": "PACKING", "startMin": 240, "endMin": 360, "assignedWorkerId": "W-03" }
+      ]
+    }
+  ]
+}

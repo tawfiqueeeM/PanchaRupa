@@ -1,0 +1,51 @@
+[
+  {
+    "scenarioId": "DAY-40-NOMINAL",
+    "description": "Nominal receipt of vendor V-01 green leaf lot L-001 (DAY-40 integration baseline)",
+    "vendorId": "V-01",
+    "lotId": "L-001",
+    "grossKg": 125.0,
+    "tareKg": 5.0,
+    "netKg": 120.0,
+    "teaType": "GREEN",
+    "destination": "DRUM_INFEED_HOPPER",
+    "bufferInitiallyClear": true
+  },
+  {
+    "scenarioId": "DAY-40-GOLDEN",
+    "description": "Nominal receipt of vendor V-02 golden-eligible lot L-O01",
+    "vendorId": "V-02",
+    "lotId": "L-O01",
+    "grossKg": 44.0,
+    "tareKg": 4.0,
+    "netKg": 40.0,
+    "teaType": "GOLDEN",
+    "destination": "WITHERING_TRAYS",
+    "bufferInitiallyClear": true
+  },
+  {
+    "scenarioId": "ABNORMAL-BUFFER-BLOCKED",
+    "description": "Downstream hopper full / sensor blocked during leaf transfer",
+    "vendorId": "V-01",
+    "lotId": "L-001",
+    "grossKg": 125.0,
+    "tareKg": 5.0,
+    "netKg": 120.0,
+    "teaType": "GREEN",
+    "destination": "DRUM_INFEED_HOPPER",
+    "bufferInitiallyClear": false
+  },
+  {
+    "scenarioId": "ABNORMAL-REJECTED",
+    "description": "Quality rejection due to high moisture / leaf degradation",
+    "vendorId": "V-03",
+    "lotId": "L-009",
+    "grossKg": 60.0,
+    "tareKg": 5.0,
+    "netKg": 55.0,
+    "teaType": "GREEN",
+    "destination": "QUARANTINE_BIN",
+    "rejectionReason": "HIGH_MOISTURE",
+    "bufferInitiallyClear": true
+  }
+]

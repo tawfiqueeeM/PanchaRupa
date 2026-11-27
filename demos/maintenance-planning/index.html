@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Maintenance Planning & Outage Impact</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span class="badge" style="background:#0f3f2e; color:#7ef5b6; padding:3px 8px; border-radius:4px; font-size:0.8rem; font-weight:700; margin-right:8px; vertical-align:middle;">Demo 13</span><span>🛠</span> PanchaRupa Maintenance Planning & Outage Analysis</h1>
+        <p class="demo-subtitle">Dept 7 Business Operations & Dept 2 Capacity & Operations — Asset Registers, Work Order Scheduling, Downtime Variance & Dispatch Impact</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="maintStatusPill">● 100% OPERATIONAL</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Operational Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="PLANNED-PM-BASELINE">1. Planned PM Service Window (06:00-08:00 Pre-Shift, Zero Delay)</option>
+        <option value="UNPLANNED-DRYER-BREAKDOWN">2. Unplanned SCR Dryer Breakdown (11:30-13:30, 120m Delay, Queued WIP)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="maint-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Outage Status</span>
+      <span class="kpi-value" id="kpiStatus" style="color:var(--color-status-success);">NORMAL</span>
+      <span class="kpi-sub" id="kpiStatusSub">Zero unplanned line stoppages</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Unplanned Downtime</span>
+      <span class="kpi-value" id="kpiUnplanned">0 min</span>
+      <span class="kpi-sub" id="kpiPlannedSub">Planned PM: 120 min</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Dispatch Delay</span>
+      <span class="kpi-value" id="kpiDelay" style="color:var(--color-status-success);">0 min</span>
+      <span class="kpi-sub" id="kpiDelaySub">Shipments on schedule</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Queued WIP Batches</span>
+      <span class="kpi-value" id="kpiWip">0</span>
+      <span class="kpi-sub" id="kpiWipSub">Production flowing smoothly</span>
+    </div>
+  </section>
+
+  <!-- Outage Alert Banner -->
+  <div id="maintAlertBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="maintAlertMsg">CRITICAL MACHINE BREAKDOWN: Downstream processing halted!</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Left Column: Asset Register & WO Form -->
+    <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+      <div class="maint-card">
+        <div class="maint-card-header">
+          <span class="maint-card-title">🏭 Asset Register & Runtime Status</span>
+        </div>
+        <div class="maint-card-body" id="assetsContainer">
+          <!-- Dynamically populated assets -->
+        </div>
+      </div>
+
+      <!-- Create Work Order Form -->
+      <div class="maint-card">
+        <div class="maint-card-header">
+          <span class="maint-card-title">➕ Create Work Order</span>
+        </div>
+        <div class="maint-card-body" style="gap:var(--space-sm);">
+          <div>
+            <label style="font-size:0.75rem; font-weight:600; display:block;">Target Asset:</label>
+            <select id="formAssetSelect" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Work Order Type:</label>
+              <select id="formTypeSelect" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+                <option value="PREVENTATIVE">Planned Preventative (PM)</option>
+                <option value="CORRECTIVE">Emergency Corrective (CM)</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Duration (minutes):</label>
+              <input type="number" id="formDurationInput" value="60" min="15" max="360" step="15" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.75rem; font-weight:600; display:block;">Title / Fault Description:</label>
+            <input type="text" id="formTitleInput" value="Routine motor bearing inspection & greasing" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Parts Cost (BDT):</label>
+              <input type="number" id="formPartsInput" value="2500" min="0" max="50000" step="500" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.75rem; font-weight:600; display:block;">Labor Hours:</label>
+              <input type="number" id="formLaborInput" value="2.0" min="0.5" max="24" step="0.5" style="width:100%; padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.85rem;">
+            </div>
+          </div>
+          <button class="bms-btn primary" id="btnSubmitWO" style="margin-top:6px;">Issue Work Order</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Work Orders Table -->
+    <div class="maint-card">
+      <div class="maint-card-header">
+        <span class="maint-card-title">📋 Active Maintenance Queue (SAP PM/QM Reference)</span>
+        <div style="display:flex; gap:8px; font-size:0.75rem;">
+          <span class="badge-wo PREVENTATIVE">PM PLANNED</span>
+          <span class="badge-wo CORRECTIVE">CM EMERGENCY</span>
+        </div>
+      </div>
+      <div class="maint-card-body" style="padding:0; overflow-x:auto;">
+        <table class="wo-table">
+          <thead>
+            <tr>
+              <th>WO Number</th>
+              <th>Type</th>
+              <th>Asset</th>
+              <th>Title / Task</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Impact / Delay</th>
+              <th style="text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="woTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Production Scheduling & Machine Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>📅</span>
+          <span>PanchaRupa Production Scheduling & Capacity Planning</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 09</span>
+        </h1>
+        <p class="demo-subtitle">Dept 2 Operations — Multi-Product Machine Calendar, Contention Modeling & Outage Rescheduling</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="schedStatusPill">● SCHEDULE FEASIBLE</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Operational Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="DAY-40-NOMINAL">1. DAY-40 Nominal Baseline (30kg Green + 10kg Golden, Feasible)</option>
+        <option value="DAY-40-DRYER-OUTAGE">2. DAY-40 Shared Dryer Outage (11:30 - 13:30, Rescheduled)</option>
+        <option value="EXCESS-CAPACITY-INFEASIBLE">3. Overload Demand Excursion (70kg Green + 35kg Golden, Infeasible)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- KPI Overview Row -->
+  <section class="sched-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Feasibility Outcome</span>
+      <span class="kpi-value" id="kpiFeasible" style="color:var(--color-status-success);">FEASIBLE</span>
+      <span class="kpi-sub" id="kpiFeasibleSub">All jobs finish before 17:00 cutoff</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Total Makespan</span>
+      <span class="kpi-value" id="kpiMakespan">15:45</span>
+      <span class="kpi-sub" id="kpiMakespanSub">465 min elapsed (Shift: 540 min)</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Active Outages</span>
+      <span class="kpi-value" id="kpiOutages">0</span>
+      <span class="kpi-sub" id="kpiOutagesSub">All machines 100% available</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Scheduled Batches</span>
+      <span class="kpi-value" id="kpiBatches">2 / 40.0 kg</span>
+      <span class="kpi-sub">B-G01 (30kg) & B-GL01 (10kg)</span>
+    </div>
+  </section>
+
+  <!-- Infeasibility Banner (Hidden when feasible) -->
+  <div id="infeasibilityBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="infeasibilityMsg">SCHEDULE INFEASIBLE: Daily shift deadline exceeded! One or more batches finish past 17:00.</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Container -->
+  <section class="panel-container">
+    <!-- Controls Panel -->
+    <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+      <div class="sched-card">
+        <div class="sched-card-header">
+          <span class="sched-card-title">⚙ Order & Outage Controls</span>
+        </div>
+        <div class="sched-card-body">
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">
+              Green Tea Batch B-G01 Mass: <span id="greenMassVal" style="font-family:var(--font-mono); color:#059669; font-weight:700;">30 kg</span>
+            </label>
+            <input type="range" id="greenMassSlider" min="10" max="80" value="30" step="5" style="width:100%;">
+          </div>
+
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">
+              Golden Tea Batch B-GL01 Mass: <span id="goldenMassVal" style="font-family:var(--font-mono); color:#d97706; font-weight:700;">10 kg</span>
+            </label>
+            <input type="range" id="goldenMassSlider" min="5" max="50" value="10" step="5" style="width:100%;">
+          </div>
+
+          <div style="padding-top:10px; border-top:1px dashed var(--color-border);">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">
+              <input type="checkbox" id="chkDryerOutage">
+              Inject Dryer Outage (11:30 - 13:30)
+            </label>
+            <p style="font-size:0.75rem; color:var(--color-text-muted); margin-top:4px;">
+              Simulates heating element failure on Shared Fluid Bed Dryer, halting drying operations for 120 min.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Before vs After Comparison Card -->
+      <div class="sched-card">
+        <div class="sched-card-header">
+          <span class="sched-card-title">⚖ Before vs After Comparison</span>
+        </div>
+        <div class="sched-card-body" style="padding:var(--space-md);">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
+            <span>Baseline Completion:</span>
+            <strong id="cmpBaseMakespan" style="font-family:var(--font-mono);">15:45</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
+            <span>Revised Completion:</span>
+            <strong id="cmpRevMakespan" style="font-family:var(--font-mono);">15:45</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:0.85rem;">
+            <span>Variance / Net Delay:</span>
+            <strong id="cmpDeltaMin" style="font-family:var(--font-mono); color:var(--color-status-success);">+0 min</strong>
+          </div>
+
+          <table class="diff-table">
+            <thead>
+              <tr>
+                <th>Batch</th>
+                <th>Base</th>
+                <th>Revised</th>
+                <th>Delay</th>
+              </tr>
+            </thead>
+            <tbody id="diffTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machine Gantt / Timeline Panel -->
+    <div class="sched-card">
+      <div class="sched-card-header">
+        <span class="sched-card-title">📊 Workstation Machine Calendar & Schedule Gantt</span>
+        <div style="display:flex; gap:12px; font-size:0.75rem; align-items:center;">
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#059669; border-radius:2px;"></span> Green Tea</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#d97706; border-radius:2px;"></span> Golden Tea</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#94a3b8; border-radius:2px;"></span> Changeover</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#dc2626; border-radius:2px;"></span> Outage</span>
+        </div>
+      </div>
+      <div class="sched-card-body">
+        <div class="timeline-wrapper">
+          <!-- Time Axis: 08:00 to 18:00 (10 hours = 600 min) -->
+          <div class="timeline-axis" id="timelineAxis">
+            <div class="timeline-tick">08:00</div>
+            <div class="timeline-tick">09:00</div>
+            <div class="timeline-tick">10:00</div>
+            <div class="timeline-tick">11:00</div>
+            <div class="timeline-tick">12:00</div>
+            <div class="timeline-tick">13:00</div>
+            <div class="timeline-tick">14:00</div>
+            <div class="timeline-tick">15:00</div>
+            <div class="timeline-tick">16:00</div>
+            <div class="timeline-tick">17:00</div>
+            <div class="timeline-tick">18:00</div>
+          </div>
+
+          <!-- Machine Tracks -->
+          <div id="timelineContainer" style="margin-top:12px; position:relative;">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

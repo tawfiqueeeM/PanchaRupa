@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Staffing, Payroll & Month 24 Financial Close</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span>👥</span> PanchaRupa Staffing, Payroll & Month 24 Close</h1>
+        <p class="demo-subtitle">Dept 7 Business Operations — Attendance, Shift Meals, 4-Stage Approval & Profit vs Bank Cash Distinction</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="payrollStatusPill">● SUPERVISOR REVIEW</span>
+        <button class="header-btn" id="btnExportJson">Export JSON</button>
+        <button class="header-btn" id="btnExportCsv">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="scenarioSelect" style="font-weight:600; margin-right:8px;">Operational Scenario:</label>
+      <select id="scenarioSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="MONTH-24-STANDARD-CLOSE">1. Month 24 Financial Close (PBT BDT 300k vs Cash Deficit -BDT 119k)</option>
+        <option value="EARLY-STAGE-TWO-WORKER">2. Early Two-Worker Shift (26 Shifts, BDT 6,240 Meal Budget)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn primary" id="btnAdvanceStage">Advance Approval Stage ➔</button>
+      <button class="bms-btn" id="btnReset">↺ Reset Scenario</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="pay-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Gross Payroll</span>
+      <span class="kpi-value" id="kpiGrossPayroll">BDT 300,000</span>
+      <span class="kpi-sub" id="kpiPayrollSub">Factory: 220k | Office: 80k</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Factory Shift Meals</span>
+      <span class="kpi-value" id="kpiMeals">BDT 6,240</span>
+      <span class="kpi-sub" id="kpiMealsSub">52 meals @ BDT 120/shift</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Accounting Profit (PBT)</span>
+      <span class="kpi-value" id="kpiPbt" style="color:var(--color-status-success);">BDT 300,000</span>
+      <span class="kpi-sub">Accrual sales BDT 2.4M − COGS 1.65M</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Realized Bank Cash</span>
+      <span class="kpi-value" id="kpiCash" style="color:var(--color-status-danger);">-BDT 119,167</span>
+      <span class="kpi-sub" id="kpiCashSub">Working capital deficit</span>
+    </div>
+  </section>
+
+  <!-- Stepper Banner -->
+  <section style="padding: 0 var(--space-lg) var(--space-md) var(--space-lg);">
+    <div class="stepper" id="stepperContainer">
+      <div class="step-item active" id="step0">1. Supervisor Review</div>
+      <div class="step-item" id="step1">2. HR Verification</div>
+      <div class="step-item" id="step2">3. Finance Reconciled</div>
+      <div class="step-item" id="step3">4. Owner Authorized</div>
+    </div>
+  </section>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Left Column: Payroll Register & Meals -->
+    <div class="pay-card">
+      <div class="pay-card-header">
+        <span class="pay-card-title">👷 Staff Attendance, Meals & Wage Register</span>
+      </div>
+      <div class="pay-card-body" style="padding:0; overflow-x:auto;">
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Dept</th>
+              <th>Shifts</th>
+              <th>Meals (BDT)</th>
+              <th>Gross Wages</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Column: Month 24 Financial Close & Cash Bridge -->
+    <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+      <div class="pay-card">
+        <div class="pay-card-header">
+          <span class="pay-card-title">📑 Month 24 Income Statement (Accrual Basis)</span>
+          <span style="font-size:0.75rem; color:var(--color-text-muted);">BDT Currency</span>
+        </div>
+        <div class="pay-card-body" style="padding:var(--space-md);">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;">
+            <span>Gross Sales Revenue:</span>
+            <strong id="stmtSales" style="font-family:var(--font-mono);">BDT 2,400,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;">
+            <span>Less Cost of Tea Sold (COGS):</span>
+            <strong id="stmtCogs" style="font-family:var(--font-mono); color:var(--color-status-danger);">- BDT 1,650,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; border-top:1px dashed var(--color-border); padding-top:4px;">
+            <span>Gross Profit:</span>
+            <strong id="stmtGrossProfit" style="font-family:var(--font-mono); color:var(--color-brand-primary);">BDT 750,000.00 (31.3%)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;">
+            <span>Less Operating Expenses (OpEx):</span>
+            <strong id="stmtOpex" style="font-family:var(--font-mono); color:var(--color-status-danger);">- BDT 390,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;">
+            <span>Operating Profit (EBIT):</span>
+            <strong id="stmtEbit" style="font-family:var(--font-mono);">BDT 360,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;">
+            <span>Less Financing Interest:</span>
+            <strong id="stmtInterest" style="font-family:var(--font-mono); color:var(--color-status-danger);">- BDT 60,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.95rem; font-weight:700; border-top:2px solid var(--color-border); padding-top:6px; color:var(--color-status-success);">
+            <span>PROFIT BEFORE TAX (PBT):</span>
+            <span id="stmtPbt" style="font-family:var(--font-mono);">BDT 300,000.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profit vs Bank Cash Bridge Card -->
+      <div class="pay-card">
+        <div class="pay-card-header">
+          <span class="pay-card-title">⚖ Profit vs Bank Cash Reconciliation Bridge</span>
+        </div>
+        <div class="pay-card-body" style="padding:var(--space-md); font-size:0.85rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span>Accounting Net Profit (PBT):</span>
+            <strong style="font-family:var(--font-mono); color:var(--color-status-success);">+ BDT 300,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span>Add Back Non-Cash Depreciation:</span>
+            <strong style="font-family:var(--font-mono);">+ BDT 10,833.33</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span>Less Uncollected Broker Receivables:</span>
+            <strong style="font-family:var(--font-mono); color:var(--color-status-danger);">- BDT 280,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span>Less Cash Locked in Unsold Inventory:</span>
+            <strong style="font-family:var(--font-mono); color:var(--color-status-danger);">- BDT 150,000.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.95rem; font-weight:700; border-top:2px solid var(--color-border); padding-top:6px; color:var(--color-status-danger);">
+            <span>REALIZED OPERATING CASH POSITION:</span>
+            <span id="bridgeCash" style="font-family:var(--font-mono);">- BDT 119,166.67</span>
+          </div>
+          <div class="alert-banner warning" style="margin-top:10px;">
+            <span>⚠️</span>
+            <span>CRITICAL CASH GAP: Despite BDT 300k accounting profit, delayed auction broker settlements and inventory buffer create a negative operating cash flow (-BDT 119k), requiring bridge capital!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

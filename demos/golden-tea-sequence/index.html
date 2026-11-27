@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golden Tea Processing Sequence — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🍯</span>
+          <span>Golden Tea Processing Sequence</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 05</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 2 Capacity & Operations · Leaf eligibility, Withering → Rolling → Oxidation → Drying & shared dryer arbitration
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/05-golden-tea-processing/projects/golden-tea-sequence/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/golden-tea-sequence/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="NOMINAL-DAY-40-GOLDEN">Nominal Day-40 (B-O01)</button>
+        <button class="scenario-pill" data-scenario="INELIGIBLE-LEAF-FAULT">Ineligible Leaf Rejection</button>
+        <button class="scenario-pill" data-scenario="DRYER-SHARED-CONTENTION">Shared Dryer Contention</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Batch: <strong id="lblActiveBatch" class="font-mono">B-O01</strong> ·
+      Eligibility: <strong id="lblEligibilityStatus" class="font-mono" style="color:#15803d;">ELIGIBLE</strong> ·
+      State: <strong id="lblStageState" class="font-mono">IDLE</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- 4-Stage Visual Pipeline -->
+    <section class="card" aria-labelledby="pipeline-title">
+      <div class="card-header">
+        <h2 id="pipeline-title" class="card-title">
+          <span>🔄</span> 4-Stage Specialty Golden Tea Flow
+        </h2>
+        <span id="pipelineOverallBadge" class="status-badge idle">STANDBY</span>
+      </div>
+
+      <div class="pipeline-flow">
+        <!-- Stage 1: Withering Trays -->
+        <div id="nodeWithering" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">1. Withering Trays</strong>
+            <span id="badgeWithering" class="status-badge idle">IDLE</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted);">Moisture: 78% → 65% (120m)</div>
+          <div class="metric-box" style="padding:4px 6px; margin-top:2px;">
+            <div class="metric-label" style="font-size:0.6rem;">Status</div>
+            <div id="valWitheringStatus" class="metric-value font-mono" style="font-size:0.85rem;">STANDBY</div>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Stage 2: Shared Roller -->
+        <div id="nodeRoller" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">2. Shared Roller</strong>
+            <span id="badgeRoller" class="status-badge idle">IDLE</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted);">Cell Rupture & Shaping (30m)</div>
+          <div class="metric-box" style="padding:4px 6px; margin-top:2px;">
+            <div class="metric-label" style="font-size:0.6rem;">Status</div>
+            <div id="valRollerStatus" class="metric-value font-mono" style="font-size:0.85rem;">STANDBY</div>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Stage 3: Oxidation Racks -->
+        <div id="nodeOxidation" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">3. Oxidation Racks</strong>
+            <span id="badgeOxidation" class="status-badge idle">IDLE</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted);">Polyphenol Fermentation (90m)</div>
+          <div class="metric-box" style="padding:4px 6px; margin-top:2px;">
+            <div class="metric-label" style="font-size:0.6rem;">Target Profile</div>
+            <div id="valOxidationLiquor" class="metric-value font-mono" style="font-size:0.8rem; color:var(--color-brand-gold);">Amber Gold</div>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Stage 4: Shared Final Dryer -->
+        <div id="nodeDryer" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">4. Final Dryer</strong>
+            <span id="badgeDryer" class="status-badge normal">FREE</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted);">Fixation & Dry (95°C / 60m)</div>
+          <div class="metric-box" style="padding:4px 6px; margin-top:2px;">
+            <div class="metric-label" style="font-size:0.6rem;">Dryer Owner</div>
+            <div id="valDryerOwner" class="metric-value font-mono" style="font-size:0.85rem;">None</div>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Finished Output -->
+        <div class="station-node" style="border-style:dashed;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">5. Finished Stock</strong>
+            <span class="status-badge normal">RELEASED</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--color-text-muted);">Golden Tea Output</div>
+          <div class="metric-box" style="padding:4px 6px; margin-top:2px;">
+            <div class="metric-label" style="font-size:0.6rem;">Total Output</div>
+            <div id="valReleasedGolden" class="metric-value font-mono" style="font-size:1.05rem; color:#15803d;">0.00 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waiting Reason Callout -->
+      <div id="waitingCallout" class="reason-callout" style="margin-top:var(--space-xs);">
+        <strong style="color:var(--color-status-warning);">MUTUAL EXCLUSION ACTIVE:</strong>
+        <span id="waitingCalloutMsg">Batch held waiting for Shared Dryer release.</span>
+      </div>
+    </section>
+
+    <!-- Controls & Shared Resource Arbitration -->
+    <div class="panel-grid">
+      <!-- Operator Process Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <div class="card-header">
+          <h2 id="controls-title" class="card-title">
+            <span>⚙️</span> Batch & Recipe Controls
+          </h2>
+          <span class="status-badge normal">BATCH ACTIVE</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+          <div class="form-group">
+            <label for="inpBatchId" class="form-label">Batch ID</label>
+            <input type="text" id="inpBatchId" class="form-input font-mono" value="B-O01">
+          </div>
+          <div class="form-group">
+            <label for="inpFreshKg" class="form-label">Fresh Leaf Mass (kg)</label>
+            <input type="number" id="inpFreshKg" class="form-input font-mono" step="1.0" value="40.0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="selProfile" class="form-label">Oxidation Profile Selection</label>
+          <select id="selProfile" class="form-select font-mono">
+            <option value="OX-LIGHT-01">OX-LIGHT-01: Light Golden Flush (60m @ 24°C / 90% RH / 25% yield)</option>
+            <option value="OX-MED-02" selected>OX-MED-02: Classic Amber Golden (90m @ 25°C / 90% RH / 25% yield)</option>
+            <option value="OX-DEEP-03">OX-DEEP-03: Deep Muscatel (120m @ 26°C / 92% RH / 24% yield)</option>
+          </select>
+        </div>
+
+        <!-- Leaf Eligibility Quality Toggle -->
+        <div style="background:var(--color-bg-surface-alt); padding:var(--space-sm); border-radius:var(--radius-sm); border:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700; font-size:0.85rem;">Leaf Quality Classification</div>
+            <div id="lblEligibilityDetail" style="font-size:0.75rem; color:var(--color-text-muted);">
+              Tender young shoots & buds required for Golden Tea.
+            </div>
+          </div>
+          <button id="btnToggleEligibility" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+            Toggle Eligibility
+          </button>
+        </div>
+
+        <div id="eligibilityErrorBanner" class="validation-box" style="margin-top:var(--space-2xs);">
+          LEAF INELIGIBLE: Active lot does not qualify for Golden Tea. Start command inhibited.
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); margin-top:var(--space-xs);">
+          <button id="btnStepLine" class="btn btn-primary" style="flex:1;">
+            <span>⏭️</span> Step Line (Advance Stage)
+          </button>
+          <button id="btnAutoRun" class="btn btn-warning" style="flex:1;">
+            <span>▶️</span> Auto-Run Sequence
+          </button>
+        </div>
+      </section>
+
+      <!-- Shared Dryer Arbitration Panel -->
+      <section class="card" aria-labelledby="arbitration-title">
+        <div class="card-header">
+          <h2 id="arbitration-title" class="card-title">
+            <span>🛡️</span> Shared Dryer Arbitration & Mutual Exclusion
+          </h2>
+          <span id="dryerStatePill" class="status-badge normal">DRYER FREE</span>
+        </div>
+
+        <div id="dryerLockCard" class="dryer-lock-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.85rem;">Shared Dryer Asset Status</strong>
+            <span id="badgeLockStatus" class="status-badge normal">UNLOCKED</span>
+          </div>
+          <div id="lblDryerLockDesc" style="font-size:0.75rem; color:var(--color-text-muted);">
+            Available for either Green Tea or Golden Tea drying cycle.
+          </div>
+          <div style="margin-top:var(--space-2xs); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.75rem;">Simulate Green Batch Contention:</span>
+            <button id="btnToggleGreenLock" class="btn btn-danger" style="font-size:0.75rem; padding:4px 8px;">
+              Lock Dryer with Green B-G01
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Ledger & Exports -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-xs);">
+          <strong style="font-size:0.8rem;">Sequence Events & Exports:</strong>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">CSV</button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">JSON</button>
+          </div>
+        </div>
+
+        <div id="eventLogContainer" class="event-log-container" style="max-height:140px;" role="log" aria-live="polite">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

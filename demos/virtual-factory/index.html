@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa 3D Virtual Tea Factory</title>
+  <link rel="stylesheet" href="../../shared/css/tokens.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Full-Viewport 3D Factory Floor -->
+  <main id="factory3dViewport" class="viewport-3d" aria-label="3D Virtual Tea Factory">
+    <div id="labelsOverlay" class="labels-overlay"></div>
+  </main>
+
+  <!-- Compact Minimal Top HUD Bar -->
+  <header class="hud-top-bar" aria-label="Factory Live Controls">
+    <div class="hud-brand">
+      <span class="hud-badge">Demo 14 · 3D</span>
+      <strong>PanchaRupa Tea Factory</strong>
+    </div>
+
+    <div class="hud-metrics">
+      <div class="hud-stat">
+        <span class="hud-stat-label">Live Leaf Intake</span>
+        <strong id="hudLeafIntake">—</strong>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-label">Active Stage</span>
+        <strong id="hudActiveStage">1. Leaf Intake Dock</strong>
+      </div>
+    </div>
+
+    <div class="hud-controls">
+      <label class="hud-control-label" for="policySelect">Policy</label>
+      <select id="policySelect" aria-label="Simulation Policy">
+        <option value="fixed_standard">A1: Fixed + Standard</option>
+        <option value="fixed_buffer">A2: Fixed + 400kg Buffer</option>
+        <option value="seasonal_standard">B1: Seasonal + Standard</option>
+        <option value="seasonal_buffer" selected>B2: Seasonal + 400kg Buffer</option>
+      </select>
+
+      <button id="btnPlayPause" class="hud-btn" type="button">⏸ Pause</button>
+      <select id="speedSelect" aria-label="Simulation Speed">
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+      </select>
+
+      <button id="btnToggleDrawer" class="hud-btn hud-btn-accent" type="button" aria-expanded="false">
+        <span>DB / PLC / DES</span>
+        <span id="snapshotHeaderPill" class="status-pill status-pill--fallback">LOADING</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Left Panel: Interactive Operator HMI & Quick Operator Guide -->
+  <aside id="leftHmiPanel" class="side-panel side-panel-left" hidden aria-label="Operator HMI and Quick Guide">
+    <div class="side-panel-header">
+      <div>
+        <span class="panel-eyebrow">OPERATOR HMI</span>
+        <strong id="leftPanelTitle">1. Leaf Intake Dock</strong>
+      </div>
+      <button id="btnCloseLeftPanel" class="inspector-close" type="button" aria-label="Close operator HMI panel">✕</button>
+    </div>
+
+    <div class="side-panel-body">
+      <div class="guide-box">
+        <div class="section-label">How to Operate</div>
+        <p id="operatorGuideText" class="guide-text"></p>
+      </div>
+
+      <div class="hmi-controls-box">
+        <div class="section-label">Interactive Station Controls</div>
+        <div id="hmiControlsContainer" class="hmi-controls-list"></div>
+      </div>
+
+      <div class="telemetry-box">
+        <div class="section-label">Live Station Telemetry</div>
+        <dl class="inspector-grid">
+          <div><dt>Fresh Leaves Arrived</dt><dd id="inspLeafArrived">—</dd></div>
+          <div><dt>Active Batch &amp; Status</dt><dd id="inspBatchStatus">—</dd></div>
+          <div><dt>PLC Safety Interlock</dt><dd id="inspPlcState">—</dd></div>
+          <div><dt>Dryer Utilization</dt><dd id="inspDryerUtil">—</dd></div>
+          <div><dt>Finished Tea Stock</dt><dd id="inspFinishedStock">—</dd></div>
+        </dl>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Panel: PLC Hardware, Control Architecture & Live IEC 61131-3 Code -->
+  <aside id="rightPlcPanel" class="side-panel side-panel-right" hidden aria-label="PLC Hardware and IEC 61131-3 Code">
+    <div class="side-panel-header">
+      <div>
+        <span class="panel-eyebrow">CONTROL ARCHITECTURE</span>
+        <strong id="rightPanelTitle">Hardware &amp; PLC Logic</strong>
+      </div>
+      <button id="btnCloseRightPanel" class="inspector-close" type="button" aria-label="Close PLC code panel">✕</button>
+    </div>
+
+    <div class="side-panel-body">
+      <div class="hw-box">
+        <div class="section-label">Target Hardware &amp; Protocol</div>
+        <div id="plcHardwareMeta" class="hw-meta"></div>
+      </div>
+
+      <div class="plc-vars-box">
+        <div class="section-label">Live Variable State Highlights</div>
+        <div id="plcLiveVars" class="plc-vars-list"></div>
+      </div>
+
+      <div class="plc-code-box">
+        <div class="section-label" id="plcCodeSourceLabel">IEC 61131-3 Structured Text</div>
+        <pre id="plcCodeViewer" class="plc-code-pre">Loading control logic...</pre>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Minimal Bottom Zone-Selector Bar -->
+  <nav class="hud-bottom-bar" aria-label="Factory Station Waypoints">
+    <button class="zone-btn active" data-station="intake" type="button">1. Intake Dock</button>
+    <button class="zone-btn" data-station="withering" type="button">2. Withering</button>
+    <button class="zone-btn" data-station="rolling" type="button">3. Rolling</button>
+    <button class="zone-btn" data-station="dryer" type="button">4. Dryer Line</button>
+    <button class="zone-btn" data-station="warehouse" type="button">5. Warehouse</button>
+    <button class="zone-btn" data-station="overview" type="button">Overview</button>
+  </nav>
+
+  <!-- Single Collapsible Verification & Benchmark Drawer -->
+  <aside id="verificationDrawer" class="verification-drawer" hidden aria-label="System Verification & Monte Carlo Benchmarks">
+    <div class="drawer-header">
+      <div>
+        <h2>System Verification &amp; Monte Carlo Benchmarks (DB / PLC / DES)</h2>
+        <span id="snapshotSourceBadge" class="badge-simulated">LOADING SNAPSHOT...</span>
+      </div>
+      <button id="btnCloseDrawer" class="hud-btn" type="button">Close ✕</button>
+    </div>
+
+    <div id="snapshotStatusGrid" class="drawer-status-grid"></div>
+
+    <div class="drawer-table-wrap">
+      <table class="comparison-table" id="snapshotPolicyTable">
+        <thead>
+          <tr>
+            <th>Policy</th>
+            <th>Finished Tea (kg/yr)</th>
+            <th>Dryer Util.</th>
+            <th>Winter Fulfillment</th>
+            <th>Stockout Days</th>
+            <th>Absorption Cost</th>
+            <th>Min Winter Cash</th>
+          </tr>
+        </thead>
+        <tbody id="snapshotPolicyTableBody"></tbody>
+      </table>
+    </div>
+  </aside>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

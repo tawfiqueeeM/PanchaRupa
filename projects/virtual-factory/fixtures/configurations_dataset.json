@@ -1,0 +1,131 @@
+{
+  "configurations": [
+    {
+      "id": "config_1_manual",
+      "order": 1,
+      "name": "1. Manual Cottage Operation",
+      "category": "HISTORICAL_MANUAL",
+      "description": "Foundational artisanal setup. Manual hand rolling, charcoal pan/sun drying, manual packaging. Highly labor-constrained.",
+      "bottleneckStation": "Rolling (Hand Labor)",
+      "maxMonthlyCapacityKg": 120.0,
+      "laborIntensityWorkerHoursPerKg": 4.20,
+      "secKwhPerKg": 0.15,
+      "unitCostBdtPerKg": 265.00,
+      "orderCycleTimeDays": 18.5,
+      "mechanizationLevel": "Manual (0%)",
+      "equipment": {
+        "withering": "Bamboo Trays / Sun",
+        "rolling": "Hand Rolling Table",
+        "drying": "Charcoal Tray / Sun",
+        "packaging": "Manual Scoop & Foot Sealer"
+      }
+    },
+    {
+      "id": "config_2_heated_drum",
+      "order": 2,
+      "name": "2. Heated Drum Mechanization",
+      "category": "EARLY_MECHANIZED",
+      "description": "Introduction of rotary gas/wood drum for fixation panning. Rolling remains entirely manual hand labor.",
+      "bottleneckStation": "Rolling (Hand Labor)",
+      "maxMonthlyCapacityKg": 250.0,
+      "laborIntensityWorkerHoursPerKg": 2.80,
+      "secKwhPerKg": 0.65,
+      "unitCostBdtPerKg": 225.00,
+      "orderCycleTimeDays": 12.0,
+      "mechanizationLevel": "Partial (25%)",
+      "equipment": {
+        "withering": "Static Troughs",
+        "rolling": "Hand Rolling Table",
+        "drying": "Rotary Heated Drum Pan",
+        "packaging": "Manual Scale & Hand Sealer"
+      }
+    },
+    {
+      "id": "config_3_automated_drying",
+      "order": 3,
+      "name": "3. Automated Final Drying",
+      "category": "INTERMEDIATE_AUTOMATED",
+      "description": "Continuous motorized belt conveyor dryer installed. Hand rolling persists as the acute throughput bottleneck.",
+      "bottleneckStation": "Rolling (Hand Labor)",
+      "maxMonthlyCapacityKg": 450.0,
+      "laborIntensityWorkerHoursPerKg": 1.90,
+      "secKwhPerKg": 1.85,
+      "unitCostBdtPerKg": 205.00,
+      "orderCycleTimeDays": 7.5,
+      "mechanizationLevel": "Semi-Automated (50%)",
+      "equipment": {
+        "withering": "Troughs with Fixed Fans",
+        "rolling": "Hand Rolling Table",
+        "drying": "Continuous Conveyor Dryer",
+        "packaging": "Semi-Auto Auger Filler"
+      }
+    },
+    {
+      "id": "config_4_machine_rolling",
+      "order": 4,
+      "name": "4. Mechanized Rolling & Drying",
+      "category": "MECHANIZED_PROCESS",
+      "description": "Mechanized batch rolling table paired with conveyor dryer. Bottleneck shifts from rolling to dryer queue capacity.",
+      "bottleneckStation": "Drying (Queue Capacity)",
+      "maxMonthlyCapacityKg": 750.0,
+      "laborIntensityWorkerHoursPerKg": 1.10,
+      "secKwhPerKg": 1.45,
+      "unitCostBdtPerKg": 192.00,
+      "orderCycleTimeDays": 4.0,
+      "mechanizationLevel": "Advanced (75%)",
+      "equipment": {
+        "withering": "Troughs with VFD Fans",
+        "rolling": "Mechanized Rolling Table",
+        "drying": "Continuous Conveyor Dryer",
+        "packaging": "Semi-Auto Auger Filler"
+      }
+    },
+    {
+      "id": "config_5_coordinated_factory",
+      "order": 5,
+      "name": "5. Proposed Coordinated Factory",
+      "category": "MODERN_COORDINATED",
+      "description": "Full coordinated PanchaRupa facility: Shared roller and dryer mutual exclusion scheduling, robotic delta packing cell, and BMS environmental controls.",
+      "bottleneckStation": "Coordinated Line Balance",
+      "maxMonthlyCapacityKg": 1200.0,
+      "laborIntensityWorkerHoursPerKg": 0.42,
+      "secKwhPerKg": 1.05,
+      "unitCostBdtPerKg": 181.63,
+      "orderCycleTimeDays": 1.8,
+      "mechanizationLevel": "Integrated (95%)",
+      "equipment": {
+        "withering": "Automated BMS Troughs",
+        "rolling": "Shared Roller with Auto Clean",
+        "drying": "Two-Stage Modulated Dryer",
+        "packaging": "Robotic Delta Cell & Checkweigher"
+      }
+    }
+  ],
+  "workloads": [
+    {
+      "id": "load_pilot_100kg",
+      "name": "Founder Reported Pilot Benchmark (100 kg)",
+      "targetOutputKg": 100.0,
+      "founderReported": true,
+      "notes": "Historical benchmark from artisanal pilot batch run."
+    },
+    {
+      "id": "load_design_1000kg",
+      "name": "Active Month Design Target (1,000 kg)",
+      "targetOutputKg": 1000.0,
+      "founderReported": true,
+      "notes": "Design capacity for nominal active plucking month."
+    },
+    {
+      "id": "load_day40_integration",
+      "name": "DAY-40 Multi-Product Benchmark (40 kg)",
+      "targetOutputKg": 40.0,
+      "greenTeaKg": 30.0,
+      "goldenTeaKg": 10.0,
+      "bulkAuctionKg": 36.0,
+      "retailBottlesKg": 4.0,
+      "founderReported": false,
+      "notes": "Synthetic integration benchmark testing multi-product changeover and pack split."
+    }
+  ]
+}

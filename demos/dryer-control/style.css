@@ -1,0 +1,63 @@
+@import url("../../shared/css/base.css");
+
+/* Specific styling for Tea Dryer Control demo */
+.dryer-cockpit {
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border: 2px solid #334155;
+}
+
+.temperature-gauge-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: #1e293b;
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  border: 1px solid #334155;
+}
+
+.temp-big-val {
+  font-family: var(--font-mono);
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.05em;
+}
+
+.temp-big-val.heating { color: #f97316; }
+.temp-big-val.tripped { color: #ef4444; }
+
+.heat-output-meter-track {
+  height: 18px;
+  background: #1e293b;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+
+.heat-output-meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.interlock-alert-box {
+  background: #7f1d1d;
+  border: 2px solid #ef4444;
+  color: #ffffff;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  display: none;
+}
+
+.interlock-alert-box.active {
+  display: block;
+}

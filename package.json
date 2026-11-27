@@ -1,0 +1,9 @@
+{
+  "name": "pancharupa-virtual-tea-factory",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "python shared/serve.py 8080"
+  }
+}

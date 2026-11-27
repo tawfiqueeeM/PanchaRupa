@@ -1,0 +1,136 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "DAY-40-ALLOCATION-BASE",
+      "description": "DAY-40 fulfillment baseline: 40 kg released tea split into 36 kg bulk auction sack and 4 kg retail bottles (40 x 50g + 20 x 100g)",
+      "lots": [
+        {
+          "lotId": "LOT-G01-REL",
+          "product": "GREEN_TEA",
+          "totalKg": 30.0,
+          "reservedKg": 0.0,
+          "dispatchedKg": 0.0,
+          "disposition": "RELEASED",
+          "storageBin": "BIN-A1"
+        },
+        {
+          "lotId": "LOT-GL01-REL",
+          "product": "GOLDEN_TEA",
+          "totalKg": 10.0,
+          "reservedKg": 0.0,
+          "dispatchedKg": 0.0,
+          "disposition": "RELEASED",
+          "storageBin": "BIN-A2"
+        }
+      ],
+      "orders": [
+        {
+          "orderId": "ORD-BULK-01",
+          "channel": "AUCTION_BULK",
+          "customer": "Sreemangal Auction Broker (National Tea Co)",
+          "lotId": "LOT-G01-REL",
+          "allocatedKg": 26.0,
+          "format": "Bulk 26kg Tea Sack",
+          "unitCount": 1,
+          "lifecycleState": "RESERVED",
+          "settlementDays": 14,
+          "settlementStatus": "PENDING"
+        },
+        {
+          "orderId": "ORD-BULK-02",
+          "channel": "AUCTION_BULK",
+          "customer": "Chattogram Auction House (Consolidated)",
+          "lotId": "LOT-GL01-REL",
+          "allocatedKg": 10.0,
+          "format": "Bulk 10kg Golden Sack",
+          "unitCount": 1,
+          "lifecycleState": "RESERVED",
+          "settlementDays": 14,
+          "settlementStatus": "PENDING"
+        },
+        {
+          "orderId": "ORD-RET-50G",
+          "channel": "RETAIL_BOTTLES",
+          "customer": "Dhaka Organic Boutique Retailers",
+          "lotId": "LOT-G01-REL",
+          "allocatedKg": 2.0,
+          "format": "50g Amber Glass Bottles",
+          "unitCount": 40,
+          "lifecycleState": "RESERVED",
+          "settlementDays": 7,
+          "settlementStatus": "PENDING"
+        },
+        {
+          "orderId": "ORD-RET-100G",
+          "channel": "RETAIL_BOTTLES",
+          "customer": "Dhaka Organic Boutique Retailers",
+          "lotId": "LOT-G01-REL",
+          "allocatedKg": 2.0,
+          "format": "100g Amber Glass Bottles",
+          "unitCount": 20,
+          "lifecycleState": "RESERVED",
+          "settlementDays": 7,
+          "settlementStatus": "PENDING"
+        }
+      ]
+    },
+    {
+      "scenarioId": "HELD-LOT-DISPATCH-ATTEMPT",
+      "description": "Quality quarantined lot (LOT-QA-HOLD) under moisture hold: attempted reservation or dispatch is blocked",
+      "lots": [
+        {
+          "lotId": "LOT-QA-HOLD",
+          "product": "GREEN_TEA",
+          "totalKg": 25.0,
+          "reservedKg": 0.0,
+          "dispatchedKg": 0.0,
+          "disposition": "ON_HOLD",
+          "storageBin": "QUARANTINE-Q1"
+        }
+      ],
+      "orders": [
+        {
+          "orderId": "ORD-ILLEGAL-01",
+          "channel": "AUCTION_BULK",
+          "customer": "Unauthorized Dispatch",
+          "lotId": "LOT-QA-HOLD",
+          "allocatedKg": 20.0,
+          "format": "Bulk Sack",
+          "unitCount": 1,
+          "lifecycleState": "RESERVED",
+          "settlementDays": 14,
+          "settlementStatus": "PENDING"
+        }
+      ]
+    },
+    {
+      "scenarioId": "SETTLEMENT-DELAY-SIMULATION",
+      "description": "Auction broker delayed settlement: 36 kg bulk tea dispatched but settlement overdue past 28-day window",
+      "lots": [
+        {
+          "lotId": "LOT-G01-REL",
+          "product": "GREEN_TEA",
+          "totalKg": 40.0,
+          "reservedKg": 0.0,
+          "dispatchedKg": 36.0,
+          "disposition": "RELEASED",
+          "storageBin": "BIN-A1"
+        }
+      ],
+      "orders": [
+        {
+          "orderId": "ORD-DELAYED-01",
+          "channel": "AUCTION_BULK",
+          "customer": "Chattogram Auction House (Delayed Settlement)",
+          "lotId": "LOT-G01-REL",
+          "allocatedKg": 36.0,
+          "format": "Bulk 36kg Sack",
+          "unitCount": 1,
+          "lifecycleState": "DISPATCHED",
+          "settlementDays": 35,
+          "settlementStatus": "OVERDUE_DELAYED"
+        }
+      ]
+    }
+  ]
+}

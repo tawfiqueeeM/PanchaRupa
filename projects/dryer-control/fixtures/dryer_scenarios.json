@@ -1,0 +1,20 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "DRY-NORMAL",
+      "description": "Green/Golden batch final drying with continuous healthy fan proof",
+      "setpointC": 95.0,
+      "ambientTempC": 25.0,
+      "fanProofInitiallyHealthy": true,
+      "tripAtMinute": null
+    },
+    {
+      "scenarioId": "DRY-FAULT",
+      "description": "Fan proof loss interlock trip at minute 15 requiring Acknowledge + Clear + Restart",
+      "setpointC": 95.0,
+      "ambientTempC": 25.0,
+      "fanProofInitiallyHealthy": true,
+      "tripAtMinute": 15
+    }
+  ]
+}

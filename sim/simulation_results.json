@@ -1,0 +1,450 @@
+{
+  "benchmarkMetadata": {
+    "experimentId": "EXP-EUROSIM-2027-BENCHMARK",
+    "seed": 42,
+    "replications": 1000,
+    "completedAt": "2026-11-27T21:14:55.698934+00:00"
+  },
+  "policies": {
+    "fixed_standard": {
+      "label": "Policy A1: Fixed Staffing + Standard Inventory (Baseline)",
+      "kpis": {
+        "runSummary": {
+          "experimentId": "EXP-EUROSIM-2027-FIXED_STANDARD",
+          "completedAt": "2026-11-27T21:13:58.218833+00:00",
+          "totalSimulatedDays": 365
+        },
+        "operationalKpis": {
+          "annualFreshLeafProcessedKg": 41775.5772,
+          "annualFinishedTeaProducedKg": 10443.8943,
+          "averageDryerUtilizationPct": 41.3993,
+          "peakFlushQueueWaitHours": 8.4048
+        },
+        "winterDormancyResilience": {
+          "winterStockoutDays": 59,
+          "winterOrderFulfillmentPct": 50.8196,
+          "minimumWinterCashBalanceBdt": -1933541.9502,
+          "workingCapitalDeficitOccurred": true
+        },
+        "laborAndCostingKpis": {
+          "totalOvertimeHoursPaid": 0.0,
+          "totalWorkerIdleHours": 14480.3893,
+          "averageAbsorptionCostBdtPerKg": 402.0641,
+          "totalMealAllowancesPaidBdt": 262800.0
+        }
+      },
+      "confidenceIntervals95": {
+        "annualFreshLeafProcessedKg": {
+          "mean": 41775.5772,
+          "std": 428.213,
+          "ci95Low": 41749.0363,
+          "ci95High": 41802.1181
+        },
+        "annualFinishedTeaProducedKg": {
+          "mean": 10443.8943,
+          "std": 107.0532,
+          "ci95Low": 10437.2591,
+          "ci95High": 10450.5295
+        },
+        "averageDryerUtilizationPct": {
+          "mean": 41.3993,
+          "std": 0.4247,
+          "ci95Low": 41.373,
+          "ci95High": 41.4257
+        },
+        "peakFlushQueueWaitHours": {
+          "mean": 8.4048,
+          "std": 0.8146,
+          "ci95Low": 8.3544,
+          "ci95High": 8.4553
+        },
+        "winterStockoutDays": {
+          "mean": 59.0,
+          "std": 0.0,
+          "ci95Low": 59.0,
+          "ci95High": 59.0
+        },
+        "winterOrderFulfillmentPct": {
+          "mean": 50.8196,
+          "std": 0.5629,
+          "ci95Low": 50.7847,
+          "ci95High": 50.8545
+        },
+        "minimumWinterCashBalanceBdt": {
+          "mean": -1933541.9502,
+          "std": 21361.2199,
+          "ci95Low": -1934865.9324,
+          "ci95High": -1932217.9681
+        },
+        "workingCapitalDeficitRate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95Low": 1.0,
+          "ci95High": 1.0
+        },
+        "totalOvertimeHoursPaid": {
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95Low": 0.0,
+          "ci95High": 0.0
+        },
+        "totalWorkerIdleHours": {
+          "mean": 14480.3893,
+          "std": 34.1397,
+          "ci95Low": 14478.2733,
+          "ci95High": 14482.5053
+        },
+        "averageAbsorptionCostBdtPerKg": {
+          "mean": 402.0641,
+          "std": 2.4354,
+          "ci95Low": 401.9132,
+          "ci95High": 402.2151
+        },
+        "totalMealAllowancesPaidBdt": {
+          "mean": 262800.0,
+          "std": 0.0,
+          "ci95Low": 262800.0,
+          "ci95High": 262800.0
+        }
+      }
+    },
+    "fixed_buffer": {
+      "label": "Policy A2: Fixed Staffing + Pre-Winter Buffer (400 kg)",
+      "kpis": {
+        "runSummary": {
+          "experimentId": "EXP-EUROSIM-2027-FIXED_BUFFER",
+          "completedAt": "2026-11-27T21:14:16.589476+00:00",
+          "totalSimulatedDays": 365
+        },
+        "operationalKpis": {
+          "annualFreshLeafProcessedKg": 41775.5772,
+          "annualFinishedTeaProducedKg": 10443.8943,
+          "averageDryerUtilizationPct": 41.3993,
+          "peakFlushQueueWaitHours": 8.4048
+        },
+        "winterDormancyResilience": {
+          "winterStockoutDays": 59,
+          "winterOrderFulfillmentPct": 50.8196,
+          "minimumWinterCashBalanceBdt": -1946541.9502,
+          "workingCapitalDeficitOccurred": true
+        },
+        "laborAndCostingKpis": {
+          "totalOvertimeHoursPaid": 0.0,
+          "totalWorkerIdleHours": 14480.3893,
+          "averageAbsorptionCostBdtPerKg": 402.0641,
+          "totalMealAllowancesPaidBdt": 262800.0
+        }
+      },
+      "confidenceIntervals95": {
+        "annualFreshLeafProcessedKg": {
+          "mean": 41775.5772,
+          "std": 428.213,
+          "ci95Low": 41749.0363,
+          "ci95High": 41802.1181
+        },
+        "annualFinishedTeaProducedKg": {
+          "mean": 10443.8943,
+          "std": 107.0532,
+          "ci95Low": 10437.2591,
+          "ci95High": 10450.5295
+        },
+        "averageDryerUtilizationPct": {
+          "mean": 41.3993,
+          "std": 0.4247,
+          "ci95Low": 41.373,
+          "ci95High": 41.4257
+        },
+        "peakFlushQueueWaitHours": {
+          "mean": 8.4048,
+          "std": 0.8146,
+          "ci95Low": 8.3544,
+          "ci95High": 8.4553
+        },
+        "winterStockoutDays": {
+          "mean": 59.0,
+          "std": 0.0,
+          "ci95Low": 59.0,
+          "ci95High": 59.0
+        },
+        "winterOrderFulfillmentPct": {
+          "mean": 50.8196,
+          "std": 0.5629,
+          "ci95Low": 50.7847,
+          "ci95High": 50.8545
+        },
+        "minimumWinterCashBalanceBdt": {
+          "mean": -1946541.9502,
+          "std": 21361.2199,
+          "ci95Low": -1947865.9324,
+          "ci95High": -1945217.9681
+        },
+        "workingCapitalDeficitRate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95Low": 1.0,
+          "ci95High": 1.0
+        },
+        "totalOvertimeHoursPaid": {
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95Low": 0.0,
+          "ci95High": 0.0
+        },
+        "totalWorkerIdleHours": {
+          "mean": 14480.3893,
+          "std": 34.1397,
+          "ci95Low": 14478.2733,
+          "ci95High": 14482.5053
+        },
+        "averageAbsorptionCostBdtPerKg": {
+          "mean": 402.0641,
+          "std": 2.4354,
+          "ci95Low": 401.9132,
+          "ci95High": 402.2151
+        },
+        "totalMealAllowancesPaidBdt": {
+          "mean": 262800.0,
+          "std": 0.0,
+          "ci95Low": 262800.0,
+          "ci95High": 262800.0
+        }
+      }
+    },
+    "seasonal_standard": {
+      "label": "Policy B1: Seasonal Staffing + Standard Inventory",
+      "kpis": {
+        "runSummary": {
+          "experimentId": "EXP-EUROSIM-2027-SEASONAL_STANDARD",
+          "completedAt": "2026-11-27T21:14:34.872059+00:00",
+          "totalSimulatedDays": 365
+        },
+        "operationalKpis": {
+          "annualFreshLeafProcessedKg": 41775.5772,
+          "annualFinishedTeaProducedKg": 10443.8943,
+          "averageDryerUtilizationPct": 41.3993,
+          "peakFlushQueueWaitHours": 8.4048
+        },
+        "winterDormancyResilience": {
+          "winterStockoutDays": 59,
+          "winterOrderFulfillmentPct": 50.8196,
+          "minimumWinterCashBalanceBdt": -1470001.9502,
+          "workingCapitalDeficitOccurred": true
+        },
+        "laborAndCostingKpis": {
+          "totalOvertimeHoursPaid": 0.0,
+          "totalWorkerIdleHours": 9664.3893,
+          "averageAbsorptionCostBdtPerKg": 357.6756,
+          "totalMealAllowancesPaidBdt": 190560.0
+        }
+      },
+      "confidenceIntervals95": {
+        "annualFreshLeafProcessedKg": {
+          "mean": 41775.5772,
+          "std": 428.213,
+          "ci95Low": 41749.0363,
+          "ci95High": 41802.1181
+        },
+        "annualFinishedTeaProducedKg": {
+          "mean": 10443.8943,
+          "std": 107.0532,
+          "ci95Low": 10437.2591,
+          "ci95High": 10450.5295
+        },
+        "averageDryerUtilizationPct": {
+          "mean": 41.3993,
+          "std": 0.4247,
+          "ci95Low": 41.373,
+          "ci95High": 41.4257
+        },
+        "peakFlushQueueWaitHours": {
+          "mean": 8.4048,
+          "std": 0.8146,
+          "ci95Low": 8.3544,
+          "ci95High": 8.4553
+        },
+        "winterStockoutDays": {
+          "mean": 59.0,
+          "std": 0.0,
+          "ci95Low": 59.0,
+          "ci95High": 59.0
+        },
+        "winterOrderFulfillmentPct": {
+          "mean": 50.8196,
+          "std": 0.5629,
+          "ci95Low": 50.7847,
+          "ci95High": 50.8545
+        },
+        "minimumWinterCashBalanceBdt": {
+          "mean": -1470001.9502,
+          "std": 21361.2199,
+          "ci95Low": -1471325.9324,
+          "ci95High": -1468677.9681
+        },
+        "workingCapitalDeficitRate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95Low": 1.0,
+          "ci95High": 1.0
+        },
+        "totalOvertimeHoursPaid": {
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95Low": 0.0,
+          "ci95High": 0.0
+        },
+        "totalWorkerIdleHours": {
+          "mean": 9664.3893,
+          "std": 34.1397,
+          "ci95Low": 9662.2733,
+          "ci95High": 9666.5053
+        },
+        "averageAbsorptionCostBdtPerKg": {
+          "mean": 357.6756,
+          "std": 1.981,
+          "ci95Low": 357.5528,
+          "ci95High": 357.7984
+        },
+        "totalMealAllowancesPaidBdt": {
+          "mean": 190560.0,
+          "std": 0.0,
+          "ci95Low": 190560.0,
+          "ci95High": 190560.0
+        }
+      }
+    },
+    "seasonal_buffer": {
+      "label": "Policy B2: Seasonal Staffing + Pre-Winter Buffer (400 kg)",
+      "kpis": {
+        "runSummary": {
+          "experimentId": "EXP-EUROSIM-2027-SEASONAL_BUFFER",
+          "completedAt": "2026-11-27T21:14:55.696972+00:00",
+          "totalSimulatedDays": 365
+        },
+        "operationalKpis": {
+          "annualFreshLeafProcessedKg": 41775.5772,
+          "annualFinishedTeaProducedKg": 10443.8943,
+          "averageDryerUtilizationPct": 41.3993,
+          "peakFlushQueueWaitHours": 8.4048
+        },
+        "winterDormancyResilience": {
+          "winterStockoutDays": 59,
+          "winterOrderFulfillmentPct": 50.8196,
+          "minimumWinterCashBalanceBdt": -1483001.9502,
+          "workingCapitalDeficitOccurred": true
+        },
+        "laborAndCostingKpis": {
+          "totalOvertimeHoursPaid": 0.0,
+          "totalWorkerIdleHours": 9664.3893,
+          "averageAbsorptionCostBdtPerKg": 357.6756,
+          "totalMealAllowancesPaidBdt": 190560.0
+        }
+      },
+      "confidenceIntervals95": {
+        "annualFreshLeafProcessedKg": {
+          "mean": 41775.5772,
+          "std": 428.213,
+          "ci95Low": 41749.0363,
+          "ci95High": 41802.1181
+        },
+        "annualFinishedTeaProducedKg": {
+          "mean": 10443.8943,
+          "std": 107.0532,
+          "ci95Low": 10437.2591,
+          "ci95High": 10450.5295
+        },
+        "averageDryerUtilizationPct": {
+          "mean": 41.3993,
+          "std": 0.4247,
+          "ci95Low": 41.373,
+          "ci95High": 41.4257
+        },
+        "peakFlushQueueWaitHours": {
+          "mean": 8.4048,
+          "std": 0.8146,
+          "ci95Low": 8.3544,
+          "ci95High": 8.4553
+        },
+        "winterStockoutDays": {
+          "mean": 59.0,
+          "std": 0.0,
+          "ci95Low": 59.0,
+          "ci95High": 59.0
+        },
+        "winterOrderFulfillmentPct": {
+          "mean": 50.8196,
+          "std": 0.5629,
+          "ci95Low": 50.7847,
+          "ci95High": 50.8545
+        },
+        "minimumWinterCashBalanceBdt": {
+          "mean": -1483001.9502,
+          "std": 21361.2199,
+          "ci95Low": -1484325.9324,
+          "ci95High": -1481677.9681
+        },
+        "workingCapitalDeficitRate": {
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95Low": 1.0,
+          "ci95High": 1.0
+        },
+        "totalOvertimeHoursPaid": {
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95Low": 0.0,
+          "ci95High": 0.0
+        },
+        "totalWorkerIdleHours": {
+          "mean": 9664.3893,
+          "std": 34.1397,
+          "ci95Low": 9662.2733,
+          "ci95High": 9666.5053
+        },
+        "averageAbsorptionCostBdtPerKg": {
+          "mean": 357.6756,
+          "std": 1.981,
+          "ci95Low": 357.5528,
+          "ci95High": 357.7984
+        },
+        "totalMealAllowancesPaidBdt": {
+          "mean": 190560.0,
+          "std": 0.0,
+          "ci95Low": 190560.0,
+          "ci95High": 190560.0
+        }
+      }
+    }
+  },
+  "pairedComparisons": {
+    "seasonal_buffer_minus_fixed_standard.winterStockoutDays": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci95Low": 0.0,
+      "ci95High": 0.0
+    },
+    "seasonal_buffer_minus_fixed_standard.winterOrderFulfillmentPct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci95Low": 0.0,
+      "ci95High": 0.0
+    },
+    "seasonal_buffer_minus_fixed_standard.minimumWinterCashBalanceBdt": {
+      "mean": 450540.0,
+      "std": 0.0,
+      "ci95Low": 450540.0,
+      "ci95High": 450540.0
+    },
+    "seasonal_buffer_minus_fixed_standard.totalWorkerIdleHours": {
+      "mean": -4816.0,
+      "std": 0.0,
+      "ci95Low": -4816.0,
+      "ci95High": -4816.0
+    },
+    "seasonal_buffer_minus_fixed_standard.averageAbsorptionCostBdtPerKg": {
+      "mean": -44.3885,
+      "std": 0.4545,
+      "ci95Low": -44.4167,
+      "ci95High": -44.3603
+    }
+  }
+}

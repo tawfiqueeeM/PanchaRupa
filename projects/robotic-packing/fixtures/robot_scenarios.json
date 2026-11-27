@@ -1,0 +1,41 @@
+{
+  "formats": {
+    "FORMAT_50G": {
+      "formatId": "FORMAT_50G",
+      "name": "50g Retail Bottle",
+      "bottlesPerCarton": 12,
+      "matrixCols": 4,
+      "matrixRows": 3,
+      "cycleTimeSec": 1.5
+    },
+    "FORMAT_100G": {
+      "formatId": "FORMAT_100G",
+      "name": "100g Retail Bottle",
+      "bottlesPerCarton": 6,
+      "matrixCols": 3,
+      "matrixRows": 2,
+      "cycleTimeSec": 2.0
+    }
+  },
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-50G-CARTON",
+      "description": "Nominal packing of 12 x 50g bottles into shipping carton",
+      "formatId": "FORMAT_50G",
+      "interruptAtBottle": null
+    },
+    {
+      "scenarioId": "NOMINAL-100G-CARTON",
+      "description": "Nominal packing of 6 x 100g bottles into shipping carton",
+      "formatId": "FORMAT_100G",
+      "interruptAtBottle": null
+    },
+    {
+      "scenarioId": "INTERRUPTED-PICK-FAULT",
+      "description": "Vacuum loss at bottle #5 during transit; arm hold and guided recovery",
+      "formatId": "FORMAT_50G",
+      "interruptAtBottle": 5,
+      "faultReason": "Vacuum pressure switch DI_VACUUM_LOSS tripped during transit"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "DESIGN-MONTH-1000KG",
+      "description": "Illustrative 1,000 kg design month costing model: 90% bulk / 10% retail, BDT 181.63 manufacturing cost per released kg",
+      "volumeKg": 1000.0,
+      "leafPricePerKg": 25.0,
+      "netYieldPct": 25.0,
+      "bulkSharePct": 90.0,
+      "retailSharePct": 10.0,
+      "bulkPricePerKg": 240.0,
+      "retailPricePerKg": 450.0,
+      "recurringCashBdt": 61000.0,
+      "depreciationBdt": 10833.33,
+      "outboundFreightBdt": 9000.0
+    },
+    {
+      "scenarioId": "ZERO-OUTPUT-DORMANCY",
+      "description": "Winter off-season / shutdown with 0 kg fresh leaf processing: zero direct costs, BDT 71,833.33 unabsorbed fixed period variance",
+      "volumeKg": 0.0,
+      "leafPricePerKg": 25.0,
+      "netYieldPct": 25.0,
+      "bulkSharePct": 90.0,
+      "retailSharePct": 10.0,
+      "bulkPricePerKg": 240.0,
+      "retailPricePerKg": 450.0,
+      "recurringCashBdt": 61000.0,
+      "depreciationBdt": 10833.33,
+      "outboundFreightBdt": 0.0
+    },
+    {
+      "scenarioId": "HIGH-RETAIL-PREMIUM",
+      "description": "High-margin boutique mix: 500 kg output with 50% retail bottle allocation capturing higher gross contribution",
+      "volumeKg": 500.0,
+      "leafPricePerKg": 28.0,
+      "netYieldPct": 25.0,
+      "bulkSharePct": 50.0,
+      "retailSharePct": 50.0,
+      "bulkPricePerKg": 250.0,
+      "retailPricePerKg": 480.0,
+      "recurringCashBdt": 61000.0,
+      "depreciationBdt": 10833.33,
+      "outboundFreightBdt": 4500.0
+    }
+  ]
+}

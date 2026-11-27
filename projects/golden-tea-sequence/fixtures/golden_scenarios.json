@@ -1,0 +1,64 @@
+{
+  "oxidationProfiles": [
+    {
+      "profileId": "OX-LIGHT-01",
+      "name": "Light Golden Flush",
+      "oxidationMin": 60,
+      "tempC": 24.0,
+      "targetRh": 0.90,
+      "liquorColor": "Bright Golden Yellow",
+      "yieldFraction": 0.25
+    },
+    {
+      "profileId": "OX-MED-02",
+      "name": "Classic Amber Golden",
+      "oxidationMin": 90,
+      "tempC": 25.0,
+      "targetRh": 0.90,
+      "liquorColor": "Deep Golden Amber",
+      "yieldFraction": 0.25
+    },
+    {
+      "profileId": "OX-DEEP-03",
+      "name": "Deep Muscatel Golden",
+      "oxidationMin": 120,
+      "tempC": 26.0,
+      "targetRh": 0.92,
+      "liquorColor": "Coppery Red Gold",
+      "yieldFraction": 0.24
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-DAY-40-GOLDEN",
+      "description": "Nominal Day-40 Golden Tea Batch (B-O01, 40 kg fresh -> 10 kg finished)",
+      "batchId": "B-O01",
+      "lotId": "L-O01",
+      "freshKg": 40.0,
+      "leafEligible": true,
+      "profileId": "OX-MED-02",
+      "dryerInitialState": "FREE"
+    },
+    {
+      "scenarioId": "INELIGIBLE-LEAF-FAULT",
+      "description": "Attempt to brew Golden Tea from coarse non-eligible green tea leaf",
+      "batchId": "B-O02",
+      "lotId": "L-G09",
+      "freshKg": 40.0,
+      "leafEligible": false,
+      "profileId": "OX-MED-02",
+      "dryerInitialState": "FREE"
+    },
+    {
+      "scenarioId": "DRYER-SHARED-CONTENTION",
+      "description": "Oxidation completes but Shared Final Dryer is occupied by Green Tea Batch B-G01",
+      "batchId": "B-O01",
+      "lotId": "L-O01",
+      "freshKg": 40.0,
+      "leafEligible": true,
+      "profileId": "OX-MED-02",
+      "dryerInitialState": "BUSY_GREEN",
+      "dryerOwner": "B-G01"
+    }
+  ]
+}

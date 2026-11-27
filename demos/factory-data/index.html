@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Factory Data Platform & Traceability</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1><span class="badge" style="background:#0f3f2e; color:#7ef5b6; padding:3px 8px; border-radius:4px; font-size:0.8rem; font-weight:700; margin-right:8px; vertical-align:middle;">Demo 16</span><span>🗄</span> PanchaRupa Factory Data Platform & Traceability</h1>
+        <p class="demo-subtitle">Depts 4, 5 & 7 (Quality, Systems & Business) — Relational Data Dictionary, Ingestion Diagnostics & End-to-End Lot Genealogy</p>
+      </div>
+      <div class="demo-actions">
+        <span class="status-indicator ok" id="dataStatusPill">● DATASET VALID</span>
+        <button class="header-btn" id="btnDownloadClean">Download Clean JSON</button>
+        <button class="header-btn" id="btnDownloadInvalid">Download Invalid JSON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scenario Bar -->
+  <section class="scenario-bar">
+    <div class="scenario-selector">
+      <label for="datasetSelect" style="font-weight:600; margin-right:8px;">Relational Dataset Fixture:</label>
+      <select id="datasetSelect" style="padding:6px 12px; border-radius:4px; border:1px solid var(--color-border); font-size:0.85rem;">
+        <option value="CLEAN">1. Clean Production Dataset (0 Errors, Full Relational Integrity)</option>
+        <option value="INVALID">2. Injected Validation Exceptions (Duplicates, Orphan FKs, Invalid Units)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="bms-btn" id="btnExportReport">Export Validation Report</button>
+    </div>
+  </section>
+
+  <!-- Top KPI Row -->
+  <section class="data-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Data Validation Status</span>
+      <span class="kpi-value" id="kpiStatus" style="color:var(--color-status-success);">VALID</span>
+      <span class="kpi-sub" id="kpiStatusSub">Zero data dictionary violations</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Total Records Ingested</span>
+      <span class="kpi-value" id="kpiTotalRecords">9</span>
+      <span class="kpi-sub" id="kpiEntityCounts">Across 6 relational tables</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Duplicate PKs</span>
+      <span class="kpi-value" id="kpiDuplicates">0</span>
+      <span class="kpi-sub" id="kpiDuplicatesSub">Primary key uniqueness verified</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Orphan Foreign Keys</span>
+      <span class="kpi-value" id="kpiOrphans">0</span>
+      <span class="kpi-sub" id="kpiOrphansSub">Referential integrity intact</span>
+    </div>
+  </section>
+
+  <!-- Exception Banner -->
+  <div id="dataAlertBanner" style="padding: 0 var(--space-lg); display: none;">
+    <div class="alert-banner danger">
+      <span>🚨</span>
+      <span id="dataAlertMsg">DATA INGESTION INTEGRITY EXCEPTIONS DETECTED</span>
+    </div>
+  </div>
+
+  <!-- Main Panel Layout -->
+  <section class="panel-container">
+    <!-- Left Column: Lot Explorer & Genealogy Tree -->
+    <div class="data-card">
+      <div class="data-card-header">
+        <span class="data-card-title">🔍 End-to-End Lot Traceability Explorer</span>
+        <select id="lotSelect" style="padding:4px 8px; border:1px solid var(--color-border); border-radius:4px; font-size:0.8rem;">
+          <!-- Options populated dynamically -->
+        </select>
+      </div>
+      <div class="data-card-body" id="genealogyContainer">
+        <!-- Rendered genealogy tree -->
+      </div>
+    </div>
+
+    <!-- Right Column: Validation Diagnostics Table -->
+    <div class="data-card">
+      <div class="data-card-header">
+        <span class="data-card-title">📋 Schema Diagnostics & Integrity Error Log</span>
+        <span style="font-size:0.75rem; color:var(--color-text-muted);">SQL/Python Data Quality Rules</span>
+      </div>
+      <div class="data-card-body" style="padding:0; overflow-x:auto;">
+        <table class="diag-table">
+          <thead>
+            <tr>
+              <th>Violation Type</th>
+              <th>Table & Field</th>
+              <th>Invalid Value</th>
+              <th>Diagnostic Message</th>
+            </tr>
+          </thead>
+          <tbody id="diagTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

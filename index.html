@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanchaRupa Virtual Tea Factory — Engineering & Simulation Portal</title>
+  <link rel="stylesheet" href="shared/css/tokens.css">
+  <link rel="stylesheet" href="shared/css/base.css">
+  <style>
+    .portal-hero {
+      background: linear-gradient(135deg, var(--color-brand-primary) 0%, #0d2218 100%);
+      color: #ffffff;
+      padding: var(--space-xl) var(--space-lg);
+      border-bottom: 4px solid var(--color-brand-gold);
+    }
+    .portal-hero-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .hero-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-md);
+    }
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .pill-green { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.4); }
+    .pill-gold { background: rgba(201, 136, 24, 0.2); color: #fde047; border: 1px solid rgba(201, 136, 24, 0.4); }
+    .pill-blue { background: rgba(56, 189, 248, 0.2); color: #bae6fd; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .pill-purple { background: rgba(168, 85, 247, 0.2); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+    .portal-hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-xs);
+    }
+    .portal-hero p {
+      font-size: 1.05rem;
+      color: #cbd5e1;
+      max-width: 820px;
+      line-height: 1.6;
+    }
+
+    .kpi-strip {
+      background: #ffffff;
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-md) var(--space-lg);
+    }
+    .kpi-strip-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+    .kpi-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .kpi-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      letter-spacing: 0.04em;
+    }
+    .kpi-item .val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--color-text-main);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+    .kpi-item .sub {
+      font-size: 0.75rem;
+      color: var(--color-status-normal);
+      font-weight: 500;
+    }
+
+    .portal-body {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .dept-section {
+      margin-bottom: var(--space-xl);
+    }
+    .dept-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      border-bottom: 2px solid var(--color-border);
+      padding-bottom: var(--space-xs);
+      margin-bottom: var(--space-md);
+    }
+    .dept-title-area {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .dept-number {
+      background: var(--color-brand-primary);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+    }
+    .dept-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-brand-primary);
+    }
+    .dept-subtitle {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .demo-card {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-md);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .demo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-brand-accent);
+    }
+    .demo-card-top {
+      margin-bottom: var(--space-sm);
+    }
+    .demo-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xs);
+    }
+    .demo-slug-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+      background: var(--color-bg-surface-alt);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+    }
+    .demo-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 4px;
+    }
+    .demo-card-desc {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      line-height: 1.45;
+    }
+    .demo-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: var(--space-xs);
+    }
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 500;
+    }
+    .demo-card-footer {
+      border-top: 1px solid var(--color-bg-surface-alt);
+      padding-top: var(--space-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-sm);
+    }
+    .btn-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-brand-primary);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s ease;
+    }
+    .btn-launch:hover {
+      background: var(--color-brand-accent);
+      color: #ffffff;
+    }
+
+    .contracts-panel {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      margin-top: var(--space-xl);
+      box-shadow: var(--shadow-sm);
+    }
+    .contracts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-md);
+    }
+    .contract-box {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+      background: var(--color-bg-app);
+    }
+    .contract-box h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--color-brand-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .contract-box p {
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      margin: 6px 0 10px 0;
+      line-height: 1.45;
+    }
+    .contract-box a {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--color-brand-accent);
+      text-decoration: none;
+    }
+    .contract-box a:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      border-top: 1px solid var(--color-border);
+      background: #ffffff;
+      padding: var(--space-lg);
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      margin-top: var(--space-xl);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero Header -->
+  <header class="portal-hero">
+    <div class="portal-hero-inner">
+      <div class="hero-badge-row">
+        <span class="hero-pill pill-green">● Consolidated Main Active</span>
+        <span class="hero-pill pill-gold">20 Interactive Demos</span>
+        <span class="hero-pill pill-blue">101/101 Native Tests Passing</span>
+        <span class="hero-pill pill-purple">Panchagarh, Bangladesh</span>
+      </div>
+      <h1>PanchaRupa Virtual Tea Factory</h1>
+      <p>Interactive engineering twin, industrial automation simulator, and commercial decision-support platform for smallholder CTC & Orthodox green/golden tea manufacturing.</p>
+    </div>
+  </header>
+
+  <!-- KPI Strip -->
+  <section class="kpi-strip" aria-label="Factory Engineering Metrics">
+    <div class="kpi-strip-inner">
+      <div class="kpi-item">
+        <span class="label">Simulated Demos</span>
+        <span class="val">20 Modules</span>
+        <span class="sub">100% Zero-Dependency</span>
+      </div>
+      <div class="kpi-item">
+        <span class="label">Unit Test Assertions</span>
+        <span class="val">101 Passed</span>
+        <span class="sub">Node.js Native Runner</span>
+      </div>
+      <div class="kpi-item">
+        <span class="label">Design Volume</span>
+        <span class="val">1,000 kg / mo</span>
+        <span class="sub">4,000 kg Fresh Leaf</span>
+      </div>
+      <div class="kpi-item">
+        <span class="label">Target Unit Cost</span>
+        <span class="val">BDT 181.63 / kg</span>
+        <span class="sub">Design Month Absorption</span>
+      </div>
+      <div class="kpi-item">
+        <span class="label">Engineering Departments</span>
+        <span class="val">7 Depts</span>
+        <span class="sub">Full Lifecycle Coverage</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="portal-body">
+
+    <!-- Capstone Highlight Banner -->
+    <div class="card" style="margin-bottom:var(--space-xl); background:linear-gradient(to right, #ffffff, #f0fdf4); border:2px solid var(--color-brand-accent);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-md);">
+        <div>
+          <span class="badge badge-normal" style="margin-bottom:6px;">Capstone Showcase (Dept 5)</span>
+          <h2 style="font-size:1.3rem; font-weight:800; color:var(--color-brand-primary);">Integrated Virtual Factory Simulator</h2>
+          <p style="font-size:0.9rem; color:var(--color-text-muted); max-width:760px; margin-top:4px;">
+            Simulate end-to-end plant operations across all 5 factory evolution stages (Traditional Hand-Rolled, Semi-Mechanized, Fully Mechanized, Automated Continuous, and Digital Twin). Evaluates bottleneck migration, batch cycle makespan, and labor productivity scaling from 1.6 to 16.7 kg/man-day.
+          </p>
+        </div>
+        <div>
+          <a href="demos/virtual-factory/index.html" class="btn btn-primary" style="padding:10px 20px; font-size:0.95rem; font-weight:700;">Open Capstone Simulator →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department 1: Production Engineering -->
+    <section class="dept-section" id="dept-1">
+      <div class="dept-header">
+        <div class="dept-title-area">
+          <span class="dept-number">Dept 1</span>
+          <h3 class="dept-title">Production Engineering</h3>
+        </div>
+        <span class="dept-subtitle">Thermal, Mechanical, Chemical & Kinetic Transformation Processes</span>
+      </div>
+      <div class="demo-grid">
+        <!-- 01 Leaf Intake -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 01</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Leaf Intake & Weighbridge</h4>
+            <p class="demo-card-desc">Gross/tare deduction scale with water-droplet moisture correction, fine leaf ratio grading, and downstream withering buffer interlock (%I0.1).</p>
+            <div class="demo-card-tags">
+              <span class="tag">Tare Deduction</span>
+              <span class="tag">Fine Leaf %</span>
+              <span class="tag">Buffer Gate</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/leaf-intake</span>
+            <a href="demos/leaf-intake/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 02 Withering Airflow -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 04</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Withering Trough Airflow</h4>
+            <p class="demo-card-desc">Psychrometric trough evaporation simulation with ambient RH sensitivity, capacitive leaf probe feedback (%IW70), and target 65% moisture cutoff.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Psychrometrics</span>
+              <span class="tag">VFD Airflow</span>
+              <span class="tag">Sensor Watchdog</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/withering-airflow</span>
+            <a href="demos/withering-airflow/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 03 Green Tea Sequence -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 02</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Green Tea Steaming & Rolling</h4>
+            <p class="demo-card-desc">Thermal polyphenol oxidase (PPO) enzyme deactivation, cylindrical roasting kinetics, and shared rolling table mutual exclusion scheduling.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Enzyme Kill</span>
+              <span class="tag">Drum Roaster</span>
+              <span class="tag">Machine Lock</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/green-tea-sequence</span>
+            <a href="demos/green-tea-sequence/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 04 Golden Tea Processing -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 05</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Orthodox Golden Tea & Fermentation</h4>
+            <p class="demo-card-desc">4-stage orthodox CTC progression (withering, gentle rolling, enzymatic oxidation, drying) with colorimetric liquor grading and shared dryer ownership guards.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Theaflavin/TR</span>
+              <span class="tag">Oxidation Bed</span>
+              <span class="tag">Shared Dryer</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/golden-tea-sequence</span>
+            <a href="demos/golden-tea-sequence/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 05 Dryer Controls -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 03</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Fluidized Bed Dryer Controls</h4>
+            <p class="demo-card-desc">Thermal equilibrium ODE with air-proving differential pressure switch (%I3.0), SCR heat command, and 3-phase deliberate safety reset discipline.</p>
+            <div class="demo-card-tags">
+              <span class="tag">IEC 61131-3</span>
+              <span class="tag">Burner Safety</span>
+              <span class="tag">3-Phase Reset</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/dryer-control</span>
+            <a href="demos/dryer-control/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 06 Grading & Routing -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 06</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Tea Grading & Mesh Routing</h4>
+            <p class="demo-card-desc">Multi-deck vibro-screen mesh separation (BOP, OF, Dust, Stalks), electrostatic fiber extraction, destination full bin interlocks, and mass conservation.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Mesh Sieving</span>
+              <span class="tag">Bin Interlock</span>
+              <span class="tag">Idempotent Gate</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/grading-and-routing</span>
+            <a href="demos/grading-and-routing/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Department 2: Capacity and Operations -->
+    <section class="dept-section" id="dept-2">
+      <div class="dept-header">
+        <div class="dept-title-area">
+          <span class="dept-number">Dept 2</span>
+          <h3 class="dept-title">Capacity & Operations</h3>
+        </div>
+        <span class="dept-subtitle">Scheduling, Maintenance, Crew Rostering & Warehouse Fulfillment</span>
+      </div>
+      <div class="demo-grid">
+        <!-- 07 Production Scheduling -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 09</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Production Scheduling</h4>
+            <p class="demo-card-desc">DAY-40 Gantt scheduling engine with shared machine calendar, furnace changeover cleanup intervals, and order target due time feasibility checks.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Makespan Gantt</span>
+              <span class="tag">Changeover Window</span>
+              <span class="tag">Machine Calendar</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/production-scheduling</span>
+            <a href="demos/production-scheduling/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 08 Worker Shift Planning -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 10</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Worker Shift Planning & Skills</h4>
+            <p class="demo-card-desc">Shift attendance roster with multi-station certified skill matrix, absence impact detection, and concurrency double-booking prevention.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Skill Matrix</span>
+              <span class="tag">Roster Coverage</span>
+              <span class="tag">Absence Alarm</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/worker-shift-planning</span>
+            <a href="demos/worker-shift-planning/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 09 Maintenance Planning -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 13</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Preventive Maintenance</h4>
+            <p class="demo-card-desc">Asset runtime tracking, scheduled PM window execution with zero dispatch delay, and corrective work order management during breakdown outages.</p>
+            <div class="demo-card-tags">
+              <span class="tag">CMMS Orders</span>
+              <span class="tag">Runtime Hours</span>
+              <span class="tag">Outage Isolation</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/maintenance-planning</span>
+            <a href="demos/maintenance-planning/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 10 Inventory & Fulfillment -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 11</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Inventory & Fulfillment</h4>
+            <p class="demo-card-desc">Warehouse finished goods lot allocation (bulk vs retail bottles), quality hold gates, overdraw rejection, and full settlement lifecycle tracking.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Warehouse WMS</span>
+              <span class="tag">Quality Hold</span>
+              <span class="tag">Order Settlement</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/inventory-and-fulfillment</span>
+            <a href="demos/inventory-and-fulfillment/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Department 3: Controls, Electrical & Facilities -->
+    <section class="dept-section" id="dept-3">
+      <div class="dept-header">
+        <div class="dept-title-area">
+          <span class="dept-number">Dept 3</span>
+          <h3 class="dept-title">Controls, Electrical & Facilities</h3>
+        </div>
+        <span class="dept-subtitle">SCADA Data Platform, Modbus Telemetry & Building Automation</span>
+      </div>
+      <div class="demo-grid">
+        <!-- 11 Building Automation & BMS -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 18</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Building Automation & BMS</h4>
+            <p class="demo-card-desc">Ventilation AHU differential pressure proof loss alarms, warehouse climate humidity control, Modbus meter stale watchdog, and zero-SEC ratio safety.</p>
+            <div class="demo-card-tags">
+              <span class="tag">BACnet / Modbus</span>
+              <span class="tag">AHU Flow</span>
+              <span class="tag">kWh/kg SEC</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/building-automation</span>
+            <a href="demos/building-automation/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 12 Factory Data Platform -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 16</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Factory Data Platform</h4>
+            <p class="demo-card-desc">Relational schema validation layer enforcing primary/foreign key integrity, measurement unit checks, and recursive leaf-to-bottle lot genealogy traces.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Relational DDL</span>
+              <span class="tag">Foreign Keys</span>
+              <span class="tag">Lot Genealogy</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/factory-data</span>
+            <a href="demos/factory-data/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Department 4: Quality, Packaging & Sustainability -->
+    <section class="dept-section" id="dept-4">
+      <div class="dept-header">
+        <div class="dept-title-area">
+          <span class="dept-number">Dept 4</span>
+          <h3 class="dept-title">Quality, Packaging & Sustainability</h3>
+        </div>
+        <span class="dept-subtitle">Robotic Dosing, Vision Rejection & Environmental Mass Balances</span>
+      </div>
+      <div class="demo-grid">
+        <!-- 13 Packing & Reject Routing -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 07</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Packing & Reject Routing</h4>
+            <p class="demo-card-desc">High-speed packaging dosing across retail formats, tare-compensated checkweigher rejection, and source lot inventory conservation.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Checkweigher</span>
+              <span class="tag">Underfill Reject</span>
+              <span class="tag">Ledger Audit</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/packing-and-reject</span>
+            <a href="demos/packing-and-reject/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 14 Robotic Packing -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 15</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Delta Robot Packing Cell</h4>
+            <p class="demo-card-desc">Kinematic pick-and-place carton packing (50g vs 100g format changeover), arm fault hold recovery, and partial-carton bottle accountability.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Delta Kinematics</span>
+              <span class="tag">Carton Changeover</span>
+              <span class="tag">Fault Recovery</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/robotic-packing</span>
+            <a href="demos/robotic-packing/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 15 Sustainability & Waste -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 17</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Sustainability & Waste Balance</h4>
+            <p class="demo-card-desc">Wet-mass conservation, biomass furnace carbon accounting, dryer outage queue stewing energy penalties, and paired baseline replay comparisons.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Mass Balance</span>
+              <span class="tag">Biomass Furnace</span>
+              <span class="tag">Energy Waste</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/sustainability</span>
+            <a href="demos/sustainability/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Department 7: Business Operations, Commercial & Finance -->
+    <section class="dept-section" id="dept-7">
+      <div class="dept-header">
+        <div class="dept-title-area">
+          <span class="dept-number">Dept 7</span>
+          <h3 class="dept-title">Business Operations & Finance</h3>
+        </div>
+        <span class="dept-subtitle">Procurement, Absorption Costing, 4-Tier Payroll & Auction Strategy</span>
+      </div>
+      <div class="demo-grid">
+        <!-- 16 Leaf Procurement -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 08</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Smallholder Leaf Procurement</h4>
+            <p class="demo-card-desc">Smallholder tea garden vendor ledger, 25% dry yield conversion, inventory buffer offset, and seasonal winter dormancy purchasing halt.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Smallholders</span>
+              <span class="tag">25% Yield</span>
+              <span class="tag">Winter Buffer</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/leaf-procurement</span>
+            <a href="demos/leaf-procurement/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 17 Costing & Margin -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 12</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Costing, Margins & Break-Even</h4>
+            <p class="demo-card-desc">Absorption costing model matching BDT 181.63/kg design baseline, outbound freight segregation, and break-even production volume computation.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Absorption Cost</span>
+              <span class="tag">BDT 181.63</span>
+              <span class="tag">Break-Even</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/costing-and-margin</span>
+            <a href="demos/costing-and-margin/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 18 Staffing & Payroll -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 19</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Staffing & 4-Tier Payroll Close</h4>
+            <p class="demo-card-desc">4-tier immutable approval workflow, tea estate shift meal allowance calculations, and Month 24 accrual profit vs bank cash reconciliation.</p>
+            <div class="demo-card-tags">
+              <span class="tag">4-Tier Approval</span>
+              <span class="tag">Meal Allowance</span>
+              <span class="tag">Cash Recon</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/staffing-and-payroll</span>
+            <a href="demos/staffing-and-payroll/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+
+        <!-- 19 Tea Auction Planning -->
+        <div class="demo-card">
+          <div class="demo-card-top">
+            <div class="demo-card-header">
+              <span class="demo-slug-tag">Demo 20</span>
+              <span class="badge badge-normal">Verified</span>
+            </div>
+            <h4 class="demo-card-title">Multi-Center Tea Auction Planning</h4>
+            <p class="demo-card-desc">3-centre net realization optimizer (Panchagarh vs Sreemangal vs Chattogram), freight break-even premium calculation, and reserve price deficit RELIST gating.</p>
+            <div class="demo-card-tags">
+              <span class="tag">Chattogram CGP</span>
+              <span class="tag">Freight Premium</span>
+              <span class="tag">Reserve Deficit</span>
+            </div>
+          </div>
+          <div class="demo-card-footer">
+            <span style="font-size:0.75rem; color:var(--color-text-muted);">demos/tea-auction-planning</span>
+            <a href="demos/tea-auction-planning/index.html" class="btn-launch">Launch Demo →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Engineering Scaffolding & Strict Contracts Section -->
+    <section class="contracts-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-xs);">
+        <h3 style="font-size:1.15rem; font-weight:800; color:var(--color-brand-primary);">Autonomous Agent Engineering Contracts (INTERFACE.md)</h3>
+        <span class="badge badge-normal">Zero-Drift Specifications</span>
+      </div>
+      <p style="font-size:0.85rem; color:var(--color-text-muted); margin-top:4px;">
+        Strict API, schema, and hardware boundary contracts enabling parallel agent development across database design, PLC Structured Text programming, and discrete-event simulation.
+      </p>
+
+      <div class="contracts-grid">
+        <div class="contract-box">
+          <h4>🗄️ Relational Data Contract</h4>
+          <p>SQLite and PostgreSQL DDL schemas, primary/foreign key constraints, and recursive leaf-to-bottle lot genealogy queries matching Factory Data Platform.</p>
+          <a href="db/INTERFACE.md">Inspect db/INTERFACE.md →</a>
+        </div>
+        <div class="contract-box">
+          <h4>⚡ PLC Industrial Automation</h4>
+          <p>IEC 61131-3 Structured Text (.st) function blocks for FB_DryerSafetyControl and FB_WitheringAirflowControl with hardware I/O mappings (%I/%Q registers).</p>
+          <a href="plc/INTERFACE.md">Inspect plc/INTERFACE.md →</a>
+        </div>
+        <div class="contract-box">
+          <h4>📊 Discrete-Event Simulation</h4>
+          <p>Python discrete-event simulation schema for seasonal plucking curves, winter inventory buffering, and financial runway targeting SIMS EUROSIM 2027.</p>
+          <a href="sim/INTERFACE.md">Inspect sim/INTERFACE.md →</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><strong>PanchaRupa Virtual Tea Factory</strong> — Consolidated Master Workspace (Main Branch)</p>
+    <p style="margin-top:4px; font-size:0.75rem;">Run <code>python shared/serve.py 8080</code> to launch this portal and all 20 interactive simulation demos locally.</p>
+  </footer>
+
+</body>
+</html>

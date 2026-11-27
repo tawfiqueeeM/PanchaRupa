@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Tea Processing Sequence — PanchaRupa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="demo-header">
+    <div class="demo-header-top">
+      <div class="demo-title-group">
+        <h1>
+          <span>🍵</span>
+          <span>Green Tea Processing Sequence</span>
+          <span class="status-badge normal" style="font-size:0.7rem;">Demo 02</span>
+        </h1>
+        <div class="demo-subtitle">
+          Dept 2 Capacity & Operations · Drum → Rolling → Drying progression, recipe parameters & shared station lockouts
+        </div>
+      </div>
+      <div class="demo-actions">
+        <a id="btnViewSource" href="https://github.com/tawfiqueeeM/PanchaRupa/tree/subproject/02-green-tea-processing/projects/green-tea-sequence/" target="_blank" rel="noopener noreferrer" class="header-btn">
+          <span>📂</span> View Project Source
+        </a>
+        <a id="btnViewEvidence" href="../../projects/green-tea-sequence/TEST-REPORT.md" target="_blank" class="header-btn">
+          <span>📋</span> View Test Evidence
+        </a>
+        <button id="btnResetDemo" class="header-btn primary">
+          <span>🔄</span> Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="scenario-bar">
+    <div class="scenario-selector">
+      <span class="scenario-label">Scenario Presets:</span>
+      <div class="scenario-pill-group">
+        <button class="scenario-pill active" data-scenario="NOMINAL-DAY-40">Nominal Day-40 (B-G01)</button>
+        <button class="scenario-pill" data-scenario="ROLLER-CONTENTION">Roller Contention Fault</button>
+        <button class="scenario-pill" data-scenario="DRYER-CONTENTION">Dryer Contention Fault</button>
+      </div>
+    </div>
+    <div class="scenario-status" style="font-size:0.85rem; color:var(--color-text-muted);">
+      Batch: <strong id="lblActiveBatch" class="font-mono">B-G01</strong> ·
+      State: <strong id="lblLineState" class="font-mono">IDLE</strong> ·
+      Cumulative Finished: <strong id="lblTotalFinished" class="font-mono">0.00 kg</strong>
+    </div>
+  </nav>
+
+  <main class="demo-container">
+    <!-- Visual Sequence Pipeline -->
+    <section class="card" aria-labelledby="pipeline-title">
+      <div class="card-header">
+        <h2 id="pipeline-title" class="card-title">
+          <span>🔄</span> Physical Processing Pipeline
+        </h2>
+        <span id="pipelineOverallBadge" class="status-badge idle">STANDBY</span>
+      </div>
+
+      <div class="pipeline-flow">
+        <!-- Station 1: Heated Drum -->
+        <div id="nodeDrum" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.9rem;">1. Heated Drum</strong>
+            <span id="badgeDrum" class="status-badge idle">IDLE</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">Fixation & De-enzyming</div>
+          <div class="metric-grid" style="grid-template-columns:1fr 1fr; margin-top:var(--space-2xs);">
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Temp</div>
+              <div id="valDrumTemp" class="metric-value font-mono" style="font-size:0.95rem;">230°C</div>
+            </div>
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Cycle</div>
+              <div id="valDrumCycle" class="metric-value font-mono" style="font-size:0.95rem;">35m</div>
+            </div>
+          </div>
+          <div id="lblDrumOccupant" style="font-size:0.75rem; color:var(--color-text-muted); font-family:var(--font-mono);">Occupant: None</div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Station 2: Shared Roller -->
+        <div id="nodeRoller" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.9rem;">2. Shared Roller</strong>
+            <span id="badgeRoller" class="status-badge normal">AVAILABLE</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">Cell Rupture & Shaping</div>
+          <div class="metric-grid" style="grid-template-columns:1fr 1fr; margin-top:var(--space-2xs);">
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Status</div>
+              <div id="valRollerStatus" class="metric-value font-mono" style="font-size:0.95rem;">READY</div>
+            </div>
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Cycle</div>
+              <div id="valRollerCycle" class="metric-value font-mono" style="font-size:0.95rem;">30m</div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-2xs);">
+            <span id="lblRollerOccupant" style="font-size:0.75rem; color:var(--color-text-muted); font-family:var(--font-mono);">Occupant: None</span>
+            <button id="btnToggleRoller" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">
+              Toggle Lock (%I1.0)
+            </button>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Station 3: Shared Final Dryer -->
+        <div id="nodeDryer" class="station-node">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.9rem;">3. Final Dryer</strong>
+            <span id="badgeDryer" class="status-badge normal">AVAILABLE</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">Moisture Reduction (3-5%)</div>
+          <div class="metric-grid" style="grid-template-columns:1fr 1fr; margin-top:var(--space-2xs);">
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Temp</div>
+              <div id="valDryerTemp" class="metric-value font-mono" style="font-size:0.95rem;">95°C</div>
+            </div>
+            <div class="metric-box" style="padding:4px 6px;">
+              <div class="metric-label" style="font-size:0.65rem;">Cycle</div>
+              <div id="valDryerCycle" class="metric-value font-mono" style="font-size:0.95rem;">60m</div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-2xs);">
+            <span id="lblDryerOccupant" style="font-size:0.75rem; color:var(--color-text-muted); font-family:var(--font-mono);">Occupant: None</span>
+            <button id="btnToggleDryer" class="btn btn-secondary" style="font-size:0.7rem; padding:2px 6px;">
+              Toggle Lock (%I2.0)
+            </button>
+          </div>
+        </div>
+
+        <div class="flow-connector">➔</div>
+
+        <!-- Station 4: Released Output -->
+        <div class="station-node" style="border-style:dashed;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.9rem;">4. Finished Stock</strong>
+            <span class="status-badge normal">QUALITY RELEASE</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--color-text-muted);">Bulk / Retail Allocation</div>
+          <div class="metric-box" style="padding:6px; margin-top:var(--space-2xs);">
+            <div class="metric-label" style="font-size:0.65rem;">Total Released</div>
+            <div id="valReleasedTotal" class="metric-value font-mono" style="font-size:1.15rem; color:#15803d;">0.00 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waiting Reason Callout -->
+      <div id="waitingCallout" class="reason-callout">
+        <div style="font-weight:700; color:var(--color-brand-gold); font-size:0.85rem;">INTERLOCK HOLD ACTIVE:</div>
+        <div id="waitingCalloutMsg" style="font-size:0.85rem; margin-top:2px;">
+          Batch B-G01 held at station discharge. Retaining batch identity and mass.
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls & Sequence Details -->
+    <div class="panel-grid">
+      <!-- Operator Line Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <div class="card-header">
+          <h2 id="controls-title" class="card-title">
+            <span>🎮</span> Operator Sequence Controls
+          </h2>
+          <span id="badgeActiveStage" class="status-badge idle">IDLE</span>
+        </div>
+
+        <div class="form-group">
+          <label for="selRecipe" class="form-label">Green Tea Recipe Selection</label>
+          <select id="selRecipe" class="form-select font-mono">
+            <option value="GT-STD-01">GT-STD-01: Standard Green Tea (230°C / 30m / 95°C / 25% yield)</option>
+            <option value="GT-DEL-02">GT-DEL-02: Spring Delicate Flush (210°C / 20m / 90°C / 26% yield)</option>
+            <option value="GT-ROAST-03">GT-ROAST-03: High Roast Green (245°C / 35m / 105°C / 24% yield)</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+          <div class="form-group">
+            <label for="inpBatchId" class="form-label">Batch ID</label>
+            <input type="text" id="inpBatchId" class="form-input font-mono" value="B-G01">
+          </div>
+          <div class="form-group">
+            <label for="inpFreshKg" class="form-label">Fresh Leaf Mass (kg)</label>
+            <input type="number" id="inpFreshKg" class="form-input font-mono" step="1.0" value="120.0">
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-label">Expected Output</div>
+            <div id="valExpectedOutput" class="metric-value font-mono">30.00 kg</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Elapsed Time</div>
+            <div id="valElapsedTime" class="metric-value font-mono">0 min</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:var(--space-sm); margin-top:var(--space-xs);">
+          <button id="btnStepLine" class="btn btn-primary" style="flex:1;">
+            <span>⏭️</span> Step Line (Handshake Next)
+          </button>
+          <button id="btnAutoRun" class="btn btn-warning" style="flex:1;">
+            <span>▶️</span> Auto-Run Sequence
+          </button>
+        </div>
+      </section>
+
+      <!-- Event Ledger & Output History -->
+      <section class="card" aria-labelledby="history-title">
+        <div class="card-header">
+          <h2 id="history-title" class="card-title">
+            <span>📜</span> Batch Events & Completed Batches
+          </h2>
+          <div style="display:flex; gap:var(--space-xs);">
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>💾</span> Export CSV
+            </button>
+            <button id="btnExportJson" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">
+              <span>📄</span> Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div id="eventLogContainer" class="event-log-container" role="log" aria-live="polite">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div style="margin-top:var(--space-xs);">
+          <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--space-2xs);">Released Batches Ledger:</div>
+          <div class="data-table-container" style="max-height:130px; overflow-y:auto;">
+            <table class="data-table" aria-label="Completed Batches">
+              <thead>
+                <tr>
+                  <th>Batch ID</th>
+                  <th>Recipe</th>
+                  <th>Fresh (kg)</th>
+                  <th>Finished (kg)</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="completedTableBody">
+                <tr><td colspan="6" style="text-align:center; color:var(--color-text-muted);">No batches released yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-OPS-DAY",
+      "description": "Nominal operations day: ventilation active with healthy proof, room humidity at 58% RH, active meter polling",
+      "ventilationFanCommand": true,
+      "ventilationProofHealthy": true,
+      "storageHumidityRh": 58.0,
+      "storageTempC": 22.5,
+      "meterPollingActive": true,
+      "shiftReleasedTeaKg": 40.0
+    },
+    {
+      "scenarioId": "VENTILATION-PROOF-LOSS",
+      "description": "AHU supply fan commanded run but differential pressure proof lost",
+      "ventilationFanCommand": true,
+      "ventilationProofHealthy": false,
+      "storageHumidityRh": 58.0,
+      "storageTempC": 22.5,
+      "meterPollingActive": true,
+      "shiftReleasedTeaKg": 40.0
+    },
+    {
+      "scenarioId": "HUMIDITY-EXCURSION-TRIP",
+      "description": "Finished tea storage humidity excursion rising to 78% RH (exceeds 65% limit)",
+      "ventilationFanCommand": true,
+      "ventilationProofHealthy": true,
+      "storageHumidityRh": 78.0,
+      "storageTempC": 26.0,
+      "meterPollingActive": true,
+      "shiftReleasedTeaKg": 40.0
+    },
+    {
+      "scenarioId": "STALE-METER-TIMEOUT",
+      "description": "Modbus electrical meter polling frozen / communication timeout > 15s",
+      "ventilationFanCommand": true,
+      "ventilationProofHealthy": true,
+      "storageHumidityRh": 58.0,
+      "storageTempC": 22.5,
+      "meterPollingActive": false,
+      "shiftReleasedTeaKg": 40.0
+    }
+  ]
+}

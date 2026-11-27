@@ -1,0 +1,104 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "PLANNED-PM-BASELINE",
+      "description": "Planned morning PM on Fluid Bed Dryer (AST-DRY-01): 06:00 - 08:00 pre-shift service window, zero batch queuing, zero dispatch delay",
+      "assets": [
+        {
+          "assetId": "AST-DRY-01",
+          "name": "Fluid Bed Dryer",
+          "category": "THERMAL",
+          "criticality": "HIGH",
+          "runtimeHours": 285.0,
+          "mtbfHours": 300.0,
+          "status": "MAINTENANCE_PLANNED"
+        },
+        {
+          "assetId": "AST-ROL-01",
+          "name": "Tea Roller",
+          "category": "MECHANICAL",
+          "criticality": "HIGH",
+          "runtimeHours": 180.0,
+          "mtbfHours": 450.0,
+          "status": "OPERATIONAL"
+        },
+        {
+          "assetId": "AST-ROB-01",
+          "name": "Delta Robot Packing Cell",
+          "category": "ROBOTICS",
+          "criticality": "HIGH",
+          "runtimeHours": 120.0,
+          "mtbfHours": 500.0,
+          "status": "OPERATIONAL"
+        }
+      ],
+      "workOrders": [
+        {
+          "woId": "WO-PM-2026-001",
+          "type": "PREVENTATIVE",
+          "assetId": "AST-DRY-01",
+          "title": "Semi-Annual Burner Chamber Descaling & Blower Inspection",
+          "priority": "MEDIUM",
+          "startMin": -120,
+          "endMin": 0,
+          "durationMinutes": 120,
+          "status": "COMPLETED",
+          "partsCostBdt": 3500.0,
+          "laborHours": 4.0,
+          "queuedBatches": [],
+          "dispatchDelayMin": 0
+        }
+      ]
+    },
+    {
+      "scenarioId": "UNPLANNED-DRYER-BREAKDOWN",
+      "description": "Unplanned SCR heating element burnout during active shift (11:30 - 13:30, 120m outage): queues 40kg WIP and delays dispatch by 120 min",
+      "assets": [
+        {
+          "assetId": "AST-DRY-01",
+          "name": "Fluid Bed Dryer",
+          "category": "THERMAL",
+          "criticality": "HIGH",
+          "runtimeHours": 305.0,
+          "mtbfHours": 300.0,
+          "status": "TRIPPED_OUTAGE"
+        },
+        {
+          "assetId": "AST-ROL-01",
+          "name": "Tea Roller",
+          "category": "MECHANICAL",
+          "criticality": "HIGH",
+          "runtimeHours": 180.0,
+          "mtbfHours": 450.0,
+          "status": "OPERATIONAL"
+        },
+        {
+          "assetId": "AST-ROB-01",
+          "name": "Delta Robot Packing Cell",
+          "category": "ROBOTICS",
+          "criticality": "HIGH",
+          "runtimeHours": 120.0,
+          "mtbfHours": 500.0,
+          "status": "OPERATIONAL"
+        }
+      ],
+      "workOrders": [
+        {
+          "woId": "WO-EM-2026-088",
+          "type": "CORRECTIVE",
+          "assetId": "AST-DRY-01",
+          "title": "Emergency SCR Heating Element Burnout Replacement",
+          "priority": "CRITICAL",
+          "startMin": 210,
+          "endMin": 330,
+          "durationMinutes": 120,
+          "status": "IN_PROGRESS",
+          "partsCostBdt": 12500.0,
+          "laborHours": 6.0,
+          "queuedBatches": ["B-G01", "B-GL01"],
+          "dispatchDelayMin": 120
+        }
+      ]
+    }
+  ]
+}

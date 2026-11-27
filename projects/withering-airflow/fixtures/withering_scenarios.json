@@ -1,0 +1,40 @@
+{
+  "ambientScenarios": {
+    "SPRING-NOMINAL": {
+      "name": "Spring Nominal",
+      "tempC": 25.0,
+      "relativeHumidity": 0.65,
+      "baseEvapRate": 0.08
+    },
+    "MONSOON-HUMID": {
+      "name": "Monsoon High Humidity",
+      "tempC": 28.0,
+      "relativeHumidity": 0.88,
+      "baseEvapRate": 0.035
+    },
+    "DRY-AUTUMN": {
+      "name": "Autumn Dry Ambient",
+      "tempC": 22.0,
+      "relativeHumidity": 0.50,
+      "baseEvapRate": 0.12
+    }
+  },
+  "defaultBatch": {
+    "batchId": "B-W01",
+    "leafMassKg": 40.0,
+    "initialMoisturePercent": 78.0,
+    "targetMoisturePercent": 65.0
+  },
+  "comparisonPresets": [
+    {
+      "name": "Run A (Gentle Airflow - 40%)",
+      "fanSpeedPercent": 40,
+      "ambientKey": "SPRING-NOMINAL"
+    },
+    {
+      "name": "Run B (High Airflow - 85%)",
+      "fanSpeedPercent": 85,
+      "ambientKey": "SPRING-NOMINAL"
+    }
+  ]
+}

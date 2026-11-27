@@ -1,0 +1,66 @@
+{
+  "recipes": [
+    {
+      "recipeId": "GT-STD-01",
+      "name": "Standard Green Tea",
+      "drumTempC": 230,
+      "drumDurationMin": 35,
+      "rollerDurationMin": 30,
+      "dryerTempC": 95,
+      "dryerDurationMin": 60,
+      "yieldFraction": 0.25
+    },
+    {
+      "recipeId": "GT-DEL-02",
+      "name": "Spring Delicate Flush",
+      "drumTempC": 210,
+      "drumDurationMin": 25,
+      "rollerDurationMin": 20,
+      "dryerTempC": 90,
+      "dryerDurationMin": 50,
+      "yieldFraction": 0.26
+    },
+    {
+      "recipeId": "GT-ROAST-03",
+      "name": "High Roast Green Tea",
+      "drumTempC": 245,
+      "drumDurationMin": 40,
+      "rollerDurationMin": 35,
+      "dryerTempC": 105,
+      "dryerDurationMin": 65,
+      "yieldFraction": 0.24
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "NOMINAL-DAY-40",
+      "description": "Nominal Day-40 Green Tea Batch (B-G01, 120 kg -> 30 kg)",
+      "batchId": "B-G01",
+      "recipeId": "GT-STD-01",
+      "freshLeafKg": 120.0,
+      "rollerInitiallyAvailable": true,
+      "dryerInitiallyAvailable": true
+    },
+    {
+      "scenarioId": "ROLLER-CONTENTION",
+      "description": "Drum completes but Roller is busy with Golden Tea Batch B-O01",
+      "batchId": "B-G01",
+      "recipeId": "GT-STD-01",
+      "freshLeafKg": 120.0,
+      "rollerInitiallyAvailable": false,
+      "rollerBlockReason": "Roller occupied by Golden Tea Batch B-O01",
+      "dryerInitiallyAvailable": true
+    },
+    {
+      "scenarioId": "DRYER-CONTENTION",
+      "description": "Rolling completes but Final Dryer is reserved for Golden Tea oxidation batch",
+      "batchId": "B-G01",
+      "recipeId": "GT-STD-01",
+      "freshLeafKg": 120.0,
+      "rollerInitiallyAvailable": true,
+      "dryerInitiallyAvailable": false,
+      "dryerBlockReason": "Dryer reserved for Golden Tea Batch B-O01",
+      "stepToDryer": true
+    }
+  ]
+}

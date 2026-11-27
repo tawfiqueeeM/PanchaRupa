@@ -1,0 +1,114 @@
+{
+  "scenarios": [
+    {
+      "scenarioId": "DAY-40-NOMINAL",
+      "description": "DAY-40 integration baseline: 30 kg Green Tea (B-G01) and 10 kg Golden Tea (B-GL01), zero machine outages",
+      "shiftStartMin": 0,
+      "shiftEndMin": 540,
+      "orders": [
+        {
+          "batchId": "B-G01",
+          "product": "GREEN_TEA",
+          "quantityKg": 30.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "FIXATION_DRUM", "durationMin": 45, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "SHARED_DRYER", "durationMin": 60, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 45, "cleanMin": 0 }
+          ]
+        },
+        {
+          "batchId": "B-GL01",
+          "product": "GOLDEN_TEA",
+          "quantityKg": 10.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "WITHERING_TROUGH", "durationMin": 120, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "OXIDATION_CHAMBER", "durationMin": 90, "cleanMin": 0 },
+            { "machine": "SHARED_DRYER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 30, "cleanMin": 0 }
+          ]
+        }
+      ],
+      "outages": []
+    },
+    {
+      "scenarioId": "DAY-40-DRYER-OUTAGE",
+      "description": "DAY-40 run with unplanned Shared Dryer thermal element fault (11:30 - 13:30, 120 min outage window)",
+      "shiftStartMin": 0,
+      "shiftEndMin": 540,
+      "orders": [
+        {
+          "batchId": "B-G01",
+          "product": "GREEN_TEA",
+          "quantityKg": 30.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "FIXATION_DRUM", "durationMin": 45, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "SHARED_DRYER", "durationMin": 60, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 45, "cleanMin": 0 }
+          ]
+        },
+        {
+          "batchId": "B-GL01",
+          "product": "GOLDEN_TEA",
+          "quantityKg": 10.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "WITHERING_TROUGH", "durationMin": 120, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "OXIDATION_CHAMBER", "durationMin": 90, "cleanMin": 0 },
+            { "machine": "SHARED_DRYER", "durationMin": 45, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 30, "cleanMin": 0 }
+          ]
+        }
+      ],
+      "outages": [
+        {
+          "outageId": "OUT-DRY-01",
+          "machine": "SHARED_DRYER",
+          "startMin": 210,
+          "endMin": 330,
+          "reason": "SCR heating element breaker trip and cooling blower replacement"
+        }
+      ]
+    },
+    {
+      "scenarioId": "EXCESS-CAPACITY-INFEASIBLE",
+      "description": "Excess volume order overload (70 kg Green + 35 kg Golden) exceeding single-shift processing limits",
+      "shiftStartMin": 0,
+      "shiftEndMin": 540,
+      "orders": [
+        {
+          "batchId": "B-G01",
+          "product": "GREEN_TEA",
+          "quantityKg": 70.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "FIXATION_DRUM", "durationMin": 120, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 120, "cleanMin": 15 },
+            { "machine": "SHARED_DRYER", "durationMin": 150, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 90, "cleanMin": 0 }
+          ]
+        },
+        {
+          "batchId": "B-GL01",
+          "product": "GOLDEN_TEA",
+          "quantityKg": 35.0,
+          "targetTime": "17:00",
+          "steps": [
+            { "machine": "WITHERING_TROUGH", "durationMin": 180, "cleanMin": 0 },
+            { "machine": "SHARED_ROLLER", "durationMin": 90, "cleanMin": 15 },
+            { "machine": "OXIDATION_CHAMBER", "durationMin": 120, "cleanMin": 0 },
+            { "machine": "SHARED_DRYER", "durationMin": 90, "cleanMin": 15 },
+            { "machine": "PACKING_LINE", "durationMin": 60, "cleanMin": 0 }
+          ]
+        }
+      ],
+      "outages": []
+    }
+  ]
+}
