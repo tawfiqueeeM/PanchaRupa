@@ -10,10 +10,10 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 01 · RECEPTION & DIVERTER (SC-01, DV-01A/B)',
     name: '1. Raw Leaf Reception & Diverter',
     shortName: 'Room 01: Intake',
-    x: -20,
-    z: 0,
-    cameraOffset: { x: -20, y: 3.6, z: 7.6 },
-    lookAtOffset: { x: -20, y: 1.15, z: -0.3 },
+    x: -16,
+    z: -5.5,
+    cameraOffset: { x: -16, y: 4.2, z: 3.2 },
+    lookAtOffset: { x: -16, y: 1.1, z: -5.5 },
   },
   {
     id: 'withering',
@@ -23,10 +23,10 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 02 · WITHERING HALL · GOLDEN BUFFER (T-01..04)',
     name: '2. Climate-Controlled Withering Hall',
     shortName: 'Room 02: Withering',
-    x: -12,
-    z: 0,
-    cameraOffset: { x: -12, y: 3.6, z: 7.6 },
-    lookAtOffset: { x: -12, y: 1.15, z: -0.2 },
+    x: -8,
+    z: -5.5,
+    cameraOffset: { x: -8, y: 4.2, z: 3.2 },
+    lookAtOffset: { x: -8, y: 1.1, z: -5.5 },
   },
   {
     id: 'rolling',
@@ -36,10 +36,10 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 03 · FIXATION, ROLLING & OXIDATION (RL-01..02)',
     name: '3. Fixation, Rolling & Oxidation Room',
     shortName: 'Room 03: Rolling',
-    x: -4,
-    z: 0,
-    cameraOffset: { x: -4, y: 3.6, z: 7.6 },
-    lookAtOffset: { x: -4, y: 1.15, z: -0.2 },
+    x: -12,
+    z: 4.5,
+    cameraOffset: { x: -12, y: 4.2, z: 12.8 },
+    lookAtOffset: { x: -12, y: 1.1, z: 4.5 },
   },
   {
     id: 'dryer',
@@ -49,10 +49,10 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 04 · THERMAL DRYING · ATEX ZONE 22 (DR-01)',
     name: '4. Thermal Drying Room (ATEX Zone 22)',
     shortName: 'Room 04: Dryer',
-    x: 4,
-    z: 0,
-    cameraOffset: { x: 4, y: 3.7, z: 7.6 },
-    lookAtOffset: { x: 4, y: 1.25, z: -0.2 },
+    x: 0,
+    z: -5.5,
+    cameraOffset: { x: 0, y: 4.2, z: 3.2 },
+    lookAtOffset: { x: 0, y: 1.2, z: -5.5 },
   },
   {
     id: 'sorting',
@@ -62,10 +62,10 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 05 · GRADING & OPTICAL SORTING (GR-01, OS-01, RJ-01)',
     name: '5. Vibratory Grading & Optical Sorting',
     shortName: 'Room 05: Sorting',
-    x: 12,
-    z: 0,
-    cameraOffset: { x: 12, y: 3.6, z: 7.6 },
-    lookAtOffset: { x: 12, y: 1.15, z: 0.0 },
+    x: 8,
+    z: -5.5,
+    cameraOffset: { x: 8, y: 4.2, z: 3.2 },
+    lookAtOffset: { x: 8, y: 1.1, z: -5.5 },
   },
   {
     id: 'warehouse',
@@ -75,17 +75,17 @@ export const FACTORY_STATIONS = [
     zoneLabel: 'ROOM 06 · CLEANROOM WEIGH-FILL & PACKAGING (PK-01)',
     name: '6. Cleanroom Weigh-Fill & Foil Packaging',
     shortName: 'Room 06: Packaging',
-    x: 20,
-    z: 0,
-    cameraOffset: { x: 20, y: 3.6, z: 7.8 },
-    lookAtOffset: { x: 20, y: 1.2, z: -0.2 },
+    x: 16,
+    z: -5.5,
+    cameraOffset: { x: 16, y: 4.2, z: 3.4 },
+    lookAtOffset: { x: 16, y: 1.1, z: -5.5 },
   },
 ];
 
-// Elevated front-left corner bird's-eye view framing all 6 rooms diagonally
+// Elevated front-left corner bird's-eye view framing the L-shaped 6-room facility
 const OVERVIEW_CAMERA = {
-  pos: new THREE.Vector3(-28, 17.5, 25),
-  target: new THREE.Vector3(0, 1.0, -0.5),
+  pos: new THREE.Vector3(-27, 20.5, 22),
+  target: new THREE.Vector3(-1.5, 1.0, -1.0),
 };
 
 // Deterministic PRNG for repeatable procedural leaf textures
@@ -430,7 +430,13 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-export function createFactory3D({ container, labelsContainer, onStationSelect, initialTheme = 'light' }) {
+export function createFactory3D({
+  container,
+  labelsContainer,
+  onStationSelect,
+  onBufferTick,
+  initialTheme = 'light',
+}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe9eef5);
   scene.fog = new THREE.FogExp2(0xe9eef5, 0.0075);
@@ -476,117 +482,162 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   dirLight.shadow.camera.bottom = -20;
   scene.add(dirLight);
 
-  // 6-Room Floor (64m x 28m), grids, walkway & dual conveyor spines
+  // L-Shaped Two-Tier Floor (60m x 32m), grids, walkway & zero-overlap conveyors
   const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.85, metalness: 0.08 });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(64, 28), floorMat);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 32), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  const gridLight = new THREE.GridHelper(64, 64, 0x94a3b8, 0xb8c4d4);
+  const gridLight = new THREE.GridHelper(60, 60, 0x94a3b8, 0xb8c4d4);
   gridLight.position.y = 0.008;
   scene.add(gridLight);
 
-  const gridDark = new THREE.GridHelper(64, 64, 0x334155, 0x243042);
+  const gridDark = new THREE.GridHelper(60, 60, 0x334155, 0x243042);
   gridDark.position.y = 0.008;
   gridDark.visible = false;
   scene.add(gridDark);
 
   const walkwayMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.78 });
-  const walkway = new THREE.Mesh(new THREE.BoxGeometry(48, 0.03, 1.6), walkwayMat);
-  walkway.position.set(0, 0.015, 5.2);
+  const walkway = new THREE.Mesh(new THREE.BoxGeometry(40, 0.03, 1.4), walkwayMat);
+  walkway.position.set(0, 0.015, -0.2);
   walkway.receiveShadow = true;
   scene.add(walkway);
 
-  // Main Process Conveyor Spine (z = 0) across all 6 rooms
+  // Conveyor Belts (L-Shaped / Two-Tier, zero overlap):
   const spineBeltMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5, roughness: 0.45 });
-  const spineBelt = new THREE.Mesh(new THREE.BoxGeometry(44, 0.22, 0.72), spineBeltMat);
-  spineBelt.position.set(0, 0.55, 0);
-  spineBelt.castShadow = true;
-  spineBelt.receiveShadow = true;
-  scene.add(spineBelt);
+  // 1) Path 1 (01->02) East belt along z=-5.5 (x=-16 to x=-8)
+  const path1Belt = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.22, 0.72), spineBeltMat);
+  path1Belt.position.set(-12, 0.55, -5.5);
+  path1Belt.castShadow = true;
+  path1Belt.receiveShadow = true;
+  scene.add(path1Belt);
 
-  // Path 2: Green Tea Direct Bypass Conveyor (Room 01 -> Room 03 at z = -2.35, bypassing Room 02)
+  // 2) Path 2 (01->03) South belt along x=-16 (z=-5.5 to z=+3.5) — Green Tea Direct
   const bypassBeltMat = new THREE.MeshStandardMaterial({ color: 0x15803d, metalness: 0.4, roughness: 0.5 });
-  const bypassBelt = new THREE.Mesh(new THREE.BoxGeometry(16.6, 0.18, 0.56), bypassBeltMat);
-  bypassBelt.position.set(-12, 0.72, -2.35);
-  bypassBelt.castShadow = true;
-  bypassBelt.receiveShadow = true;
-  scene.add(bypassBelt);
+  const path2Belt = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.2, 9.2), bypassBeltMat);
+  path2Belt.position.set(-16, 0.55, -1.0);
+  path2Belt.castShadow = true;
+  path2Belt.receiveShadow = true;
+  scene.add(path2Belt);
 
-  // Architectural 6-Room Cutaway Partition System
+  // 3) Path 3 (02->03) South belt along x=-8 (z=-5.5 to z=+3.5) — Golden Tea Handover
+  const goldenBeltMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.45, roughness: 0.45 });
+  const path3Belt = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.2, 9.2), goldenBeltMat);
+  path3Belt.position.set(-8, 0.55, -1.0);
+  path3Belt.castShadow = true;
+  path3Belt.receiveShadow = true;
+  scene.add(path3Belt);
+
+  // 4) Discharge (03->04) North-East belt from (-6, +3.5) to (0, -5.5)
+  const dx34 = 6.0;
+  const dz34 = -9.0;
+  const len34 = Math.hypot(dx34, dz34);
+  const path34Belt = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.2, len34), spineBeltMat);
+  path34Belt.position.set(-3.0, 0.55, -1.0);
+  path34Belt.rotation.y = Math.atan2(dx34, dz34);
+  path34Belt.castShadow = true;
+  path34Belt.receiveShadow = true;
+  scene.add(path34Belt);
+
+  // 5) Upper Process Belt (04->05->06) East along z=-5.5 (x=0 to x=+16)
+  const upperEastBelt = new THREE.Mesh(new THREE.BoxGeometry(16.6, 0.22, 0.72), spineBeltMat);
+  upperEastBelt.position.set(8, 0.55, -5.5);
+  upperEastBelt.castShadow = true;
+  upperEastBelt.receiveShadow = true;
+  scene.add(upperEastBelt);
+
+  // Architectural L-Shaped 6-Room Cutaway Partition System
   const wallBackMat = new THREE.MeshStandardMaterial({ color: 0xdbe3ee, roughness: 0.88 });
   const wallPartitionMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.82 });
   const wallFrameMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.55, roughness: 0.4 });
   const pillarMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.55, roughness: 0.42 });
 
-  // Full-height back wall (z = -5.5, width 48.4m)
-  const backWall = new THREE.Mesh(new THREE.BoxGeometry(48.4, 4.2, 0.24), wallBackMat);
-  backWall.position.set(0, 2.1, -5.5);
+  // Upper Row Back Wall (z = -10.0, x = -20 to +20 -> width 40.4m)
+  const backWall = new THREE.Mesh(new THREE.BoxGeometry(40.4, 4.2, 0.24), wallBackMat);
+  backWall.position.set(0, 2.1, -10.0);
   backWall.receiveShadow = true;
   backWall.castShadow = true;
   scene.add(backWall);
 
-  // Low front cutaway curb walls (z = +4.2) with room entry gaps
-  for (const st of FACTORY_STATIONS) {
-    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.36, 0.2), wallPartitionMat);
-    leftCurb.position.set(st.x - 2.65, 0.18, 4.2);
+  // Upper Row Low Front Cutaway Curbs (z = -1.0)
+  for (const st of FACTORY_STATIONS.filter((s) => s.z < 0)) {
+    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.36, 0.2), wallPartitionMat);
+    leftCurb.position.set(st.x - 2.6, 0.18, -1.0);
     leftCurb.castShadow = true;
-    leftCurb.receiveShadow = true;
     scene.add(leftCurb);
 
-    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.36, 0.2), wallPartitionMat);
-    rightCurb.position.set(st.x + 2.65, 0.18, 4.2);
+    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.36, 0.2), wallPartitionMat);
+    rightCurb.position.set(st.x + 2.6, 0.18, -1.0);
     rightCurb.castShadow = true;
-    rightCurb.receiveShadow = true;
     scene.add(rightCurb);
   }
 
-  // Side & inter-room cutaway partition walls at x = -24, -16, -8, 0, +8, +16, +24
-  const partitionXs = [-24, -16, -8, 0, 8, 16, 24];
-  partitionXs.forEach((px, idx) => {
-    const isOuter = idx === 0 || idx === partitionXs.length - 1;
+  // Upper Row Partition Walls at x = -20, -12, -4, +4, +12, +20 (z = -10.0 to -1.0 -> 9m)
+  const upperPartitionXs = [-20, -12, -4, 4, 12, 20];
+  upperPartitionXs.forEach((px, idx) => {
+    const isOuter = idx === 0 || idx === upperPartitionXs.length - 1;
+    const isSolidBetween02and04 = px === -4; // Room 02 and Room 04 have no direct conveyor between them
     const wallHeight = isOuter ? 2.4 : 2.1;
 
     const backCol = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.32), pillarMat);
-    backCol.position.set(px, 2.1, -5.5);
+    backCol.position.set(px, 2.1, -10.0);
     backCol.castShadow = true;
     scene.add(backCol);
 
     const frontCol = new THREE.Mesh(new THREE.BoxGeometry(0.28, wallHeight, 0.28), pillarMat);
-    frontCol.position.set(px, wallHeight / 2, 4.2);
+    frontCol.position.set(px, wallHeight / 2, -1.0);
     frontCol.castShadow = true;
     scene.add(frontCol);
 
-    if (isOuter) {
-      const solidSide = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 9.7), wallPartitionMat);
-      solidSide.position.set(px, wallHeight / 2, -0.65);
+    if (isOuter || isSolidBetween02and04) {
+      const solidSide = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 9.0), wallPartitionMat);
+      solidSide.position.set(px, wallHeight / 2, -5.5);
       solidSide.castShadow = true;
       solidSide.receiveShadow = true;
       scene.add(solidSide);
     } else {
-      // Back section (z = -5.5 to -0.85)
-      const backSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 4.65), wallPartitionMat);
-      backSeg.position.set(px, wallHeight / 2, -3.175);
+      const backSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 3.65), wallPartitionMat);
+      backSeg.position.set(px, wallHeight / 2, -8.175);
       backSeg.castShadow = true;
-      backSeg.receiveShadow = true;
       scene.add(backSeg);
 
-      // Front section (z = +0.85 to +4.2)
-      const frontSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 3.35), wallPartitionMat);
-      frontSeg.position.set(px, wallHeight / 2, 2.525);
+      const frontSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 3.65), wallPartitionMat);
+      frontSeg.position.set(px, wallHeight / 2, -2.825);
       frontSeg.castShadow = true;
-      frontSeg.receiveShadow = true;
       scene.add(frontSeg);
 
-      // Header lintel above main conveyor pass-through
       const lintelH = wallHeight - 1.45;
       const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.22, lintelH, 1.7), wallFrameMat);
-      lintel.position.set(px, 1.45 + lintelH / 2, 0);
+      lintel.position.set(px, 1.45 + lintelH / 2, -5.5);
       lintel.castShadow = true;
       scene.add(lintel);
     }
   });
+
+  // Front Room 03 Bay Cutaway Enclosure (x = -18 to -6, z = +0.75 to +8.25)
+  {
+    const r3BackLeft = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 0.2), wallPartitionMat);
+    r3BackLeft.position.set(-16.4, 1.1, 0.75);
+    scene.add(r3BackLeft);
+    const r3BackMid = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.2, 0.2), wallPartitionMat);
+    r3BackMid.position.set(-12.0, 1.1, 0.75);
+    scene.add(r3BackMid);
+    const r3BackRight = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 0.2), wallPartitionMat);
+    r3BackRight.position.set(-7.6, 1.1, 0.75);
+    scene.add(r3BackRight);
+
+    const r3Left = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.1, 7.5), wallPartitionMat);
+    r3Left.position.set(-18.0, 1.05, 4.5);
+    scene.add(r3Left);
+    const r3Right = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.1, 5.2), wallPartitionMat);
+    r3Right.position.set(-6.0, 1.05, 5.65);
+    scene.add(r3Right);
+
+    const r3FrontCurb = new THREE.Mesh(new THREE.BoxGeometry(12.0, 0.36, 0.2), wallPartitionMat);
+    r3FrontCurb.position.set(-12.0, 0.18, 8.25);
+    scene.add(r3FrontCurb);
+  }
 
   // Machine & Procedural Tea Leaf Materials
   const steelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.68, roughness: 0.34 });
@@ -632,8 +683,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   const witheringFans = [];
   const rollerDrums = [];
   const intakeCrates = [];
+  const path1Batches = [];
   const bypassBatches = [];
-  const mainConveyorBatches = [];
+  const goldenBatches = [];
+  const discharge34Batches = [];
+  const upperEastBatches = [];
   const dryerHeaters = [];
   const rejectDivertParticles = [];
   const warehouseBoxes = [];
@@ -642,6 +696,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   const tagAnchors = new Map();
   let diverterArmA = null;
   let diverterArmB = null;
+  let gateDG02 = null;
   let rollingBedMesh = null;
   let rollerClumps = [];
   let graderDeckGroup = null;
@@ -653,15 +708,17 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     const border = isDryer ? '#eab308' : isSorting ? '#0284c7' : '#0f766e';
     const textCol = isDryer ? '#fde047' : '#f8fafc';
 
-    const wallPlaque = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.8, 0.95),
-      new THREE.MeshBasicMaterial({
-        map: createPlaqueTexture(st.zoneLabel, border, textCol),
-        transparent: true,
-      })
-    );
-    wallPlaque.position.set(st.x, 3.35, -5.36);
-    scene.add(wallPlaque);
+    if (st.z < 0) {
+      const wallPlaque = new THREE.Mesh(
+        new THREE.PlaneGeometry(6.8, 0.95),
+        new THREE.MeshBasicMaterial({
+          map: createPlaqueTexture(st.zoneLabel, border, textCol),
+          transparent: true,
+        })
+      );
+      wallPlaque.position.set(st.x, 3.35, -9.84);
+      scene.add(wallPlaque);
+    }
 
     const floorPlaque = new THREE.Mesh(
       new THREE.PlaneGeometry(5.2, 0.88),
@@ -671,22 +728,23 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       })
     );
     floorPlaque.rotation.x = -Math.PI / 2;
-    floorPlaque.position.set(st.x, 0.025, 3.55);
+    floorPlaque.position.set(st.x, 0.025, st.z + 3.25);
     scene.add(floorPlaque);
   });
 
-  // Safety-Yellow ATEX Zone 22 Floor Perimeter around Dryer DR-01 in Room 04 (x = 4)
+  // Safety-Yellow ATEX Zone 22 Floor Perimeter around Dryer DR-01 in Room 04 (x = 0, z = -5.5)
   {
     const atexMat = new THREE.MeshBasicMaterial({ color: 0xeab308 });
-    const dx = 4;
+    const dx = 0;
+    const dz = -5.5;
     const w = 6.2;
     const d = 4.2;
     const t = 0.14;
     const borders = [
-      { x: dx, z: -d / 2, sx: w, sz: t },
-      { x: dx, z: d / 2, sx: w, sz: t },
-      { x: dx - w / 2, z: 0, sx: t, sz: d },
-      { x: dx + w / 2, z: 0, sx: t, sz: d },
+      { x: dx, z: dz - d / 2, sx: w, sz: t },
+      { x: dx, z: dz + d / 2, sx: w, sz: t },
+      { x: dx - w / 2, z: dz, sx: t, sz: d },
+      { x: dx + w / 2, z: dz, sx: t, sz: d },
     ];
     borders.forEach((b) => {
       const strip = new THREE.Mesh(new THREE.PlaneGeometry(b.sx, b.sz), atexMat);
@@ -703,11 +761,12 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       })
     );
     atexSign.rotation.x = -Math.PI / 2;
-    atexSign.position.set(dx, 0.028, -2.55);
+    atexSign.position.set(dx, 0.028, dz - 2.55);
     scene.add(atexSign);
   }
 
   function makeHotspot(station) {
+    const hz = station.z > 0 ? station.z + 4.3 : -0.2;
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(0.55, 0.78, 36),
       new THREE.MeshBasicMaterial({
@@ -718,7 +777,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       })
     );
     ring.rotation.x = -Math.PI / 2;
-    ring.position.set(station.x, 0.04, 5.2);
+    ring.position.set(station.x, 0.04, hz);
     ring.userData.stationId = station.id;
     scene.add(ring);
     hotspotRings.push(ring);
@@ -734,7 +793,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       })
     );
     disc.rotation.x = -Math.PI / 2;
-    disc.position.set(station.x, 0.035, 5.2);
+    disc.position.set(station.x, 0.035, hz);
     disc.userData.stationId = station.id;
     scene.add(disc);
     clickableTargets.push(disc);
@@ -747,11 +806,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         new THREE.CylinderGeometry(0.05, 0.05, 1.55, 10),
         darkSlateMat
       );
-      pole.position.set(st.x + 2.3, 0.78, 1.85);
+      pole.position.set(st.x + 2.3, 0.78, st.z + 1.85);
       group.add(pole);
 
       const beaconGroup = new THREE.Group();
-      beaconGroup.position.set(st.x + 2.3, 1.62, 1.85);
+      beaconGroup.position.set(st.x + 2.3, 1.62, st.z + 1.85);
 
       const beaconMat = new THREE.MeshStandardMaterial({
         color: 0x22c55e,
@@ -785,29 +844,29 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     if (tagPos) tagAnchors.set(stationId, tagPos);
   }
 
-  // Room 01: Raw Leaf Reception & Diverter (SC-01, DV-01A/B) — Woven Bamboo Baskets + Curved Leaf Blades
+  // Room 01: Raw Leaf Reception & Diverter (SC-01, DV-01A/B) — Top-Left (x=-16, z=-5.5)
   {
     const st = FACTORY_STATIONS[0];
     const g = new THREE.Group();
     const dockPad = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.38, 4.2), darkSlateMat);
-    dockPad.position.set(st.x, 0.19, 0);
+    dockPad.position.set(st.x, 0.19, st.z);
     g.add(dockPad);
 
     const hopper = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 0.55, 1.5, 6), steelMat);
-    hopper.position.set(st.x + 1.15, 1.55, 0);
+    hopper.position.set(st.x + 1.15, 1.55, st.z);
     g.add(hopper);
 
     const scalePost = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.9, 0.18), brushedIronMat);
-    scalePost.position.set(st.x - 1.9, 1.15, 1.4);
+    scalePost.position.set(st.x - 1.9, 1.15, st.z + 1.4);
     g.add(scalePost);
 
     const gateMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.6, roughness: 0.3 });
     diverterArmA = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 0.85), gateMat);
-    diverterArmA.position.set(st.x + 2.45, 0.95, 0);
+    diverterArmA.position.set(st.x + 2.45, 0.95, st.z);
     g.add(diverterArmA);
 
-    diverterArmB = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 0.85), gateMat);
-    diverterArmB.position.set(st.x + 2.45, 0.95, -2.35);
+    diverterArmB = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.45, 0.14), gateMat);
+    diverterArmB.position.set(st.x, 0.95, st.z + 2.1);
     g.add(diverterArmB);
 
     const wovenMat = new THREE.MeshStandardMaterial({
@@ -828,12 +887,10 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     for (let i = 0; i < 4; i++) {
       const basketGroup = new THREE.Group();
       basketGroup.add(new THREE.Mesh(basketGeo, wovenMat));
-
       const leafHeap = new THREE.Mesh(heapGeo, stageLeafMaterials.intake);
       leafHeap.position.y = 0.24;
       basketGroup.add(leafHeap);
 
-      // Multi-angled fanned serrated green leaf blades overflowing the basket
       for (let b = 0; b < 7; b++) {
         const blade = new THREE.Mesh(bladeGeo, bladeMat);
         const angle = (b / 7) * Math.PI * 2;
@@ -842,7 +899,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         basketGroup.add(blade);
       }
 
-      basketGroup.position.set(st.x - 2.2 + i * 1.15, 0.92, 0);
+      basketGroup.position.set(st.x - 2.2 + i * 1.15, 0.92, st.z);
       basketGroup.userData.baseX = st.x - 2.3;
       basketGroup.userData.phase = i * 0.25;
       g.add(basketGroup);
@@ -854,24 +911,24 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.75, 0),
-      new THREE.Vector3(st.x - 1.9, 2.2, 1.4)
+      new THREE.Vector3(st.x, 2.75, st.z),
+      new THREE.Vector3(st.x - 1.9, 2.2, st.z + 1.4)
     );
   }
 
-  // Room 02: Climate-Controlled Withering Hall — Undulating Olive-Green Leaf Beds (T-01..04)
+  // Room 02: Climate-Controlled Withering Hall — Top-Center-Left (x=-8, z=-5.5)
   {
     const st = FACTORY_STATIONS[1];
     const g = new THREE.Group();
     let fanIdx = 0;
     const witheredBedGeo = createOrganicLeafBedGeometry(4.85, 1.32, 0.16, 0.22, 32, 14, 33);
-    for (const tz of [-0.9, 1.55]) {
+    for (const tz of [-1.25, 1.25]) {
       const trough = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.9, 1.5), steelMat);
-      trough.position.set(st.x, 0.65, tz);
+      trough.position.set(st.x, 0.65, st.z + tz);
       g.add(trough);
 
       const leafBed = new THREE.Mesh(witheredBedGeo, stageLeafMaterials.withering);
-      leafBed.position.set(st.x, 1.14, tz);
+      leafBed.position.set(st.x, 1.14, st.z + tz);
       g.add(leafBed);
 
       for (const fx of [-2.75, 2.75]) {
@@ -880,11 +937,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
           darkSlateMat
         );
         shroud.rotation.z = Math.PI / 2;
-        shroud.position.set(st.x + fx, 0.75, tz);
+        shroud.position.set(st.x + fx, 0.75, st.z + tz);
         g.add(shroud);
 
         const fanGroup = new THREE.Group();
-        fanGroup.position.set(st.x + fx + (fx < 0 ? -0.22 : 0.22), 0.75, tz);
+        fanGroup.position.set(st.x + fx + (fx < 0 ? -0.22 : 0.22), 0.75, st.z + tz);
         for (let b = 0; b < 4; b++) {
           const blade = new THREE.Mesh(
             new THREE.BoxGeometry(0.05, 0.82, 0.16),
@@ -899,48 +956,55 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       }
     }
 
+    gateDG02 = new THREE.Mesh(
+      new THREE.BoxGeometry(0.95, 0.55, 0.16),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.55, roughness: 0.35 })
+    );
+    gateDG02.position.set(st.x, 0.92, -1.0);
+    g.add(gateDG02);
+
     scene.add(g);
     makeHotspot(st);
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.55, 0),
-      new THREE.Vector3(st.x - 2.75, 1.75, 1.55)
+      new THREE.Vector3(st.x, 2.55, st.z),
+      new THREE.Vector3(st.x - 2.75, 1.75, st.z + 1.25)
     );
   }
 
-  // Room 03: Fixation, Rolling & Oxidation Room (RL-01..02)
+  // Room 03: Fixation, Rolling & Oxidation Room — Front Bay (x=-12, z=+4.5)
   {
     const st = FACTORY_STATIONS[2];
     const g = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.35, 4.0), darkSlateMat);
-    base.position.set(st.x, 0.175, 0);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(8.8, 0.35, 4.4), darkSlateMat);
+    base.position.set(st.x, 0.175, st.z);
     g.add(base);
 
-    for (const rx of [-1.2, 1.2]) {
-      const stand = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 1.4), steelMat);
-      stand.position.set(st.x + rx, 0.9, -0.75);
+    for (const rx of [-2.0, 2.0]) {
+      const stand = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 1.5), steelMat);
+      stand.position.set(st.x + rx, 0.9, st.z - 0.75);
       g.add(stand);
 
-      const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 1.15, 20), brassMat);
-      drum.position.set(st.x + rx, 1.75, -0.75);
+      const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 1.2, 20), brassMat);
+      drum.position.set(st.x + rx, 1.75, st.z - 0.75);
       g.add(drum);
       rollerDrums.push(drum);
     }
 
-    const oxTable = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.7, 1.15), steelMat);
-    oxTable.position.set(st.x, 0.7, 1.15);
+    const oxTable = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.7, 1.25), steelMat);
+    oxTable.position.set(st.x, 0.7, st.z + 1.2);
     g.add(oxTable);
 
-    const oxBedGeo = createOrganicLeafBedGeometry(3.75, 0.96, 0.1, 0.14, 24, 10, 44);
+    const oxBedGeo = createOrganicLeafBedGeometry(5.8, 1.05, 0.1, 0.16, 28, 10, 44);
     rollingBedMesh = new THREE.Mesh(oxBedGeo, stageLeafMaterials.rolling_green);
-    rollingBedMesh.position.set(st.x, 1.08, 1.15);
+    rollingBedMesh.position.set(st.x, 1.08, st.z + 1.2);
     g.add(rollingBedMesh);
 
     const clumpGeo = createLeafClusterGeometry(0.24, 55);
-    for (let c = 0; c < 5; c++) {
+    for (let c = 0; c < 6; c++) {
       const clump = new THREE.Mesh(clumpGeo, stageLeafMaterials.rolling_green);
-      clump.position.set(st.x - 1.3 + c * 0.65, 1.18, 1.15 + (c % 2 === 0 ? -0.14 : 0.14));
+      clump.position.set(st.x - 2.1 + c * 0.84, 1.2, st.z + 1.2 + (c % 2 === 0 ? -0.14 : 0.14));
       g.add(clump);
       rollerClumps.push(clump);
     }
@@ -950,31 +1014,31 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.85, 0),
-      new THREE.Vector3(st.x - 1.2, 2.45, -0.75)
+      new THREE.Vector3(st.x, 2.85, st.z),
+      new THREE.Vector3(st.x - 2.0, 2.45, st.z - 0.75)
     );
   }
 
-  // Room 04: Thermal Drying Room — ATEX Zone 22 (DR-01, TT-401/402, FS-401)
+  // Room 04: Thermal Drying Room — ATEX Zone 22 — Top-Center-Right (x=0, z=-5.5)
   {
     const st = FACTORY_STATIONS[3];
     const g = new THREE.Group();
     const chamber = new THREE.Mesh(new THREE.BoxGeometry(5.0, 2.2, 2.4), darkSlateMat);
-    chamber.position.set(st.x, 1.1, 0);
+    chamber.position.set(st.x, 1.1, st.z);
     g.add(chamber);
 
     const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 2.6, 16), steelMat);
-    stack.position.set(st.x + 1.2, 3.3, 0);
+    stack.position.set(st.x + 1.2, 3.3, st.z);
     g.add(stack);
 
     const chute = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.18, 0.85), steelMat);
     chute.rotation.z = -0.32;
-    chute.position.set(st.x + 2.75, 0.88, 0);
+    chute.position.set(st.x + 2.75, 0.88, st.z);
     g.add(chute);
 
     const driedBedGeo = createOrganicLeafBedGeometry(1.05, 0.72, 0.08, 0.12, 14, 10, 66);
     const driedBed = new THREE.Mesh(driedBedGeo, stageLeafMaterials.dryer);
-    driedBed.position.set(st.x + 2.85, 0.94, 0);
+    driedBed.position.set(st.x + 2.85, 0.94, st.z);
     g.add(driedBed);
 
     for (let hx = -1.4; hx <= 1.4; hx += 0.7) {
@@ -985,13 +1049,13 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         roughness: 0.3,
       });
       const coil = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.55, 2.46), coilMat);
-      coil.position.set(st.x + hx, 1.05, 0);
+      coil.position.set(st.x + hx, 1.05, st.z);
       g.add(coil);
       dryerHeaters.push(coil);
     }
 
     const dryerGlow = new THREE.PointLight(0xf97316, 2.2, 9);
-    dryerGlow.position.set(st.x, 1.4, 1.8);
+    dryerGlow.position.set(st.x, 1.4, st.z + 1.8);
     g.add(dryerGlow);
     dryerHeaters.push(dryerGlow);
 
@@ -1000,23 +1064,22 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 3.25, 0),
-      new THREE.Vector3(st.x - 1.8, 2.45, 1.1)
+      new THREE.Vector3(st.x, 3.25, st.z),
+      new THREE.Vector3(st.x - 1.8, 2.45, st.z + 1.1)
     );
   }
 
-  // Room 05: Vibratory Grading & Optical Color Sorting (GR-01, OS-01, RJ-01 Reject Bin)
+  // Room 05: Vibratory Grading & Optical Sorting — Top-Right-Center (x=8, z=-5.5)
   {
     const st = FACTORY_STATIONS[4];
     const g = new THREE.Group();
 
     const basePad = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.25, 4.4), darkSlateMat);
-    basePad.position.set(st.x, 0.125, 0);
+    basePad.position.set(st.x, 0.125, st.z);
     g.add(basePad);
 
-    // Multi-deck Vibratory Grader (GR-01)
     graderDeckGroup = new THREE.Group();
-    graderDeckGroup.position.set(st.x - 1.35, 1.05, 0);
+    graderDeckGroup.position.set(st.x - 1.35, 1.05, st.z);
     const deckFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.52, 1.35), steelMat);
     graderDeckGroup.add(deckFrame);
     const graderBed = new THREE.Mesh(
@@ -1027,38 +1090,36 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     graderDeckGroup.add(graderBed);
     g.add(graderDeckGroup);
 
-    // Optical Color Sorter Chute & RGB Camera Hood (OS-01)
     const sorterHousing = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.75, 1.4), brushedIronMat);
-    sorterHousing.position.set(st.x + 1.05, 1.1, 0);
+    sorterHousing.position.set(st.x + 1.05, 1.1, st.z);
     g.add(sorterHousing);
 
     const opticalBar = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 0.12, 1.46),
       new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 1.5 })
     );
-    opticalBar.position.set(st.x + 1.05, 1.65, 0);
+    opticalBar.position.set(st.x + 1.05, 1.65, st.z);
     g.add(opticalBar);
 
-    // Dedicated Reject Bin (RJ-01) in front of Optical Sorter with pale/scorched reject leaf pile
     const rejectBin = new THREE.Mesh(
       new THREE.BoxGeometry(1.35, 0.68, 1.15),
       new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6, metalness: 0.3 })
     );
-    rejectBin.position.set(st.x + 1.05, 0.56, 1.55);
+    rejectBin.position.set(st.x + 1.05, 0.56, st.z + 1.55);
     g.add(rejectBin);
 
     const rejectPile = new THREE.Mesh(
       createOrganicLeafBedGeometry(1.15, 0.95, 0.1, 0.16, 14, 12, 91),
       stageLeafMaterials.reject
     );
-    rejectPile.position.set(st.x + 1.05, 0.88, 1.55);
+    rejectPile.position.set(st.x + 1.05, 0.88, st.z + 1.55);
     g.add(rejectPile);
 
-    // Animated reject leaf particles diverting from OS-01 into RJ-01
     const rejGeo = createLeafClusterGeometry(0.14, 95);
     for (let r = 0; r < 4; r++) {
       const rej = new THREE.Mesh(rejGeo, stageLeafMaterials.reject);
-      rej.position.set(st.x + 1.05, 1.25, 0.4 + r * 0.28);
+      rej.position.set(st.x + 1.05, 1.25, st.z + 0.4 + r * 0.28);
+      rej.userData.baseZ = st.z;
       rej.userData.phase = r * 0.25;
       g.add(rej);
       rejectDivertParticles.push(rej);
@@ -1069,35 +1130,35 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.95, 0),
-      new THREE.Vector3(st.x + 1.05, 2.35, 0.9)
+      new THREE.Vector3(st.x, 2.95, st.z),
+      new THREE.Vector3(st.x + 1.05, 2.35, st.z + 0.9)
     );
   }
 
-  // Room 06: Cleanroom Weigh-Fill & Foil Packaging (PK-01)
+  // Room 06: Cleanroom Weigh-Fill & Foil Packaging — Top-Far-Right (x=16, z=-5.5)
   {
     const st = FACTORY_STATIONS[5];
     const g = new THREE.Group();
     const rackBase = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.22, 4.4), darkSlateMat);
-    rackBase.position.set(st.x, 0.11, 0);
+    rackBase.position.set(st.x, 0.11, st.z);
     g.add(rackBase);
 
     const packer = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 1.4), steelMat);
-    packer.position.set(st.x - 1.8, 1.12, 0);
+    packer.position.set(st.x - 1.8, 1.12, st.z);
     g.add(packer);
 
     const trayFrame = new THREE.Mesh(
       new THREE.BoxGeometry(1.25, 0.14, 0.95),
       new THREE.MeshStandardMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.55, roughness: 0.15 })
     );
-    trayFrame.position.set(st.x - 1.7, 0.3, 1.35);
+    trayFrame.position.set(st.x - 1.7, 0.3, st.z + 1.35);
     g.add(trayFrame);
 
     const sampleTea = new THREE.Mesh(
       createOrganicLeafBedGeometry(1.1, 0.8, 0.08, 0.08, 16, 12, 77),
       stageLeafMaterials.warehouse
     );
-    sampleTea.position.set(st.x - 1.7, 0.36, 1.35);
+    sampleTea.position.set(st.x - 1.7, 0.36, st.z + 1.35);
     g.add(sampleTea);
 
     const pouchGeo = createStandUpPouchGeometry();
@@ -1117,18 +1178,14 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
 
       const pouchGroup = new THREE.Group();
       pouchGroup.add(new THREE.Mesh(pouchGeo, kraftMat));
-
-      // Teal PanchaRupa label band
       const labelBand = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.19), foilBandMat);
       labelBand.position.y = 0.08;
       pouchGroup.add(labelBand);
-
-      // Dark translucent viewing window showing black tea leaves inside
       const viewWindow = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.16), windowMat);
       viewWindow.position.set(0, -0.1, 0.098);
       pouchGroup.add(viewWindow);
 
-      pouchGroup.position.set(st.x + 0.1 + col * 0.78, 0.54 + tier * 0.68, -0.55 + row * 0.82);
+      pouchGroup.position.set(st.x + 0.1 + col * 0.78, 0.54 + tier * 0.68, st.z - 0.55 + row * 0.82);
       pouchGroup.userData.index = idx;
       g.add(pouchGroup);
       warehouseBoxes.push(pouchGroup);
@@ -1139,52 +1196,90 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.95, 0),
-      new THREE.Vector3(st.x - 1.8, 2.25, 0.7)
+      new THREE.Vector3(st.x, 2.95, st.z),
+      new THREE.Vector3(st.x - 1.8, 2.25, st.z + 0.7)
     );
   }
 
-  // Moving Conveyor Batches:
-  // Path 2 (Green Tea Direct Bypass: Room 01 -> Room 03 at z = -2.35) — Organic Leaf Clusters + Blades
-  {
-    const clusterGeo = createLeafClusterGeometry(0.28, 97);
-    const bladeGeo = createCurvedLeafBladeGeometry(0.3, 0.14);
-    const bladeMat = new THREE.MeshStandardMaterial({
-      map: createSingleLeafBladeTexture(),
-      alphaTest: 0.35,
-      side: THREE.DoubleSide,
-      roughness: 0.72,
-    });
-    for (let i = 0; i < 6; i++) {
-      const batch = new THREE.Group();
-      batch.add(new THREE.Mesh(clusterGeo, stageLeafMaterials.intake));
-      for (let b = 0; b < 5; b++) {
-        const blade = new THREE.Mesh(bladeGeo, bladeMat);
-        const angle = (b / 5) * Math.PI * 2;
-        blade.position.set(Math.cos(angle) * 0.14, 0.1, Math.sin(angle) * 0.14);
-        blade.rotation.set(0.4, angle, 0.2);
-        batch.add(blade);
-      }
-      batch.position.set(-20 + i * 2.8, 0.9, -2.35);
-      batch.userData.phase = i / 6;
-      scene.add(batch);
-      bypassBatches.push(batch);
+  // Moving Conveyor Batches across the L-Shaped Two-Tier Floorplan:
+  const clusterGeoGreen = createLeafClusterGeometry(0.28, 97);
+  const clusterGeoMain = createLeafClusterGeometry(0.32, 99);
+  const bladeGeoConv = createCurvedLeafBladeGeometry(0.3, 0.14);
+  const bladeMatConv = new THREE.MeshStandardMaterial({
+    map: createSingleLeafBladeTexture(),
+    alphaTest: 0.35,
+    side: THREE.DoubleSide,
+    roughness: 0.72,
+  });
+
+  function makeGreenLeafBatchGroup() {
+    const batch = new THREE.Group();
+    batch.add(new THREE.Mesh(clusterGeoGreen, stageLeafMaterials.intake));
+    for (let b = 0; b < 5; b++) {
+      const blade = new THREE.Mesh(bladeGeoConv, bladeMatConv);
+      const angle = (b / 5) * Math.PI * 2;
+      blade.position.set(Math.cos(angle) * 0.14, 0.1, Math.sin(angle) * 0.14);
+      blade.rotation.set(0.4, angle, 0.2);
+      batch.add(blade);
     }
+    return batch;
   }
 
-  // Main Process Conveyor Batches (Room 01 -> Room 06 at z = 0)
-  {
-    const clusterGeo = createLeafClusterGeometry(0.32, 99);
-    const count = 14;
-    for (let i = 0; i < count; i++) {
-      const batch = new THREE.Mesh(clusterGeo, stageLeafMaterials.intake);
-      batch.position.set(-20 + i * 3.0, 0.76, 0);
-      batch.castShadow = true;
-      batch.userData.phase = i / count;
-      scene.add(batch);
-      mainConveyorBatches.push(batch);
-    }
+  // Path 1 (01->02 East at z=-5.5)
+  for (let i = 0; i < 4; i++) {
+    const b = makeGreenLeafBatchGroup();
+    b.position.set(-16 + i * 2.0, 0.76, -5.5);
+    b.userData.phase = i / 4;
+    scene.add(b);
+    path1Batches.push(b);
   }
+
+  // Path 2 (01->03 South along x=-16) — Green Tea Direct
+  for (let i = 0; i < 5; i++) {
+    const b = makeGreenLeafBatchGroup();
+    b.position.set(-16, 0.76, -5.5 + i * 2.0);
+    b.userData.phase = i / 5;
+    scene.add(b);
+    bypassBatches.push(b);
+  }
+
+  // Path 3 (02->03 South along x=-8) — Golden Tea Handover (XOR with Path 2)
+  for (let i = 0; i < 5; i++) {
+    const b = new THREE.Mesh(clusterGeoMain, stageLeafMaterials.withering);
+    b.position.set(-8, 0.76, -5.5 + i * 2.0);
+    b.castShadow = true;
+    b.visible = false;
+    b.userData.phase = i / 5;
+    scene.add(b);
+    goldenBatches.push(b);
+  }
+
+  // Discharge (03->04 North-East from (-6, +3.5) to (0, -5.5))
+  for (let i = 0; i < 5; i++) {
+    const b = new THREE.Mesh(clusterGeoMain, stageLeafMaterials.rolling_green);
+    b.position.set(-3, 0.76, -1);
+    b.castShadow = true;
+    b.userData.phase = i / 5;
+    scene.add(b);
+    discharge34Batches.push(b);
+  }
+
+  // Upper Process Belt (04->05->06 East along z=-5.5)
+  for (let i = 0; i < 8; i++) {
+    const b = new THREE.Mesh(clusterGeoMain, stageLeafMaterials.dryer);
+    b.position.set(i * 2.0, 0.76, -5.5);
+    b.castShadow = true;
+    b.userData.phase = i / 8;
+    scene.add(b);
+    upperEastBatches.push(b);
+  }
+
+  // Prominent Animated Floating Counter Badge above Room 02
+  const room02CounterEl = document.createElement('div');
+  room02CounterEl.className = 'room02-buffer-badge';
+  room02CounterEl.textContent = 'GOLDEN BUFFER: 145 / 250 kg (58%)';
+  labelsContainer.appendChild(room02CounterEl);
+  const room02CounterAnchor = new THREE.Vector3(-8, 3.35, -5.5);
 
   // Floating 3D Station Labels
   const labelEls = new Map();
@@ -1290,7 +1385,8 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     speed: 1.0,
     throughputScale: 1.0,
     operatingMode: 'normal',
-    goldenHandoverActive: false, // Path 3 (02->03) active when TRUE; Path 2 (01->03) active when FALSE
+    goldenHandoverActive: false, // XOR interlock: TRUE = Path 3 (02->03) ONLY; FALSE = Path 2 (01->03)
+    witheringBufferKg: 145.0,
     rejectSpikeActive: false,
     rejectRatePct: 3.2,
     dryerUtilPct: 41.4,
@@ -1340,10 +1436,13 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       });
     }
 
-    // Update Diverter DV-01A / DV-01B gate positions
+    // Update Diverter DV-01A / DV-01B and Room 02 Gate DG-02
     if (diverterArmA && diverterArmB) {
       diverterArmA.rotation.y = simState.goldenHandoverActive ? 0.55 : -0.35;
-      diverterArmB.rotation.y = simState.goldenHandoverActive ? 1.15 : 0.0;
+      diverterArmB.rotation.y = simState.goldenHandoverActive ? 1.55 : 0.0;
+    }
+    if (gateDG02) {
+      gateDG02.position.y = simState.goldenHandoverActive ? 1.45 : 0.92;
     }
 
     for (const [id, text] of Object.entries(simState.labelMetrics)) {
@@ -1427,52 +1526,92 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         }
       });
 
-      // Path 2: Green Tea Direct Bypass (01 -> 03) paused during Golden Handover (02 -> 03)
-      const bypassActive = !isWinter && !simState.goldenHandoverActive && simState.plcSafe && !simState.stationAlarms.intake;
-      bypassBatches.forEach((batch) => {
-        batch.visible = !isWinter && !simState.goldenHandoverActive;
-        if (bypassActive) {
-          const cycle = (simTime * 0.14 + batch.userData.phase) % 1;
-          batch.position.x = -20 + cycle * 16.0;
+      // Live Room 02 Golden Buffer accumulation (0->250 kg) & XOR discharge (250->0 kg)
+      if (!isWinter && !simState.stationAlarms.intake && !simState.stationAlarms.withering) {
+        if (!simState.goldenHandoverActive) {
+          simState.witheringBufferKg += dt * 10.5 * simState.speed;
+          if (simState.witheringBufferKg >= 250.0) {
+            simState.witheringBufferKg = 250.0;
+            simState.goldenHandoverActive = true;
+          }
+        } else {
+          simState.witheringBufferKg -= dt * 28.0 * simState.speed;
+          if (simState.witheringBufferKg <= 0.0) {
+            simState.witheringBufferKg = 0.0;
+            simState.goldenHandoverActive = false;
+          }
+        }
+        if (onBufferTick) {
+          onBufferTick(simState.witheringBufferKg, simState.goldenHandoverActive);
+        }
+      }
+
+      // Path 1 (01 -> 02 East at z=-5.5)
+      const path1Active = !isWinter && simState.plcSafe && !simState.stationAlarms.intake;
+      path1Batches.forEach((b) => {
+        b.visible = !isWinter;
+        if (path1Active) {
+          const cycle = (simTime * 0.16 + b.userData.phase) % 1;
+          b.position.x = -16 + cycle * 8.0;
         }
       });
 
-      // Main Process Conveyor (Room 01 -> Room 06)
-      const conveyorActive = !isWinter && simState.plcSafe && !simState.stationAlarms.intake;
-      mainConveyorBatches.forEach((batch) => {
-        batch.visible = !isWinter;
-        if (conveyorActive) {
-          const cycle = (simTime * 0.045 + batch.userData.phase) % 1;
-          batch.position.x = -20 + cycle * 40.0;
+      // Path 2 (01 -> 03 South at x=-16) — STRICTLY PAUSED when goldenHandoverActive === true
+      const path2Active = !isWinter && !simState.goldenHandoverActive && simState.plcSafe && !simState.stationAlarms.intake;
+      bypassBatches.forEach((b) => {
+        b.visible = !isWinter && !simState.goldenHandoverActive;
+        if (path2Active) {
+          const cycle = (simTime * 0.16 + b.userData.phase) % 1;
+          b.position.z = -5.5 + cycle * 9.0;
         }
-        const bx = batch.position.x;
-        const stageMat =
-          bx < -16
-            ? stageLeafMaterials.intake
-            : bx < -8
-              ? stageLeafMaterials.withering
-              : bx < 0
-                ? simState.goldenHandoverActive
-                  ? stageLeafMaterials.rolling
-                  : stageLeafMaterials.rolling_green
-                : bx < 8
-                  ? stageLeafMaterials.dryer
-                  : stageLeafMaterials.sorting;
-        if (batch.material !== stageMat) {
-          batch.material = stageMat;
+      });
+
+      // Path 3 (02 -> 03 South at x=-8) — ACTIVE ONLY when goldenHandoverActive === true
+      const path3Active = !isWinter && simState.goldenHandoverActive && simState.plcSafe && !simState.stationAlarms.withering;
+      goldenBatches.forEach((b) => {
+        b.visible = !isWinter && simState.goldenHandoverActive;
+        if (path3Active) {
+          const cycle = (simTime * 0.18 + b.userData.phase) % 1;
+          b.position.z = -5.5 + cycle * 9.0;
         }
+      });
+
+      // Discharge (03 -> 04 North-East from (-6, +3.5) to (0, -5.5))
+      const convActive = !isWinter && simState.plcSafe && !simState.stationAlarms.intake;
+      discharge34Batches.forEach((b) => {
+        b.visible = !isWinter;
+        const targetMat = simState.goldenHandoverActive
+          ? stageLeafMaterials.rolling
+          : stageLeafMaterials.rolling_green;
+        if (b.material !== targetMat) b.material = targetMat;
+        if (convActive) {
+          const cycle = (simTime * 0.15 + b.userData.phase) % 1;
+          b.position.x = -6.0 + cycle * 6.0;
+          b.position.z = 3.5 - cycle * 9.0;
+        }
+      });
+
+      // Upper Process Belt (04 -> 05 -> 06 East at z=-5.5)
+      upperEastBatches.forEach((b) => {
+        b.visible = !isWinter;
+        if (convActive) {
+          const cycle = (simTime * 0.09 + b.userData.phase) % 1;
+          b.position.x = cycle * 16.0;
+        }
+        const stageMat = b.position.x < 8 ? stageLeafMaterials.dryer : stageLeafMaterials.sorting;
+        if (b.material !== stageMat) b.material = stageMat;
       });
 
       // Room 05 Vibratory Grader (GR-01) oscillation + Reject Diversion into RJ-01
       if (graderDeckGroup && !isWinter) {
-        graderDeckGroup.position.x = 12 - 1.35 + Math.sin(now * 0.045) * 0.035;
+        graderDeckGroup.position.x = 8 - 1.35 + Math.sin(now * 0.045) * 0.035;
       }
       const rejectRateFactor = simState.rejectSpikeActive ? 1.9 : 1.0;
       rejectDivertParticles.forEach((rej) => {
         rej.visible = !isWinter;
         if (!isWinter) {
           const cycle = (simTime * 0.65 * rejectRateFactor + rej.userData.phase) % 1;
-          rej.position.z = 0.25 + cycle * 1.3;
+          rej.position.z = (rej.userData.baseZ ?? -5.5) + 0.25 + cycle * 1.3;
           rej.position.y = 1.32 - cycle * cycle * 0.42;
         }
       });
@@ -1550,6 +1689,26 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       el.style.opacity = '1';
       el.style.pointerEvents = 'auto';
     });
+
+    // Project & update Room 02 floating Golden Buffer counter badge every frame
+    {
+      const pct = Math.min(100, Math.round((simState.witheringBufferKg / 250) * 100));
+      const kgStr = Math.round(simState.witheringBufferKg);
+      room02CounterEl.textContent = simState.goldenHandoverActive
+        ? `GOLDEN RUN: ${kgStr} / 250 kg — 01→03 PAUSED`
+        : `GOLDEN BUFFER: ${kgStr} / 250 kg (${pct}%)`;
+      room02CounterEl.classList.toggle('room02-buffer-badge--active', simState.goldenHandoverActive);
+
+      projVec.copy(room02CounterAnchor).project(camera);
+      if (projVec.z > 1) {
+        room02CounterEl.style.opacity = '0';
+      } else {
+        const rx = (projVec.x * 0.5 + 0.5) * cw;
+        const ry = (-projVec.y * 0.5 + 0.5) * ch;
+        room02CounterEl.style.transform = `translate(-50%, -100%) translate(${rx.toFixed(1)}px, ${ry.toFixed(1)}px)`;
+        room02CounterEl.style.opacity = '1';
+      }
+    }
 
     if (showIsaTags) {
       tagEls.forEach(({ el, stationId }) => {

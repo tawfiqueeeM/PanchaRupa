@@ -230,7 +230,7 @@ const hmiState = {
   intakeDeltaKg: 0,
   intakeQuarantine: false,
   witheringBufferKg: 145.0, // Accumulates to 250 kg threshold for Golden Tea handover
-  bGoldenBatchReady: false, // TRUE = Path 3 (02->03) priority handover active, Path 2 paused
+  bGoldenBatchActive: false, // XOR interlock: TRUE = Path 3 (02->03) ONLY, Path 2 (01->03) PAUSED
   witherFanSpeedPct: 75,
   witherTargetMoisturePct: 65,
   witherSensorFault: false,
@@ -441,9 +441,9 @@ function renderHudAnd3D() {
 
   const routeSummary = isWinter
     ? 'STANDBY (Winter)'
-    : hmiState.bGoldenBatchReady
-      ? 'Path 3 · Golden (02→03)'
-      : 'Path 1+2 · Green Bypass';
+    : hmiState.bGoldenBatchActive
+      ? 'Path 3 · Golden (02→03) [01→03 PAUSED]'
+      : 'Path 1+2 · Green Bypass (01→03)';
 
   const station = stationsList.find((s) => s.id === activeStationId);
   document.getElementById('hudActiveRoute').textContent = routeSummary;
@@ -511,7 +511,8 @@ function renderHudAnd3D() {
       speed: simSpeed,
       throughputScale,
       operatingMode: hmiState.operatingMode,
-      goldenHandoverActive: hmiState.bGoldenBatchReady,
+      goldenHandoverActive: hmiState.bGoldenBatchActive,
+      witheringBufferKg: hmiState.witheringBufferKg,
       rejectSpikeActive: hmiState.rejectSpikeActive,
       rejectRatePct: hmiState.rRejectRatePct,
       dryerUtilPct: dryerUtil,
@@ -542,15 +543,15 @@ function renderHudAnd3D() {
           ? 'QUARANTINE HOLD'
           : isWinter
             ? 'WINTER STANDBY · 0 kg/d'
-            : `${dailyIntake} kg/d · ${hmiState.bGoldenBatchReady ? 'DV-01B CLOSED' : 'BYPASS 01→03'}`,
+            : `${dailyIntake} kg/d · ${hmiState.bGoldenBatchActive ? 'DV-01B CLOSED' : 'BYPASS 01→03'}`,
         withering: hmiState.witherSensorFault
           ? '%Q3.3 SENSOR FAULT'
           : isWinter
             ? 'STANDBY · Fan 0%'
-            : `${hmiState.witheringBufferKg.toFixed(0)}/250 kg · ${hmiState.bGoldenBatchReady ? 'HANDOVER 02→03' : `Fan ${effectiveFanPct}%`}`,
+            : `${hmiState.witheringBufferKg.toFixed(0)}/250 kg · ${hmiState.bGoldenBatchActive ? 'HANDOVER 02→03' : `Fan ${effectiveFanPct}%`}`,
         rolling: isWinter
           ? 'STANDBY · Idle'
-          : `${hmiState.bGoldenBatchReady ? 'GOLDEN TEA' : 'GREEN TEA'} · ${hmiState.rollPressureBar.toFixed(1)} bar`,
+          : `${hmiState.bGoldenBatchActive ? 'GOLDEN TEA' : 'GREEN TEA'} · ${hmiState.rollPressureBar.toFixed(1)} bar`,
         dryer: hmiState.bSafetyTrip
           ? '%Q3.1 SAFETY TRIP'
           : isWinter
@@ -577,16 +578,8 @@ function renderHudAnd3D() {
 
 function triggerGoldenHandover() {
   hmiState.witheringBufferKg = 250.0;
-  hmiState.bGoldenBatchReady = true;
+  hmiState.bGoldenBatchActive = true;
   renderHudAnd3D();
-  // Automatically transfer Golden Tea batch from Room 02 to Room 03, then resume Path 2
-  setTimeout(() => {
-    if (hmiState.bGoldenBatchReady) {
-      hmiState.bGoldenBatchReady = false;
-      hmiState.witheringBufferKg = 45.0;
-      renderHudAnd3D();
-    }
-  }, 6000);
 }
 
 function triggerRejectSpike() {
@@ -605,7 +598,7 @@ function renderStationPanels() {
   document.getElementById('leafSpecState').textContent = leafSpec.state;
   if (renderLeafSwatchFn) {
     const swatchId =
-      activeStationId === 'rolling' && !hmiState.bGoldenBatchReady
+      activeStationId === 'rolling' && !hmiState.bGoldenBatchActive
         ? 'rolling_green'
         : activeStationId;
     renderLeafSwatchFn(document.getElementById('leafStageSwatch'), swatchId);
@@ -777,8 +770,9 @@ function renderLivePlcVars() {
 
   const coreVars = [
     { k: 'bSafetyTrip', v: String(hmiState.bSafetyTrip), alarm: hmiState.bSafetyTrip },
-    { k: 'bGoldenBatchReady', v: String(hmiState.bGoldenBatchReady) },
-    { k: 'bDiverterDV01B (01→03)', v: String(!hmiState.bGoldenBatchReady && !isWinter) },
+    { k: 'bGoldenBatchActive', v: String(hmiState.bGoldenBatchActive) },
+    { k: 'bDiverterDV01B (01→03)', v: String(!hmiState.bGoldenBatchActive && !isWinter) },
+    { k: 'bGateDG02 (02→03)', v: String(hmiState.bGoldenBatchActive && !isWinter) },
     { k: 'nFanSpeedRef (%QW64)', v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
     { k: 'rInletTemp (TT-401)', v: `${hmiState.rInletTempDegC.toFixed(1)} °C`, alarm: hmiState.dryerTripped },
   ];
@@ -797,7 +791,7 @@ function renderLivePlcVars() {
   } else if (activeStationId === 'rolling') {
     stationVars = [
       { k: 'rPressureBar', v: `${hmiState.rollPressureBar.toFixed(1)} bar` },
-      { k: 'eActiveLine', v: hmiState.bGoldenBatchReady ? 'GOLDEN_HANDOVER' : 'GREEN_BYPASS' },
+      { k: 'eActiveLine', v: hmiState.bGoldenBatchActive ? 'GOLDEN_HANDOVER (02→03)' : 'GREEN_BYPASS (01→03)' },
     ];
   } else if (activeStationId === 'dryer') {
     const heatCmd =
@@ -1158,7 +1152,7 @@ async function init() {
   renderDrawer();
 
   try {
-    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261128');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261130');
     renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;
@@ -1167,6 +1161,16 @@ async function init() {
       container: document.getElementById('factory3dViewport'),
       labelsContainer: document.getElementById('labelsOverlay'),
       onStationSelect: (stId) => selectStation(stId),
+      onBufferTick: (nextKg, nextGoldenActive) => {
+        hmiState.witheringBufferKg = nextKg;
+        const changed = hmiState.bGoldenBatchActive !== nextGoldenActive;
+        hmiState.bGoldenBatchActive = nextGoldenActive;
+        if (activeStationId === 'withering' || activeStationId === 'rolling' || activeStationId === 'intake') {
+          const bufEl = document.getElementById('inspWitherBuffer');
+          if (bufEl) bufEl.textContent = `${nextKg.toFixed(0)} / 250 kg`;
+        }
+        if (changed) renderHudAnd3D();
+      },
       initialTheme: currentTheme,
     });
     scene3d.setIsaTagsVisible(isaTagsVisible);

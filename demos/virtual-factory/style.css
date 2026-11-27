@@ -120,6 +120,34 @@ body {
   color: var(--text-muted);
 }
 
+.room02-buffer-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  border: 1.5px solid #0f766e;
+  background: var(--hud-bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: var(--shadow-hud);
+  pointer-events: none;
+}
+
+.room02-buffer-badge--active {
+  border-color: #d97706;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+[data-theme="dark"] .room02-buffer-badge--active {
+  background: rgba(180, 83, 9, 0.92);
+  color: #fef3c7;
+}
+
 /* ISA-18.2 Top Alarm Strip */
 .isa-alarm-strip {
   position: fixed;
