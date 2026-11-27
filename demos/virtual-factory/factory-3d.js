@@ -123,11 +123,10 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-export function createFactory3D({ container, labelsContainer, onStationSelect }) {
+export function createFactory3D({ container, labelsContainer, onStationSelect, initialTheme = 'light' }) {
   const scene = new THREE.Scene();
-  // ISA-101 High-Performance HMI neutral dark slate backdrop
-  scene.background = new THREE.Color(0x0f172a);
-  scene.fog = new THREE.FogExp2(0x0f172a, 0.013);
+  scene.background = new THREE.Color(0xe9eef5);
+  scene.fog = new THREE.FogExp2(0xe9eef5, 0.01);
 
   const width = container.clientWidth || window.innerWidth;
   const height = container.clientHeight || window.innerHeight;
@@ -154,11 +153,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect })
   controls.maxDistance = 38;
   controls.update();
 
-  // Neutral industrial lighting
-  const hemi = new THREE.HemisphereLight(0xe2e8f0, 0x1e293b, 0.9);
+  // Neutral industrial lighting (adjusted dynamically by setTheme)
+  const hemi = new THREE.HemisphereLight(0xf8fafc, 0xcbd5e1, 1.25);
   scene.add(hemi);
 
-  const dirLight = new THREE.DirectionalLight(0xf8fafc, 1.3);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
   dirLight.position.set(14, 24, 14);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.set(2048, 2048);
@@ -170,50 +169,45 @@ export function createFactory3D({ container, labelsContainer, onStationSelect })
   dirLight.shadow.camera.bottom = -18;
   scene.add(dirLight);
 
-  // Neutral slate factory floor & grid
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(56, 28),
-    new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.88, metalness: 0.1 })
-  );
+  // Factory floor, grid, walkway, conveyor spine & structural bay
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.85, metalness: 0.08 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(56, 28), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  const grid = new THREE.GridHelper(56, 56, 0x334155, 0x243042);
-  grid.position.y = 0.008;
-  scene.add(grid);
+  const gridLight = new THREE.GridHelper(56, 56, 0x94a3b8, 0xb8c4d4);
+  gridLight.position.y = 0.008;
+  scene.add(gridLight);
 
-  // Operator walkway (neutral slate)
-  const walkway = new THREE.Mesh(
-    new THREE.BoxGeometry(38, 0.03, 1.8),
-    new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.78 })
-  );
+  const gridDark = new THREE.GridHelper(56, 56, 0x334155, 0x243042);
+  gridDark.position.y = 0.008;
+  gridDark.visible = false;
+  scene.add(gridDark);
+
+  const walkwayMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.78 });
+  const walkway = new THREE.Mesh(new THREE.BoxGeometry(38, 0.03, 1.8), walkwayMat);
   walkway.position.set(0, 0.015, 3.4);
   walkway.receiveShadow = true;
   scene.add(walkway);
 
-  // Conveyor spine connecting all 5 stations
-  const spineBelt = new THREE.Mesh(
-    new THREE.BoxGeometry(34, 0.22, 0.72),
-    new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.55, roughness: 0.45 })
-  );
+  const spineBeltMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5, roughness: 0.45 });
+  const spineBelt = new THREE.Mesh(new THREE.BoxGeometry(34, 0.22, 0.72), spineBeltMat);
   spineBelt.position.set(0, 0.55, 0);
   spineBelt.castShadow = true;
   spineBelt.receiveShadow = true;
   scene.add(spineBelt);
 
   // Structural steel bay pillars & back wall
-  const pillarMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.65, roughness: 0.42 });
+  const pillarMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.55, roughness: 0.42 });
   for (let px = -22; px <= 22; px += 8) {
     const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.45, 7.5, 0.45), pillarMat);
     pillar.position.set(px, 3.75, -6.5);
     pillar.castShadow = true;
     scene.add(pillar);
   }
-  const backWall = new THREE.Mesh(
-    new THREE.BoxGeometry(52, 7.5, 0.25),
-    new THREE.MeshStandardMaterial({ color: 0x172030, roughness: 0.92 })
-  );
+  const backWallMat = new THREE.MeshStandardMaterial({ color: 0xdbe3ee, roughness: 0.9 });
+  const backWall = new THREE.Mesh(new THREE.BoxGeometry(52, 7.5, 0.25), backWallMat);
   backWall.position.set(0, 3.75, -6.8);
   backWall.receiveShadow = true;
   scene.add(backWall);
@@ -903,12 +897,52 @@ export function createFactory3D({ container, labelsContainer, onStationSelect })
     }
   }
 
+  function setTheme(mode = 'light') {
+    const isDark = mode === 'dark';
+    if (isDark) {
+      scene.background.setHex(0x0b1120);
+      scene.fog.color.setHex(0x0b1120);
+      scene.fog.density = 0.013;
+      hemi.color.setHex(0xe2e8f0);
+      hemi.groundColor.setHex(0x1e293b);
+      hemi.intensity = 0.9;
+      dirLight.color.setHex(0xf8fafc);
+      dirLight.intensity = 1.3;
+      floorMat.color.setHex(0x1e293b);
+      walkwayMat.color.setHex(0x334155);
+      spineBeltMat.color.setHex(0x475569);
+      pillarMat.color.setHex(0x334155);
+      backWallMat.color.setHex(0x172030);
+      gridLight.visible = false;
+      gridDark.visible = true;
+    } else {
+      scene.background.setHex(0xe9eef5);
+      scene.fog.color.setHex(0xe9eef5);
+      scene.fog.density = 0.01;
+      hemi.color.setHex(0xf8fafc);
+      hemi.groundColor.setHex(0xcbd5e1);
+      hemi.intensity = 1.25;
+      dirLight.color.setHex(0xffffff);
+      dirLight.intensity = 1.55;
+      floorMat.color.setHex(0xcbd5e1);
+      walkwayMat.color.setHex(0x94a3b8);
+      spineBeltMat.color.setHex(0x64748b);
+      pillarMat.color.setHex(0x94a3b8);
+      backWallMat.color.setHex(0xdbe3ee);
+      gridLight.visible = true;
+      gridDark.visible = false;
+    }
+  }
+
+  setTheme(initialTheme);
+
   rafId = requestAnimationFrame(animate);
 
   return {
     focusStation,
     updateSimulationState,
     setIsaTagsVisible,
+    setTheme,
     dispose() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);

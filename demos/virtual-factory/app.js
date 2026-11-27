@@ -115,8 +115,35 @@ let activeStationId = 'intake';
 let isPlaying = true;
 let simSpeed = 1.0;
 let isaTagsVisible = true;
+const THEME_STORAGE_KEY = 'pancharupa-hmi-theme';
+let currentTheme = (() => {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+})();
 let scene3d = null;
 const stCodeCache = {};
+
+function applyTheme(mode, persist = true) {
+  currentTheme = mode === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = currentTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+  }
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+  }
+  if (scene3d?.setTheme) {
+    scene3d.setTheme(currentTheme);
+  }
+}
 
 // Interactive Operator HMI & ISA-18.2 Alarm State
 const hmiState = {
@@ -713,6 +740,10 @@ function bindEvents() {
     if (scene3d) scene3d.setIsaTagsVisible(isaTagsVisible);
   });
 
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    applyTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+  });
+
   document.getElementById('btnPlayPause').addEventListener('click', (e) => {
     isPlaying = !isPlaying;
     e.currentTarget.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
@@ -877,6 +908,7 @@ function bindEvents() {
 }
 
 async function init() {
+  applyTheme(currentTheme, false);
   await loadFactorySnapshot();
   bindEvents();
   renderStationPanels();
@@ -892,8 +924,10 @@ async function init() {
       container: document.getElementById('factory3dViewport'),
       labelsContainer: document.getElementById('labelsOverlay'),
       onStationSelect: (stId) => selectStation(stId),
+      initialTheme: currentTheme,
     });
     scene3d.setIsaTagsVisible(isaTagsVisible);
+    scene3d.setTheme(currentTheme);
     renderHudAnd3D();
   } catch (err) {
     console.warn('3D WebGL scene unavailable; HUD and snapshot data hydrated:', err);
