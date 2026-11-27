@@ -273,17 +273,85 @@ function generateLeafStageCanvases(stageId, size = 512) {
       const bVal = Math.floor(100 + rand() * 140);
       drawSerratedLeaf(bCtx, x, y, len, wid, ang, `rgb(${bVal},${bVal},${bVal})`, null, false);
     }
-    for (let i = 0; i < 110; i++) {
+    // Metallic-gold tip highlights (#d4a24c)
+    for (let i = 0; i < 120; i++) {
       const x = rand() * size;
       const y = rand() * size;
       const len = size * (0.024 + rand() * 0.022) * mult;
       const ang = rand() * Math.PI * 2;
-      drawSerratedLeaf(dCtx, x, y, len, len * 0.25, ang, '#c89d54', '#e0b872', false);
-      drawSerratedLeaf(bCtx, x, y, len, len * 0.25, ang, '#e8e8e8', null, false);
+      drawSerratedLeaf(dCtx, x, y, len, len * 0.25, ang, '#d4a24c', '#f3d08a', false);
+      drawSerratedLeaf(bCtx, x, y, len, len * 0.25, ang, '#f0f0f0', null, false);
     }
   }
 
   return { diffCanvas, bumpCanvas };
+}
+
+function createSingleLeafBladeTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 128, 128);
+  drawSerratedLeaf(ctx, 64, 64, 112, 46, 0, '#43a047', '#a5d6a7', true);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createWovenBambooTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#a47e48';
+  ctx.fillRect(0, 0, 256, 256);
+  for (let y = 0; y < 256; y += 16) {
+    for (let x = 0; x < 256; x += 32) {
+      const offset = (y / 16) % 2 === 0 ? 0 : 16;
+      ctx.fillStyle = (x + y) % 32 === 0 ? '#c49b63' : '#8c6635';
+      ctx.fillRect((x + offset) % 256, y + 2, 28, 12);
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 1);
+  return tex;
+}
+
+function createCurvedLeafBladeGeometry(len = 0.34, wid = 0.16) {
+  const geo = new THREE.PlaneGeometry(len, wid, 6, 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const nx = x / (len * 0.5);
+    pos.setZ(i, -0.05 * nx * nx + 0.03);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function createStandUpPouchGeometry() {
+  const shape = new THREE.Shape();
+  shape.moveTo(-0.21, -0.31);
+  shape.lineTo(0.21, -0.31);
+  shape.lineTo(0.24, 0.23);
+  shape.lineTo(0.20, 0.31);
+  shape.lineTo(-0.20, 0.31);
+  shape.lineTo(-0.24, 0.23);
+  shape.closePath();
+
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: 0.14,
+    bevelEnabled: true,
+    bevelThickness: 0.025,
+    bevelSize: 0.02,
+    bevelSegments: 2,
+  });
+  geo.center();
+  return geo;
 }
 
 export function renderTeaLeafSwatch(targetCanvas, stageId) {
@@ -717,7 +785,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     if (tagPos) tagAnchors.set(stationId, tagPos);
   }
 
-  // Room 01: Raw Leaf Reception & Diverter (SC-01, DV-01A/B)
+  // Room 01: Raw Leaf Reception & Diverter (SC-01, DV-01A/B) — Woven Bamboo Baskets + Curved Leaf Blades
   {
     const st = FACTORY_STATIONS[0];
     const g = new THREE.Group();
@@ -733,7 +801,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     scalePost.position.set(st.x - 1.9, 1.15, 1.4);
     g.add(scalePost);
 
-    // Pneumatic Diverter Gates DV-01A (Main -> Room 02) and DV-01B (Bypass -> Room 03)
     const gateMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.6, roughness: 0.3 });
     diverterArmA = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 0.85), gateMat);
     diverterArmA.position.set(st.x + 2.45, 0.95, 0);
@@ -743,16 +810,37 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     diverterArmB.position.set(st.x + 2.45, 0.95, -2.35);
     g.add(diverterArmB);
 
-    const wovenMat = new THREE.MeshStandardMaterial({ color: 0xb08952, roughness: 0.88, metalness: 0.04 });
-    const basketGeo = new THREE.CylinderGeometry(0.46, 0.34, 0.48, 14);
-    const heapGeo = createLeafClusterGeometry(0.4, 21);
+    const wovenMat = new THREE.MeshStandardMaterial({
+      map: createWovenBambooTexture(),
+      roughness: 0.88,
+      metalness: 0.04,
+    });
+    const basketGeo = new THREE.CylinderGeometry(0.48, 0.33, 0.48, 18);
+    const heapGeo = createLeafClusterGeometry(0.42, 21);
+    const bladeGeo = createCurvedLeafBladeGeometry(0.36, 0.17);
+    const bladeMat = new THREE.MeshStandardMaterial({
+      map: createSingleLeafBladeTexture(),
+      alphaTest: 0.35,
+      side: THREE.DoubleSide,
+      roughness: 0.72,
+    });
 
     for (let i = 0; i < 4; i++) {
       const basketGroup = new THREE.Group();
       basketGroup.add(new THREE.Mesh(basketGeo, wovenMat));
+
       const leafHeap = new THREE.Mesh(heapGeo, stageLeafMaterials.intake);
       leafHeap.position.y = 0.24;
       basketGroup.add(leafHeap);
+
+      // Multi-angled fanned serrated green leaf blades overflowing the basket
+      for (let b = 0; b < 7; b++) {
+        const blade = new THREE.Mesh(bladeGeo, bladeMat);
+        const angle = (b / 7) * Math.PI * 2;
+        blade.position.set(Math.cos(angle) * 0.22, 0.36 + (b % 2) * 0.06, Math.sin(angle) * 0.22);
+        blade.rotation.set(0.45, angle, 0.25);
+        basketGroup.add(blade);
+      }
 
       basketGroup.position.set(st.x - 2.2 + i * 1.15, 0.92, 0);
       basketGroup.userData.baseX = st.x - 2.3;
@@ -771,19 +859,19 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     );
   }
 
-  // Room 02: Climate-Controlled Withering Hall — Golden Tea Buffer (T-01..04, FN-01..04)
+  // Room 02: Climate-Controlled Withering Hall — Undulating Olive-Green Leaf Beds (T-01..04)
   {
     const st = FACTORY_STATIONS[1];
     const g = new THREE.Group();
     let fanIdx = 0;
-    const witheredBedGeo = createOrganicLeafBedGeometry(4.8, 1.28, 0.14, 0.14, 26, 10, 33);
+    const witheredBedGeo = createOrganicLeafBedGeometry(4.85, 1.32, 0.16, 0.22, 32, 14, 33);
     for (const tz of [-0.9, 1.55]) {
       const trough = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.9, 1.5), steelMat);
       trough.position.set(st.x, 0.65, tz);
       g.add(trough);
 
       const leafBed = new THREE.Mesh(witheredBedGeo, stageLeafMaterials.withering);
-      leafBed.position.set(st.x, 1.13, tz);
+      leafBed.position.set(st.x, 1.14, tz);
       g.add(leafBed);
 
       for (const fx of [-2.75, 2.75]) {
@@ -1012,9 +1100,16 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     sampleTea.position.set(st.x - 1.7, 0.36, 1.35);
     g.add(sampleTea);
 
-    const pouchGeo = new THREE.BoxGeometry(0.46, 0.62, 0.24);
-    const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc29b61, roughness: 0.82 });
-    const foilBandMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.38, metalness: 0.25 });
+    const pouchGeo = createStandUpPouchGeometry();
+    const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc8a97e, roughness: 0.82 });
+    const foilBandMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.36, metalness: 0.25 });
+    const windowMat = new THREE.MeshStandardMaterial({
+      map: stageLeafMaterials.warehouse.map,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
+    });
     for (let idx = 0; idx < 18; idx++) {
       const col = idx % 3;
       const row = Math.floor(idx / 3) % 2;
@@ -1022,11 +1117,18 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
 
       const pouchGroup = new THREE.Group();
       pouchGroup.add(new THREE.Mesh(pouchGeo, kraftMat));
-      const labelBand = new THREE.Mesh(new THREE.BoxGeometry(0.47, 0.16, 0.25), foilBandMat);
-      labelBand.position.y = 0.04;
+
+      // Teal PanchaRupa label band
+      const labelBand = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.19), foilBandMat);
+      labelBand.position.y = 0.08;
       pouchGroup.add(labelBand);
 
-      pouchGroup.position.set(st.x + 0.1 + col * 0.78, 0.54 + tier * 0.66, -0.55 + row * 0.82);
+      // Dark translucent viewing window showing black tea leaves inside
+      const viewWindow = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.16), windowMat);
+      viewWindow.position.set(0, -0.1, 0.098);
+      pouchGroup.add(viewWindow);
+
+      pouchGroup.position.set(st.x + 0.1 + col * 0.78, 0.54 + tier * 0.68, -0.55 + row * 0.82);
       pouchGroup.userData.index = idx;
       g.add(pouchGroup);
       warehouseBoxes.push(pouchGroup);
@@ -1043,13 +1145,27 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   }
 
   // Moving Conveyor Batches:
-  // Path 2 (Green Tea Direct Bypass: Room 01 -> Room 03 at z = -2.35)
+  // Path 2 (Green Tea Direct Bypass: Room 01 -> Room 03 at z = -2.35) — Organic Leaf Clusters + Blades
   {
     const clusterGeo = createLeafClusterGeometry(0.28, 97);
+    const bladeGeo = createCurvedLeafBladeGeometry(0.3, 0.14);
+    const bladeMat = new THREE.MeshStandardMaterial({
+      map: createSingleLeafBladeTexture(),
+      alphaTest: 0.35,
+      side: THREE.DoubleSide,
+      roughness: 0.72,
+    });
     for (let i = 0; i < 6; i++) {
-      const batch = new THREE.Mesh(clusterGeo, stageLeafMaterials.intake);
+      const batch = new THREE.Group();
+      batch.add(new THREE.Mesh(clusterGeo, stageLeafMaterials.intake));
+      for (let b = 0; b < 5; b++) {
+        const blade = new THREE.Mesh(bladeGeo, bladeMat);
+        const angle = (b / 5) * Math.PI * 2;
+        blade.position.set(Math.cos(angle) * 0.14, 0.1, Math.sin(angle) * 0.14);
+        blade.rotation.set(0.4, angle, 0.2);
+        batch.add(blade);
+      }
       batch.position.set(-20 + i * 2.8, 0.9, -2.35);
-      batch.castShadow = true;
       batch.userData.phase = i / 6;
       scene.add(batch);
       bypassBatches.push(batch);
