@@ -6,72 +6,73 @@ export const FACTORY_STATIONS = [
     id: 'intake',
     order: 1,
     shortcut: '1',
-    zoneLabel: 'ZONE 01 INTAKE',
-    name: '1. Leaf Intake Dock',
-    shortName: 'Intake Dock',
+    roomCode: 'ROOM 01',
+    zoneLabel: 'ROOM 01 · RECEPTION & WEIGHING (SC-01)',
+    name: '1. Raw Leaf Reception & Weighing',
+    shortName: 'Room 01: Intake',
     x: -16,
     z: 0,
-    cameraOffset: { x: -16, y: 2.1, z: 7.8 },
-    lookAtOffset: { x: -16, y: 1.25, z: 0 },
-    accent: 0x64748b,
+    cameraOffset: { x: -16, y: 3.4, z: 7.4 },
+    lookAtOffset: { x: -16, y: 1.15, z: -0.2 },
   },
   {
     id: 'withering',
     order: 2,
     shortcut: '2',
-    zoneLabel: 'ZONE 02 WITHERING',
-    name: '2. Withering Troughs',
-    shortName: 'Withering',
+    roomCode: 'ROOM 02',
+    zoneLabel: 'ROOM 02 · WITHERING HALL (T-01..04, FN-01..04)',
+    name: '2. Climate-Controlled Withering Hall',
+    shortName: 'Room 02: Withering',
     x: -8,
     z: 0,
-    cameraOffset: { x: -8, y: 2.1, z: 7.8 },
-    lookAtOffset: { x: -8, y: 1.25, z: 0 },
-    accent: 0x64748b,
+    cameraOffset: { x: -8, y: 3.4, z: 7.4 },
+    lookAtOffset: { x: -8, y: 1.15, z: -0.2 },
   },
   {
     id: 'rolling',
     order: 3,
     shortcut: '3',
-    zoneLabel: 'ZONE 03 ROLLING',
-    name: '3. Rolling & Oxidation',
-    shortName: 'Rolling',
+    roomCode: 'ROOM 03',
+    zoneLabel: 'ROOM 03 · ROLLING & OXIDATION (RL-01..02)',
+    name: '3. Rolling & Oxidation Room',
+    shortName: 'Room 03: Rolling',
     x: 0,
     z: 0,
-    cameraOffset: { x: 0, y: 2.1, z: 7.8 },
-    lookAtOffset: { x: 0, y: 1.25, z: 0 },
-    accent: 0x64748b,
+    cameraOffset: { x: 0, y: 3.4, z: 7.4 },
+    lookAtOffset: { x: 0, y: 1.15, z: -0.2 },
   },
   {
     id: 'dryer',
     order: 4,
     shortcut: '4',
-    zoneLabel: 'ZONE 04 DRYING',
-    name: '4. Dryer Line',
-    shortName: 'Dryer Line',
+    roomCode: 'ROOM 04',
+    zoneLabel: 'ROOM 04 · THERMAL DRYING · ATEX ZONE 22 (DR-01)',
+    name: '4. Thermal Drying Room (ATEX Zone 22)',
+    shortName: 'Room 04: Dryer',
     x: 8,
     z: 0,
-    cameraOffset: { x: 8, y: 2.2, z: 7.8 },
-    lookAtOffset: { x: 8, y: 1.35, z: 0 },
-    accent: 0x64748b,
+    cameraOffset: { x: 8, y: 3.6, z: 7.6 },
+    lookAtOffset: { x: 8, y: 1.25, z: -0.2 },
   },
   {
     id: 'warehouse',
     order: 5,
     shortcut: '5',
-    zoneLabel: 'ZONE 05 PACKAGING',
-    name: '5. Packaging & Warehouse',
-    shortName: 'Warehouse',
+    roomCode: 'ROOM 05',
+    zoneLabel: 'ROOM 05 · GRADING & PACKAGING CLEANROOM (PK-01)',
+    name: '5. Dry Grading & Export Packaging Cleanroom',
+    shortName: 'Room 05: Packaging',
     x: 16,
     z: 0,
-    cameraOffset: { x: 16, y: 2.2, z: 8.2 },
-    lookAtOffset: { x: 16, y: 1.35, z: 0 },
-    accent: 0x64748b,
+    cameraOffset: { x: 16, y: 3.5, z: 7.8 },
+    lookAtOffset: { x: 16, y: 1.2, z: -0.2 },
   },
 ];
 
+// Elevated front-left corner bird's-eye view framing all 5 rooms diagonally
 const OVERVIEW_CAMERA = {
-  pos: new THREE.Vector3(0, 6.2, 23.5),
-  target: new THREE.Vector3(0, 1.3, 0),
+  pos: new THREE.Vector3(-24, 15.5, 22),
+  target: new THREE.Vector3(0, 1.0, -0.5),
 };
 
 // Moisture-stage tea colors along conveyor (78% fresh -> 68% withered -> 65% oxidized -> 3% dried)
@@ -81,7 +82,6 @@ const STAGE_COLOR_OXIDIZED = new THREE.Color(0xb45309);
 const STAGE_COLOR_FINISHED = new THREE.Color(0x292524);
 
 function sampleBatchColor(x) {
-  // x spans roughly -18 (intake) to +15 (packaging)
   const t = THREE.MathUtils.clamp((x + 18) / 33, 0, 1);
   const out = new THREE.Color();
   if (t < 0.33) {
@@ -94,25 +94,24 @@ function sampleBatchColor(x) {
   return out;
 }
 
-function createFloorLabelTexture(text, borderColor = '#64748b', textColor = '#cbd5e1') {
+function createPlaqueTexture(title, borderColor = '#64748b', textColor = '#f8fafc', bgColor = 'rgba(15, 23, 42, 0.85)') {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
+  canvas.width = 768;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 512, 128);
+  ctx.clearRect(0, 0, 768, 128);
 
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(6, 6, 756, 116);
   ctx.strokeStyle = borderColor;
   ctx.lineWidth = 6;
-  ctx.strokeRect(8, 8, 496, 112);
-
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
-  ctx.fillRect(11, 11, 490, 106);
+  ctx.strokeRect(6, 6, 756, 116);
 
   ctx.fillStyle = textColor;
-  ctx.font = '700 34px "Segoe UI", Roboto, sans-serif';
+  ctx.font = '700 28px "Segoe UI", Roboto, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, 256, 66);
+  ctx.fillText(title, 384, 64);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.anisotropy = 4;
@@ -126,12 +125,12 @@ function easeInOutCubic(t) {
 export function createFactory3D({ container, labelsContainer, onStationSelect, initialTheme = 'light' }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe9eef5);
-  scene.fog = new THREE.FogExp2(0xe9eef5, 0.01);
+  scene.fog = new THREE.FogExp2(0xe9eef5, 0.0085);
 
   const width = container.clientWidth || window.innerWidth;
   const height = container.clientHeight || window.innerHeight;
 
-  const camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 140);
+  const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 160);
   camera.position.copy(OVERVIEW_CAMERA.pos);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -147,10 +146,10 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   controls.target.copy(OVERVIEW_CAMERA.target);
   controls.enableDamping = true;
   controls.dampingFactor = 0.065;
-  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.maxPolarAngle = Math.PI * 0.48;
   controls.minPolarAngle = 0.12;
   controls.minDistance = 2.5;
-  controls.maxDistance = 38;
+  controls.maxDistance = 46;
   controls.update();
 
   // Neutral industrial lighting (adjusted dynamically by setTheme)
@@ -158,18 +157,18 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   scene.add(hemi);
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
-  dirLight.position.set(14, 24, 14);
+  dirLight.position.set(-16, 26, 18);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.set(2048, 2048);
   dirLight.shadow.camera.near = 2;
-  dirLight.shadow.camera.far = 65;
-  dirLight.shadow.camera.left = -26;
-  dirLight.shadow.camera.right = 26;
+  dirLight.shadow.camera.far = 75;
+  dirLight.shadow.camera.left = -28;
+  dirLight.shadow.camera.right = 28;
   dirLight.shadow.camera.top = 18;
   dirLight.shadow.camera.bottom = -18;
   scene.add(dirLight);
 
-  // Factory floor, grid, walkway, conveyor spine & structural bay
+  // Factory floor, grids, walkway & conveyor spine
   const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.85, metalness: 0.08 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(56, 28), floorMat);
   floor.rotation.x = -Math.PI / 2;
@@ -186,33 +185,95 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   scene.add(gridDark);
 
   const walkwayMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.78 });
-  const walkway = new THREE.Mesh(new THREE.BoxGeometry(38, 0.03, 1.8), walkwayMat);
-  walkway.position.set(0, 0.015, 3.4);
+  const walkway = new THREE.Mesh(new THREE.BoxGeometry(40, 0.03, 1.6), walkwayMat);
+  walkway.position.set(0, 0.015, 5.2);
   walkway.receiveShadow = true;
   scene.add(walkway);
 
   const spineBeltMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5, roughness: 0.45 });
-  const spineBelt = new THREE.Mesh(new THREE.BoxGeometry(34, 0.22, 0.72), spineBeltMat);
+  const spineBelt = new THREE.Mesh(new THREE.BoxGeometry(36, 0.22, 0.72), spineBeltMat);
   spineBelt.position.set(0, 0.55, 0);
   spineBelt.castShadow = true;
   spineBelt.receiveShadow = true;
   scene.add(spineBelt);
 
-  // Structural steel bay pillars & back wall
+  // Architectural 5-Room Cutaway Partition System
+  const wallBackMat = new THREE.MeshStandardMaterial({ color: 0xdbe3ee, roughness: 0.88 });
+  const wallPartitionMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.82 });
+  const wallFrameMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.55, roughness: 0.4 });
   const pillarMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.55, roughness: 0.42 });
-  for (let px = -22; px <= 22; px += 8) {
-    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.45, 7.5, 0.45), pillarMat);
-    pillar.position.set(px, 3.75, -6.5);
-    pillar.castShadow = true;
-    scene.add(pillar);
-  }
-  const backWallMat = new THREE.MeshStandardMaterial({ color: 0xdbe3ee, roughness: 0.9 });
-  const backWall = new THREE.Mesh(new THREE.BoxGeometry(52, 7.5, 0.25), backWallMat);
-  backWall.position.set(0, 3.75, -6.8);
+
+  // Full-height back wall (z = -5.5, height 4.2m)
+  const backWall = new THREE.Mesh(new THREE.BoxGeometry(40.4, 4.2, 0.24), wallBackMat);
+  backWall.position.set(0, 2.1, -5.5);
   backWall.receiveShadow = true;
+  backWall.castShadow = true;
   scene.add(backWall);
 
-  // Neutral steel/slate materials (ISA-101)
+  // Low front cutaway curb wall (z = +4.2, height 0.36m) with room entry gaps
+  for (const st of FACTORY_STATIONS) {
+    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.36, 0.2), wallPartitionMat);
+    leftCurb.position.set(st.x - 2.65, 0.18, 4.2);
+    leftCurb.castShadow = true;
+    leftCurb.receiveShadow = true;
+    scene.add(leftCurb);
+
+    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.36, 0.2), wallPartitionMat);
+    rightCurb.position.set(st.x + 2.65, 0.18, 4.2);
+    rightCurb.castShadow = true;
+    rightCurb.receiveShadow = true;
+    scene.add(rightCurb);
+  }
+
+  // Side & inter-room cutaway partition walls at x = -20, -12, -4, +4, +12, +20
+  // Inter-room partitions have a framed conveyor pass-through opening (z = -0.85 to +0.85, y = 0..1.45)
+  const partitionXs = [-20, -12, -4, 4, 12, 20];
+  partitionXs.forEach((px, idx) => {
+    const isOuter = idx === 0 || idx === partitionXs.length - 1;
+    const wallHeight = isOuter ? 2.4 : 2.1;
+
+    // Structural column at back and front cutaway corner
+    const backCol = new THREE.Mesh(new THREE.BoxGeometry(0.32, 4.2, 0.32), pillarMat);
+    backCol.position.set(px, 2.1, -5.5);
+    backCol.castShadow = true;
+    scene.add(backCol);
+
+    const frontCol = new THREE.Mesh(new THREE.BoxGeometry(0.28, wallHeight, 0.28), pillarMat);
+    frontCol.position.set(px, wallHeight / 2, 4.2);
+    frontCol.castShadow = true;
+    scene.add(frontCol);
+
+    if (isOuter) {
+      const solidSide = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 9.7), wallPartitionMat);
+      solidSide.position.set(px, wallHeight / 2, -0.65);
+      solidSide.castShadow = true;
+      solidSide.receiveShadow = true;
+      scene.add(solidSide);
+    } else {
+      // Back section (z = -5.5 to -0.85 -> length 4.65)
+      const backSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 4.65), wallPartitionMat);
+      backSeg.position.set(px, wallHeight / 2, -3.175);
+      backSeg.castShadow = true;
+      backSeg.receiveShadow = true;
+      scene.add(backSeg);
+
+      // Front section (z = +0.85 to +4.2 -> length 3.35)
+      const frontSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, wallHeight, 3.35), wallPartitionMat);
+      frontSeg.position.set(px, wallHeight / 2, 2.525);
+      frontSeg.castShadow = true;
+      frontSeg.receiveShadow = true;
+      scene.add(frontSeg);
+
+      // Header lintel above conveyor pass-through (z = -0.85 to +0.85, y = 1.45 to wallHeight)
+      const lintelH = wallHeight - 1.45;
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.22, lintelH, 1.7), wallFrameMat);
+      lintel.position.set(px, 1.45 + lintelH / 2, 0);
+      lintel.castShadow = true;
+      scene.add(lintel);
+    }
+  });
+
+  // Neutral steel/slate machine materials
   const steelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.68, roughness: 0.34 });
   const darkSlateMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.55, roughness: 0.45 });
   const brushedIronMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.62, roughness: 0.38 });
@@ -232,25 +293,43 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
   const labelAnchors = new Map();
   const tagAnchors = new Map();
 
-  // Floor Zone Markings (ZONE 01 INTAKE .. ZONE 05 PACKAGING)
+  // Room Overhead Back-Wall Plaques & Front Floor Plaques
   FACTORY_STATIONS.forEach((st) => {
-    const zoneMat = new THREE.MeshBasicMaterial({
-      map: createFloorLabelTexture(st.zoneLabel),
-      transparent: true,
-    });
-    const zonePlate = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 1.15), zoneMat);
-    zonePlate.rotation.x = -Math.PI / 2;
-    zonePlate.position.set(st.x, 0.02, 5.15);
-    scene.add(zonePlate);
+    const isDryer = st.id === 'dryer';
+    const border = isDryer ? '#eab308' : '#0f766e';
+    const textCol = isDryer ? '#fde047' : '#f8fafc';
+
+    // Back wall overhead room plaque
+    const wallPlaque = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.8, 0.95),
+      new THREE.MeshBasicMaterial({
+        map: createPlaqueTexture(st.zoneLabel, border, textCol),
+        transparent: true,
+      })
+    );
+    wallPlaque.position.set(st.x, 3.35, -5.36);
+    scene.add(wallPlaque);
+
+    // Front floor zone plaque
+    const floorPlaque = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.2, 0.88),
+      new THREE.MeshBasicMaterial({
+        map: createPlaqueTexture(`${st.roomCode}: ${st.shortName.replace(/^Room \d+:\s*/, '').toUpperCase()}`, border, textCol),
+        transparent: true,
+      })
+    );
+    floorPlaque.rotation.x = -Math.PI / 2;
+    floorPlaque.position.set(st.x, 0.025, 3.55);
+    scene.add(floorPlaque);
   });
 
-  // Safety-Yellow ATEX Zone 22 Floor Perimeter around Dryer DR-01 (x=8, z=0)
+  // Safety-Yellow ATEX Zone 22 Floor Perimeter around Dryer DR-01 in Room 04
   {
     const atexMat = new THREE.MeshBasicMaterial({ color: 0xeab308 });
     const dx = 8;
     const w = 6.2;
     const d = 4.2;
-    const t = 0.12;
+    const t = 0.14;
     const borders = [
       { x: dx, z: -d / 2, sx: w, sz: t },
       { x: dx, z: d / 2, sx: w, sz: t },
@@ -265,9 +344,9 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     });
 
     const atexSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.2, 0.65),
+      new THREE.PlaneGeometry(3.4, 0.62),
       new THREE.MeshBasicMaterial({
-        map: createFloorLabelTexture('ATEX ZONE 22 · DR-01', '#eab308', '#fde047'),
+        map: createPlaqueTexture('ATEX ZONE 22 · DR-01', '#eab308', '#fde047'),
         transparent: true,
       })
     );
@@ -278,32 +357,32 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
 
   function makeHotspot(station) {
     const ring = new THREE.Mesh(
-      new THREE.RingGeometry(0.62, 0.86, 36),
+      new THREE.RingGeometry(0.55, 0.78, 36),
       new THREE.MeshBasicMaterial({
-        color: 0x94a3b8,
+        color: 0x0f766e,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.78,
       })
     );
     ring.rotation.x = -Math.PI / 2;
-    ring.position.set(station.x, 0.04, 3.4);
+    ring.position.set(station.x, 0.04, 5.2);
     ring.userData.stationId = station.id;
     scene.add(ring);
     hotspotRings.push(ring);
     clickableTargets.push(ring);
 
     const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(0.58, 24),
+      new THREE.CircleGeometry(0.52, 24),
       new THREE.MeshBasicMaterial({
-        color: 0x64748b,
+        color: 0x0f766e,
         transparent: true,
-        opacity: 0.14,
+        opacity: 0.16,
         side: THREE.DoubleSide,
       })
     );
     disc.rotation.x = -Math.PI / 2;
-    disc.position.set(station.x, 0.035, 3.4);
+    disc.position.set(station.x, 0.035, 5.2);
     disc.userData.stationId = station.id;
     scene.add(disc);
     clickableTargets.push(disc);
@@ -313,14 +392,14 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     const st = FACTORY_STATIONS.find((s) => s.id === stationId);
     if (st) {
       const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.05, 1.45, 10),
+        new THREE.CylinderGeometry(0.05, 0.05, 1.55, 10),
         darkSlateMat
       );
-      pole.position.set(st.x + 2.15, 0.72, 1.75);
+      pole.position.set(st.x + 2.3, 0.78, 1.85);
       group.add(pole);
 
       const beaconGroup = new THREE.Group();
-      beaconGroup.position.set(st.x + 2.15, 1.52, 1.75);
+      beaconGroup.position.set(st.x + 2.3, 1.62, 1.85);
 
       const beaconMat = new THREE.MeshStandardMaterial({
         color: 0x22c55e,
@@ -328,7 +407,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         emissiveIntensity: 1.4,
         roughness: 0.25,
       });
-      // Octagonal rotating stack beacon head so rotation is visually apparent
       const beaconMesh = new THREE.Mesh(
         new THREE.CylinderGeometry(0.15, 0.15, 0.34, 8),
         beaconMat
@@ -355,7 +433,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     if (tagPos) tagAnchors.set(stationId, tagPos);
   }
 
-  // 1. Leaf Intake Dock (SC-01)
+  // Room 01: Raw Leaf Reception & Weighing (SC-01)
   {
     const st = FACTORY_STATIONS[0];
     const g = new THREE.Group();
@@ -386,17 +464,17 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 2.85, 0),
-      new THREE.Vector3(st.x - 1.9, 2.25, 1.4)
+      new THREE.Vector3(st.x, 2.75, 0),
+      new THREE.Vector3(st.x - 1.9, 2.2, 1.4)
     );
   }
 
-  // 2. Withering Troughs (FN-01..04)
+  // Room 02: Climate-Controlled Withering Hall (T-01..04, FN-01..04)
   {
     const st = FACTORY_STATIONS[1];
     const g = new THREE.Group();
     let fanIdx = 0;
-    for (const tz of [-1.25, 1.25]) {
+    for (const tz of [-1.4, 1.4]) {
       const trough = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.9, 1.5), steelMat);
       trough.position.set(st.x, 0.65, tz);
       g.add(trough);
@@ -408,7 +486,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       leafBed.position.set(st.x, 1.15, tz);
       g.add(leafBed);
 
-      // Two VFD fan shrouds per trough = FN-01..04
       for (const fx of [-2.75, 2.75]) {
         const shroud = new THREE.Mesh(
           new THREE.CylinderGeometry(0.5, 0.5, 0.36, 18),
@@ -440,11 +517,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       g,
       st.id,
       new THREE.Vector3(st.x, 2.55, 0),
-      new THREE.Vector3(st.x - 2.75, 1.65, 1.25)
+      new THREE.Vector3(st.x - 2.75, 1.75, 1.4)
     );
   }
 
-  // 3. Rolling & Oxidation (RL-01)
+  // Room 03: Rolling & Oxidation Room (RL-01..02)
   {
     const st = FACTORY_STATIONS[2];
     const g = new THREE.Group();
@@ -454,24 +531,24 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
 
     for (const rx of [-1.2, 1.2]) {
       const stand = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 1.4), steelMat);
-      stand.position.set(st.x + rx, 0.9, -0.7);
+      stand.position.set(st.x + rx, 0.9, -0.75);
       g.add(stand);
 
       const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 1.15, 20), brassMat);
-      drum.position.set(st.x + rx, 1.75, -0.7);
+      drum.position.set(st.x + rx, 1.75, -0.75);
       g.add(drum);
       rollerDrums.push(drum);
     }
 
     const oxTable = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.7, 1.1), steelMat);
-    oxTable.position.set(st.x, 0.7, 1.1);
+    oxTable.position.set(st.x, 0.7, 1.15);
     g.add(oxTable);
 
     const oxLayer = new THREE.Mesh(
       new THREE.BoxGeometry(3.7, 0.08, 0.9),
       new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.85 })
     );
-    oxLayer.position.set(st.x, 1.09, 1.1);
+    oxLayer.position.set(st.x, 1.09, 1.15);
     g.add(oxLayer);
 
     scene.add(g);
@@ -480,11 +557,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       g,
       st.id,
       new THREE.Vector3(st.x, 2.85, 0),
-      new THREE.Vector3(st.x - 1.2, 2.45, -0.7)
+      new THREE.Vector3(st.x - 1.2, 2.45, -0.75)
     );
   }
 
-  // 4. Dryer Line (TT-401 / DR-01)
+  // Room 04: Thermal Drying Room (ATEX Zone 22) (DR-01, TT-401/402, FS-401, exhaust stack)
   {
     const st = FACTORY_STATIONS[3];
     const g = new THREE.Group();
@@ -492,8 +569,8 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     chamber.position.set(st.x, 1.1, 0);
     g.add(chamber);
 
-    const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 2.4, 16), steelMat);
-    stack.position.set(st.x + 1.2, 3.2, 0);
+    const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 2.6, 16), steelMat);
+    stack.position.set(st.x + 1.2, 3.3, 0);
     g.add(stack);
 
     for (let hx = -1.4; hx <= 1.4; hx += 0.7) {
@@ -519,12 +596,12 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     registerStationHitbox(
       g,
       st.id,
-      new THREE.Vector3(st.x, 3.2, 0),
+      new THREE.Vector3(st.x, 3.25, 0),
       new THREE.Vector3(st.x - 1.8, 2.45, 1.1)
     );
   }
 
-  // 5. Packaging & Warehouse (PK-01)
+  // Room 05: Dry Grading & Export Packaging Cleanroom (PK-01)
   {
     const st = FACTORY_STATIONS[4];
     const g = new THREE.Group();
@@ -559,7 +636,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     );
   }
 
-  // Moving Conveyor Tea Batches (color transitions 78% -> 68% -> 65% -> 3% moisture)
+  // Moving Conveyor Tea Batches (78% green -> 68% olive -> 65% copper -> 3% dark tea)
   {
     const batchGeo = new THREE.BoxGeometry(0.62, 0.22, 0.52);
     const count = 12;
@@ -580,7 +657,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'station-3d-label';
-    el.innerHTML = `<span class="label-name">${st.name}</span><span class="label-metric" data-station="${st.id}">Ready</span>`;
+    el.innerHTML = `<span class="label-name">${st.roomCode} · ${st.shortName.replace(/^Room \d+:\s*/, '')}</span><span class="label-metric" data-station="${st.id}">Ready</span>`;
     el.addEventListener('click', () => {
       focusStation(st.id);
       if (onStationSelect) onStationSelect(st.id);
@@ -589,13 +666,13 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     labelEls.set(st.id, el);
   });
 
-  // Toggleable ISA-5.1 Instrument Callout Badges (SC-01, FN-01, RL-01, TT-401, PK-01)
+  // Toggleable ISA-5.1 Instrument Callout Badges
   const ISA_TAGS = [
-    { id: 'SC-01', stationId: 'intake', desc: 'Load Cell' },
-    { id: 'FN-01', stationId: 'withering', desc: 'VFD Fan' },
-    { id: 'RL-01', stationId: 'rolling', desc: 'Roll Press' },
-    { id: 'TT-401', stationId: 'dryer', desc: 'Dryer Temp' },
-    { id: 'PK-01', stationId: 'warehouse', desc: 'Pack Stock' },
+    { id: 'SC-01', stationId: 'intake' },
+    { id: 'FN-01', stationId: 'withering' },
+    { id: 'RL-01', stationId: 'rolling' },
+    { id: 'TT-401', stationId: 'dryer' },
+    { id: 'PK-01', stationId: 'warehouse' },
   ];
   const tagEls = new Map();
   let showIsaTags = true;
@@ -625,7 +702,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       endPos: destPos.clone(),
       endTarget: destTarget.clone(),
       startTime: performance.now(),
-      durationMs: 700,
+      durationMs: 750,
     };
   }
 
@@ -676,7 +753,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     playing: true,
     speed: 1.0,
     throughputScale: 1.0,
-    operatingMode: 'normal', // 'normal' | 'winter'
+    operatingMode: 'normal',
     dryerUtilPct: 41.4,
     dryerTempSpDegC: 95.0,
     witheringFanSpeedPct: 75.0,
@@ -755,7 +832,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     if (simState.playing) {
       simTime += dt * simState.speed * simState.throughputScale;
 
-      // 1. Leaf crates sliding into Intake Dock
       const intakeFactor = simState.stationAlarms.intake || isWinter ? 0.0 : simState.intakeSpeedScale;
       intakeCrates.forEach((crate) => {
         if (intakeFactor > 0) {
@@ -765,7 +841,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         crate.visible = !isWinter;
       });
 
-      // 2. Withering fans spinning (FN-01..04 scaled to %QW64 speed)
       const fanFactor =
         simState.stationAlarms.withering || isWinter
           ? 0.0
@@ -775,14 +850,12 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
           dt * 8.5 * simState.speed * simState.throughputScale * fanFactor * (idx % 2 === 0 ? 1 : -1);
       });
 
-      // 3. Orthodox rollers rotating
       const rollFactor = simState.stationAlarms.rolling || isWinter ? 0.0 : simState.rollingSpeedScale;
       rollerDrums.forEach((drum, idx) => {
         drum.rotation.y +=
           dt * 2.8 * simState.speed * simState.throughputScale * rollFactor * (idx === 0 ? 1 : -1);
       });
 
-      // 4. Dryer heating elements pulsing
       const dryerSafe = simState.plcSafe && !simState.stationAlarms.dryer && !isWinter;
       const tempFactor = Math.max(0.3, simState.dryerTempSpDegC / 95.0);
       const utilFactor = Math.max(0.25, simState.dryerUtilPct / 50) * tempFactor;
@@ -795,7 +868,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         }
       });
 
-      // 5. Moving conveyor batches transitioning 78% green -> 68% olive -> 65% copper -> 3% dark tea
       const conveyorActive = !isWinter && simState.plcSafe && !simState.stationAlarms.intake;
       conveyorBatches.forEach((batch) => {
         batch.visible = !isWinter;
@@ -806,7 +878,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
         batch.material.color.copy(sampleBatchColor(batch.position.x));
       });
 
-      // 6. Warehouse boxes subtle arrival pulse
       warehouseBoxes.forEach((box) => {
         if (box.visible && box.userData.index >= 12) {
           box.position.y =
@@ -817,7 +888,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       });
     }
 
-    // Status-driven rotating stack beacons (green=running, amber=standby/warning, flashing red=safety trip)
     const strobe = 0.85 + 0.9 * Math.abs(Math.sin(now * 0.01));
     stationBeacons.forEach(({ group, mat }, id) => {
       const isAlarm = Boolean(simState.stationAlarms[id]) || (id === 'dryer' && !simState.plcSafe);
@@ -841,13 +911,11 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       }
     });
 
-    // Pulse floor hotspot rings
     hotspotRings.forEach((ring, idx) => {
       const s = 1 + 0.06 * Math.sin(now * 0.004 + idx);
       ring.scale.set(s, s, 1);
     });
 
-    // Camera tween
     if (tweenState) {
       const u = Math.min(1, (now - tweenState.startTime) / tweenState.durationMs);
       const k = easeInOutCubic(u);
@@ -862,7 +930,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     const cw = container.clientWidth || window.innerWidth;
     const ch = container.clientHeight || window.innerHeight;
 
-    // Project floating 3D station labels
     labelAnchors.forEach((worldPos, id) => {
       const el = labelEls.get(id);
       if (!el) return;
@@ -879,7 +946,6 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       el.style.pointerEvents = 'auto';
     });
 
-    // Project ISA-5.1 instrument callout badges
     if (showIsaTags) {
       tagEls.forEach(({ el, stationId }) => {
         const anchor = tagAnchors.get(stationId);
@@ -902,7 +968,7 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
     if (isDark) {
       scene.background.setHex(0x0b1120);
       scene.fog.color.setHex(0x0b1120);
-      scene.fog.density = 0.013;
+      scene.fog.density = 0.011;
       hemi.color.setHex(0xe2e8f0);
       hemi.groundColor.setHex(0x1e293b);
       hemi.intensity = 0.9;
@@ -912,13 +978,15 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       walkwayMat.color.setHex(0x334155);
       spineBeltMat.color.setHex(0x475569);
       pillarMat.color.setHex(0x334155);
-      backWallMat.color.setHex(0x172030);
+      wallBackMat.color.setHex(0x172030);
+      wallPartitionMat.color.setHex(0x233044);
+      wallFrameMat.color.setHex(0x475569);
       gridLight.visible = false;
       gridDark.visible = true;
     } else {
       scene.background.setHex(0xe9eef5);
       scene.fog.color.setHex(0xe9eef5);
-      scene.fog.density = 0.01;
+      scene.fog.density = 0.0085;
       hemi.color.setHex(0xf8fafc);
       hemi.groundColor.setHex(0xcbd5e1);
       hemi.intensity = 1.25;
@@ -928,7 +996,9 @@ export function createFactory3D({ container, labelsContainer, onStationSelect, i
       walkwayMat.color.setHex(0x94a3b8);
       spineBeltMat.color.setHex(0x64748b);
       pillarMat.color.setHex(0x94a3b8);
-      backWallMat.color.setHex(0xdbe3ee);
+      wallBackMat.color.setHex(0xdbe3ee);
+      wallPartitionMat.color.setHex(0xe2e8f0);
+      wallFrameMat.color.setHex(0x64748b);
       gridLight.visible = true;
       gridDark.visible = false;
     }

@@ -382,6 +382,17 @@ body {
   color: #ffffff;
 }
 
+.hud-btn-exit {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.hud-btn-exit[hidden] {
+  display: none;
+}
+
 /* Dual-Sided Engineering Showcase Panels (Left: HMI, Right: PLC Code) */
 .side-panel {
   position: fixed;
@@ -682,6 +693,46 @@ body {
   background: var(--accent);
   color: #ffffff;
   border-color: var(--accent);
+}
+
+.tactile-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.tactile-btn-grid .hmi-btn {
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+}
+
+.equip-spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.equip-spec-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.74rem;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.equip-spec-row dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.equip-spec-row dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
 }
 
 .mode-switch-row {

@@ -1,46 +1,76 @@
 const DEFAULT_STATIONS = [
-  { id: 'intake', name: '1. Leaf Intake Dock', shortName: 'Intake Dock' },
-  { id: 'withering', name: '2. Withering Troughs', shortName: 'Withering' },
-  { id: 'rolling', name: '3. Rolling & Oxidation', shortName: 'Rolling' },
-  { id: 'dryer', name: '4. Dryer Line', shortName: 'Dryer Line' },
-  { id: 'warehouse', name: '5. Packaging & Warehouse', shortName: 'Warehouse' },
+  { id: 'intake', name: '1. Raw Leaf Reception & Weighing', shortName: 'Room 01: Intake' },
+  { id: 'withering', name: '2. Climate-Controlled Withering Hall', shortName: 'Room 02: Withering' },
+  { id: 'rolling', name: '3. Rolling & Oxidation Room', shortName: 'Room 03: Rolling' },
+  { id: 'dryer', name: '4. Thermal Drying Room (ATEX Zone 22)', shortName: 'Room 04: Dryer' },
+  { id: 'warehouse', name: '5. Dry Grading & Export Packaging Cleanroom', shortName: 'Room 05: Packaging' },
 ];
 let stationsList = DEFAULT_STATIONS;
 
 const STATION_SPECS = {
   intake: {
-    guide: 'Click "Trigger Batch Weigh-In (+40 kg)" to advance a fresh green-leaf lot across the digital weighbridge into the intake hopper. Toggle the Quarantine Gate to simulate a quality rejection interlock.',
-    hardware: ['Siemens SIMATIC S7-1200', 'Mettler Toledo Load Cell (4-20mA)', 'PROFINET / Modbus TCP', 'SQLite Lot Genealogy'],
+    guide: 'Room 01 (SC-01): Trigger a +40 kg weighbridge batch or toggle the Quarantine Gate to test the %Q1.0 hopper interlock.',
+    equipmentSpec: [
+      { k: 'PLC / I/O', v: 'Siemens S7-1214C DC/DC/DC · SM 1231 AI' },
+      { k: 'Load Cell', v: 'Mettler Toledo 0–500 kg (4–20 mA / AI0)' },
+      { k: 'Drive / Motor', v: '1.5 kW Intake Conveyor (DOL + VFD)' },
+      { k: 'Electrical', v: '400V 3-Ph / 24V DC Control · IP65' },
+    ],
+    hardware: ['PROFINET / Modbus TCP', 'SQLite Lot Genealogy'],
     language: 'Ladder Logic (LAD) + SQL Recursive CTE',
     codeLabel: 'Intake Weighbridge & Genealogy Logic (LAD/SQL)',
     fallbackCode: `(* Leaf Intake Weighbridge & Genealogy Edge *)\nIF bGateClosed AND (rGrossKg > rTareKg) THEN\n  rNetLeafKg := rGrossKg - rTareKg;\n  bHopperRelease AT %Q1.0 := NOT bQuarantineHold;\nEND_IF;\n\n-- db/queries.sql: Trace SUPPLIER -> DELIVERY\nINSERT INTO genealogy_edges (parent_entity_type, child_entity_type)\nVALUES ('SUPPLIER', 'DELIVERY');`,
   },
   withering: {
-    guide: 'Adjust the VFD Fan Speed slider and Target Moisture setpoint to regulate trough airflow across FN-01..04. Toggle "Simulate Probe Fault" to test the %Q3.3 capacitive sensor out-of-range cutoff.',
-    hardware: ['Siemens SIMATIC S7-1500', 'SINAMICS G120 VFD (%QW64)', 'Capacitive Moisture Probe (%IW70)', 'PROFINET IO'],
+    guide: 'Room 02 (T-01..04, FN-01..04): Adjust %QW64 VFD fan speed and target moisture, or inject %Q3.3 capacitive probe fault.',
+    equipmentSpec: [
+      { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · ET200SP Remote I/O' },
+      { k: 'VFD & Motors', v: '4× SINAMICS G120 (FN-01..04, 2.2 kW Axial)' },
+      { k: 'Sensors', v: 'Capacitive Moisture Probe (%IW70, 4–20 mA)' },
+      { k: 'Electrical', v: '400V 3-Ph · 0–10V / PROFINET %QW64' },
+    ],
+    hardware: ['SINAMICS G120 (%QW64)', 'PROFINET IO'],
     language: 'IEC 61131-3 Structured Text (ST)',
     codeLabel: 'plc/FB_WitheringAirflowControl.st',
     stPath: '../../plc/FB_WitheringAirflowControl.st',
     fallbackCode: `FUNCTION_BLOCK FB_WitheringAirflowControl\n(* Scaled %IW70 moisture -> %QW64 VFD cutoff at 65% target *)\nIF bSensorFault THEN\n  rFanSpeedPct := 0.0; nFanSpeedRef := 0;\nEND_IF;`,
   },
   rolling: {
-    guide: 'Adjust Roller Pressure (bar) and Cycle Timer (min) to control orthodox leaf maceration speed and oxidation exposure. Higher pressure increases roller drum RPM in the 3D line.',
-    hardware: ['Siemens SIMATIC S7-1500', 'Orthodox Brass Roller Drives', 'Pneumatic Pressure Regulator', 'OPC UA / SFC'],
+    guide: 'Room 03 (RL-01..02): Adjust roller pressure (bar) and cycle timer to modulate orthodox drum RPM and oxidation.',
+    equipmentSpec: [
+      { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · Safety Relay 3SK1' },
+      { k: 'Drives & Motors', v: '2× 5.5 kW Orthodox Brass Roller Geared Motors' },
+      { k: 'Instrumentation', v: 'Pneumatic Pressure Regulator (0–6 bar) + RH%' },
+      { k: 'Electrical', v: '400V 3-Ph · 6 bar Compressed Air · IP54' },
+    ],
+    hardware: ['OPC UA / SFC', 'Mutual-Exclusion Interlock'],
     language: 'Sequential Function Chart (SFC) / ST',
     codeLabel: 'Rolling & Oxidation Sequence (SFC/ST)',
     fallbackCode: `(* Mutual-Exclusion Roller & Oxidation Timer *)\nCASE eRollStep OF\n  STEP_LOAD: IF bRollerFree THEN bClampActive := TRUE; END_IF;\n  STEP_ROLL: tonRollTimer(IN := TRUE, PT := tRollDuration);\n             rDrumRpm := rPressureBar * 12.0;\n  STEP_OXIDIZE: bOxidationMist := TRUE;\nEND_CASE;`,
   },
   dryer: {
-    guide: 'Set the Inlet Temp Setpoint (50–130 °C) to modulate SCR thyristor heater glow, or trigger Dryer Over-Temp (>115°C) / Airflow Loss (FS-401) to test %Q3.1 safety interlocks. Use Reset Safety Latch to clear latched trips.',
-    hardware: ['Siemens SIMATIC S7-1500F', 'PT100 RTD (%IW60)', 'SCR Thyristor (%QW60)', 'ATEX Zone 22 Interlocks', 'PROFINET'],
+    guide: 'Room 04 (DR-01, ATEX Zone 22): Test Over-Temp (>115°C) or Airflow Loss (FS-401) to trigger %Q3.1 safety trip, then Reset Latch.',
+    equipmentSpec: [
+      { k: 'Fail-Safe PLC', v: 'Siemens S7-1512SP F-1 PN (SIL 2 / PL d)' },
+      { k: 'Sensors', v: '2× PT100 RTD (TT-401/402, %IW60) · FS-401 (%I3.0)' },
+      { k: 'Heater Control', v: '3-Ph SCR Thyristor (%QW60, 36 kW) + Exhaust Fan' },
+      { k: 'ATEX Rating', v: 'ATEX Zone 22 (Ex tc IIIB T135°C Dc) · Dust-Tight' },
+    ],
+    hardware: ['PROFINET PROFIsafe', 'Hardwired E-Stop Loop'],
     language: 'IEC 61131-3 Structured Text (ST)',
     codeLabel: 'plc/FB_DryerSafetyControl.st',
     stPath: '../../plc/FB_DryerSafetyControl.st',
     fallbackCode: `FUNCTION_BLOCK FB_DryerSafetyControl\n(* Enforces %I3.0 fan proof & 115C/140C runaway cut *)\nIF bSafetyFaultActive THEN\n  bAlarmLatched := TRUE; rHeatCmdPercent := 0.0;\nEND_IF;`,
   },
   warehouse: {
-    guide: 'Toggle the Pre-Winter Buffer (400 kg) policy to dynamically stack or release reserve tea pallets in the 3D warehouse. Switch to Winter Dormancy (Jan-Feb) to observe buffer drawdown.',
-    hardware: ['Robotic Palletizer Cell', 'Barcode / RFID Lot Scanner', 'OPC UA / REST Telemetry', 'SimPy DES Engine'],
+    guide: 'Room 05 (PK-01): Toggle the Pre-Winter Buffer (400 kg) policy or switch to Winter Dormancy to test buffer drawdown.',
+    equipmentSpec: [
+      { k: 'PLC / Cell', v: 'Siemens S7-1215C · Robotic Palletizer Cell' },
+      { k: 'Instrumentation', v: 'Checkweigher PK-01 · Barcode/RFID Lot Scanner' },
+      { k: 'Environment', v: 'Cleanroom Dehumidifier (<55% RH) · HEPA Intake' },
+      { k: 'Electrical', v: '230V/400V · OPC UA / REST + SimPy DES' },
+    ],
+    hardware: ['OPC UA / REST Telemetry', 'SimPy DES Engine'],
     language: 'Python DES + SQL Recursive CTE',
     codeLabel: 'sim/factory_des.py · Winter Buffer & Dispatch',
     fallbackCode: `# Pre-winter buffer protection (Aug-Oct build)\nif not in_winter and inv_mode == "buffer":\n    reserved = max(safety_stock, buffer_target * progress)\n    available_for_sale = max(0.0, state.finished_goods_kg - reserved)\nfulfilled_kg = min(demand_kg, available_for_sale)`,
@@ -111,7 +141,7 @@ const FALLBACK_SNAPSHOT = {
 let factorySnapshot = FALLBACK_SNAPSHOT;
 let snapshotIsLive = false;
 let activePolicyKey = 'seasonal_buffer';
-let activeStationId = 'intake';
+let activeStationId = 'overview'; // Start in unobstructed bird's-eye Overview
 let isPlaying = true;
 let simSpeed = 1.0;
 let isaTagsVisible = true;
@@ -137,7 +167,7 @@ function applyTheme(mode, persist = true) {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
     } catch {
-      // Ignore storage errors in restricted contexts
+      // Ignore storage errors
     }
   }
   if (scene3d?.setTheme) {
@@ -148,6 +178,7 @@ function applyTheme(mode, persist = true) {
 // Interactive Operator HMI & ISA-18.2 Alarm State
 const hmiState = {
   operatingMode: 'normal', // 'normal' | 'winter'
+  controlMode: 'AUTO', // 'AUTO' | 'MANUAL'
   intakeDeltaKg: 0,
   intakeQuarantine: false,
   witherFanSpeedPct: 75,
@@ -234,8 +265,8 @@ function renderAlarmBanner() {
     tsEl.textContent = '--:--:--';
     msgEl.textContent =
       hmiState.operatingMode === 'winter'
-        ? 'Winter Dormancy (Jan–Feb) · Intake & drying in standby · Drawing from 400 kg buffer'
-        : 'All safety interlocks satisfied · No active plant alarms';
+        ? 'Winter Dormancy (Jan–Feb) · Rooms 01–04 in standby · Drawing from 400 kg buffer'
+        : 'All safety interlocks satisfied · Click any room or press 1–5 to inspect';
     countEl.textContent = '0 Active';
     ackBtn.disabled = true;
     return;
@@ -348,37 +379,51 @@ function renderHudAnd3D() {
       hmiState.warehouseDispatchedKg
   );
 
-  const station = stationsList.find((s) => s.id === activeStationId) || stationsList[0];
+  const station = stationsList.find((s) => s.id === activeStationId);
   document.getElementById('hudLeafIntake').textContent = isWinter
     ? '0 kg/day (Dormancy)'
     : `${Math.round(leafKg).toLocaleString()} kg/yr`;
-  document.getElementById('hudActiveStage').textContent = station.name;
+  document.getElementById('hudActiveStage').textContent = station
+    ? station.shortName
+    : 'Plant Overview (5 Rooms)';
 
-  // Mode buttons state
+  // Mode & tactile buttons state
   const btnNormal = document.getElementById('btnModeNormal');
   const btnWinter = document.getElementById('btnModeWinter');
   if (btnNormal && btnWinter) {
     btnNormal.classList.toggle('hmi-btn-primary', !isWinter);
     btnWinter.classList.toggle('hmi-btn-primary', isWinter);
   }
+  const btnRun = document.getElementById('btnCmdRun');
+  const btnStop = document.getElementById('btnCmdStop');
+  if (btnRun && btnStop) {
+    btnRun.classList.toggle('hmi-btn-primary', isPlaying);
+    btnStop.classList.toggle('hmi-btn-danger', !isPlaying);
+  }
+  const btnAutoManual = document.getElementById('btnCmdAutoManual');
+  if (btnAutoManual) {
+    btnAutoManual.textContent = `MODE: ${hmiState.controlMode}`;
+  }
 
   // Telemetry inside left panel
-  document.getElementById('leftPanelTitle').textContent = station.name;
-  document.getElementById('inspLeafArrived').textContent = isWinter
-    ? '0 kg/day (Jan–Feb)'
-    : `${Math.round(leafKg).toLocaleString()} kg/yr`;
-  const anyAlarm = hmiState.bSafetyTrip || hmiState.witherSensorFault || hmiState.intakeQuarantine;
-  document.getElementById('inspBatchStatus').textContent = anyAlarm
-    ? `ALARM HOLD · ${station.shortName}`
-    : isWinter
-      ? `STANDBY · WINTER DORMANCY`
-      : isPlaying
-        ? `ACTIVE · ${station.shortName}`
-        : `PAUSED · ${station.shortName}`;
-  document.getElementById('inspPlcState').textContent =
-    plcPassed && !hmiState.witherSensorFault ? 'SAFE · INTERLOCK OK' : 'TRIP / FAULT LATCHED';
-  document.getElementById('inspDryerUtil').textContent = `${dryerUtil.toFixed(1)}%`;
-  document.getElementById('inspFinishedStock').textContent = `${stockKg.toLocaleString()} kg`;
+  if (station) {
+    document.getElementById('leftPanelTitle').textContent = station.name;
+    document.getElementById('inspLeafArrived').textContent = isWinter
+      ? '0 kg/day (Jan–Feb)'
+      : `${Math.round(leafKg).toLocaleString()} kg/yr`;
+    const anyAlarm = hmiState.bSafetyTrip || hmiState.witherSensorFault || hmiState.intakeQuarantine;
+    document.getElementById('inspBatchStatus').textContent = anyAlarm
+      ? `ALARM HOLD · ${station.shortName}`
+      : isWinter
+        ? 'STANDBY · WINTER DORMANCY'
+        : isPlaying
+          ? `RUNNING (${hmiState.controlMode})`
+          : 'STOPPED · OPERATOR HOLD';
+    document.getElementById('inspPlcState').textContent =
+      plcPassed && !hmiState.witherSensorFault ? 'SAFE · INTERLOCK OK' : 'TRIP / FAULT LATCHED';
+    document.getElementById('inspDryerUtil').textContent = `${dryerUtil.toFixed(1)}%`;
+    document.getElementById('inspFinishedStock').textContent = `${stockKg.toLocaleString()} kg`;
+  }
 
   // Header status pill
   const headerPill = document.getElementById('snapshotHeaderPill');
@@ -460,6 +505,7 @@ function renderHudAnd3D() {
 }
 
 function renderStationPanels() {
+  if (activeStationId === 'overview') return;
   const spec = STATION_SPECS[activeStationId] || STATION_SPECS.intake;
   document.getElementById('operatorGuideText').textContent = spec.guide;
 
@@ -470,7 +516,7 @@ function renderStationPanels() {
         <button id="btnTriggerWeighIn" class="hmi-btn hmi-btn-primary" type="button">+40 kg Batch Weigh-In</button>
       </div>
       <label class="hmi-toggle-label">
-        <span>Quarantine Gate Interlock</span>
+        <span>Quarantine Gate Interlock (%Q1.0)</span>
         <input id="chkIntakeFault" type="checkbox" ${hmiState.intakeQuarantine ? 'checked' : ''}>
       </label>
     `;
@@ -538,10 +584,23 @@ function renderStationPanels() {
         <div class="hmi-control-row-header"><span>Inlet Temp Setpoint (rTempSpDegC)</span><strong id="valDryerSp">${hmiState.dryerTempSpDegC} °C</strong></div>
         <input id="sliderDryerTempSp" type="range" min="50" max="130" step="5" value="${hmiState.dryerTempSpDegC}">
       </div>
+      <div class="hmi-btn-row">
+        <button id="btnFaultOverTemp" class="hmi-btn hmi-btn-danger" type="button">Over-Temp (&gt;115°C)</button>
+        <button id="btnFaultAirflow" class="hmi-btn hmi-btn-danger" type="button">Airflow Loss FS-401</button>
+      </div>
     `;
     document.getElementById('sliderDryerTempSp').addEventListener('input', (e) => {
       hmiState.dryerTempSpDegC = Number(e.target.value);
       document.getElementById('valDryerSp').textContent = `${hmiState.dryerTempSpDegC} °C`;
+      renderHudAnd3D();
+    });
+    document.getElementById('btnFaultOverTemp').addEventListener('click', () => {
+      hmiState.dryerTripped = true;
+      hmiState.rInletTempDegC = 122.5;
+      renderHudAnd3D();
+    });
+    document.getElementById('btnFaultAirflow').addEventListener('click', () => {
+      hmiState.airflowLossFault = true;
       renderHudAnd3D();
     });
   } else if (activeStationId === 'warehouse') {
@@ -568,7 +627,14 @@ function renderStationPanels() {
     });
   }
 
-  // Right panel hardware & code
+  // Right panel: Physical Equipment & Instrumentation + PLC code
+  const equipEl = document.getElementById('physicalEquipmentSpec');
+  if (equipEl) {
+    equipEl.innerHTML = (spec.equipmentSpec || [])
+      .map((row) => `<div class="equip-spec-row"><dt>${row.k}</dt><dd>${row.v}</dd></div>`)
+      .join('');
+  }
+
   const hwEl = document.getElementById('plcHardwareMeta');
   hwEl.innerHTML = `
     <span class="hw-chip hw-chip--lang">${spec.language}</span>
@@ -584,10 +650,9 @@ function renderStationPanels() {
 
 function renderLivePlcVars() {
   const varsEl = document.getElementById('plcLiveVars');
-  if (!varsEl) return;
+  if (!varsEl || activeStationId === 'overview') return;
   const { isWinter, effectiveFanPct, nFanSpeedRef } = computeDerivedPlcTags();
 
-  // Always show core safety/telemetry PLC tags + station-specific tags
   const coreVars = [
     { k: 'bSafetyTrip', v: String(hmiState.bSafetyTrip), alarm: hmiState.bSafetyTrip },
     { k: 'nFanSpeedRef (%QW64)', v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
@@ -674,11 +739,11 @@ function renderDrawer() {
       (c) => `
       <div class="drawer-status-card" style="border-left: 4px solid ${c.passed ? '#22c55e' : '#ef4444'};">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-          <span style="font-size:0.78rem; font-weight:700; color:#94a3b8;">${c.title}</span>
-          <span style="font-size:0.75rem; font-weight:700; color:${c.passed ? '#4ade80' : '#f87171'};">${c.passed ? 'PASS' : 'FAIL'}</span>
+          <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted);">${c.title}</span>
+          <span style="font-size:0.75rem; font-weight:700; color:${c.passed ? '#16a34a' : '#dc2626'};">${c.passed ? 'PASS' : 'FAIL'}</span>
         </div>
-        <div style="font-weight:600; font-size:0.85rem; margin-top:4px; color:#f8fafc;">${c.meta}</div>
-        <div style="font-size:0.76rem; color:#cbd5e1; margin-top:2px;">${c.detail}</div>
+        <div style="font-weight:600; font-size:0.85rem; margin-top:4px; color:var(--text);">${c.meta}</div>
+        <div style="font-size:0.76rem; color:var(--text-muted); margin-top:2px;">${c.detail}</div>
       </div>
     `
     )
@@ -694,14 +759,14 @@ function renderDrawer() {
       const minCash = Number(wr.minimumWinterCashBalanceBdt ?? 0);
       const isSelected = key === activePolicyKey;
       return `
-        <tr style="${isSelected ? 'background: rgba(15, 118, 110, 0.25);' : ''}">
+        <tr style="${isSelected ? 'background: var(--accent-soft);' : ''}">
           <td><strong>${p.label}</strong></td>
           <td>${Number(op.annualFinishedTeaProducedKg ?? 0).toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</td>
           <td>${Number(op.averageDryerUtilizationPct ?? 0).toFixed(1)}%</td>
           <td>${Number(wr.winterOrderFulfillmentPct ?? 0).toFixed(1)}%</td>
           <td>${wr.winterStockoutDays ?? 0} days</td>
           <td>BDT ${Number(lc.averageAbsorptionCostBdtPerKg ?? 0).toFixed(2)}</td>
-          <td style="color:${minCash < 0 ? '#fca5a5' : '#86efac'}; font-weight:600;">BDT ${Math.round(minCash).toLocaleString()}</td>
+          <td style="color:${minCash < 0 ? '#dc2626' : '#16a34a'}; font-weight:600;">BDT ${Math.round(minCash).toLocaleString()}</td>
         </tr>
       `;
     })
@@ -709,19 +774,46 @@ function renderDrawer() {
 }
 
 function selectStation(stationId) {
-  if (stationId !== 'overview') {
-    activeStationId = stationId;
-    document.getElementById('leftHmiPanel').hidden = false;
-    document.getElementById('rightPlcPanel').hidden = false;
+  activeStationId = stationId;
+  const isOverview = stationId === 'overview';
+  document.getElementById('leftHmiPanel').hidden = isOverview;
+  document.getElementById('rightPlcPanel').hidden = isOverview;
+  document.getElementById('btnExitRoom').hidden = isOverview;
+
+  if (!isOverview) {
     renderStationPanels();
-  } else {
-    document.getElementById('leftHmiPanel').hidden = true;
-    document.getElementById('rightPlcPanel').hidden = true;
   }
   document.querySelectorAll('.zone-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.station === stationId);
   });
   renderHudAnd3D();
+}
+
+function exitRoomToOverview() {
+  if (scene3d) scene3d.focusStation('overview');
+  selectStation('overview');
+}
+
+function triggerActiveRoomFault() {
+  if (activeStationId === 'intake') {
+    hmiState.intakeQuarantine = true;
+  } else if (activeStationId === 'withering') {
+    hmiState.witherSensorFault = true;
+  } else if (activeStationId === 'dryer') {
+    hmiState.dryerTripped = true;
+    hmiState.rInletTempDegC = 122.5;
+  } else {
+    hmiState.airflowLossFault = true;
+  }
+  renderStationPanels();
+  renderHudAnd3D();
+}
+
+function ackAllAlarms() {
+  alarmList.forEach((alarm) => {
+    alarm.acked = true;
+  });
+  renderAlarmBanner();
 }
 
 function bindEvents() {
@@ -755,15 +847,29 @@ function bindEvents() {
     renderHudAnd3D();
   });
 
-  // ISA-18.2 Alarm ACK
-  document.getElementById('btnAckAlarm').addEventListener('click', () => {
-    alarmList.forEach((alarm) => {
-      alarm.acked = true;
-    });
-    renderAlarmBanner();
-  });
+  document.getElementById('btnExitRoom').addEventListener('click', exitRoomToOverview);
 
-  // Operating Mode & Safety Interlock Controls
+  // ISA-18.2 Alarm ACK (banner + left HMI panel)
+  document.getElementById('btnAckAlarm').addEventListener('click', ackAllAlarms);
+  document.getElementById('btnHmiAckAlarm').addEventListener('click', ackAllAlarms);
+
+  // Tactile Industrial Operator Buttons
+  document.getElementById('btnCmdRun').addEventListener('click', () => {
+    isPlaying = true;
+    document.getElementById('btnPlayPause').textContent = '⏸ Pause';
+    renderHudAnd3D();
+  });
+  document.getElementById('btnCmdStop').addEventListener('click', () => {
+    isPlaying = false;
+    document.getElementById('btnPlayPause').textContent = '▶ Play';
+    renderHudAnd3D();
+  });
+  document.getElementById('btnCmdAutoManual').addEventListener('click', () => {
+    hmiState.controlMode = hmiState.controlMode === 'AUTO' ? 'MANUAL' : 'AUTO';
+    renderHudAnd3D();
+  });
+  document.getElementById('btnCmdTestFault').addEventListener('click', triggerActiveRoomFault);
+
   document.getElementById('btnModeNormal').addEventListener('click', () => {
     hmiState.operatingMode = 'normal';
     renderHudAnd3D();
@@ -771,17 +877,6 @@ function bindEvents() {
   document.getElementById('btnModeWinter').addEventListener('click', () => {
     hmiState.operatingMode = 'winter';
     renderHudAnd3D();
-  });
-  document.getElementById('btnFaultOverTemp').addEventListener('click', () => {
-    hmiState.dryerTripped = true;
-    hmiState.rInletTempDegC = 122.5;
-    if (scene3d) scene3d.focusStation('dryer');
-    selectStation('dryer');
-  });
-  document.getElementById('btnFaultAirflow').addEventListener('click', () => {
-    hmiState.airflowLossFault = true;
-    if (scene3d) scene3d.focusStation('dryer');
-    selectStation('dryer');
   });
   document.getElementById('btnResetSafetyLatch').addEventListener('click', () => {
     hmiState.dryerTripped = false;
@@ -817,7 +912,7 @@ function bindEvents() {
   toggleBtn.addEventListener('click', () => setDrawerOpen(drawer.hidden));
   document.getElementById('btnCloseDrawer').addEventListener('click', () => setDrawerOpen(false));
 
-  // Horizontal wheel, touch swipe, and keyboard station navigation (0..5 + ArrowLeft/ArrowRight)
+  // Horizontal wheel, touch swipe, and keyboard navigation (0..5, Escape, ArrowLeft/Right)
   let lastStationStepAt = 0;
   const STATION_STEP_COOLDOWN_MS = 350;
 
@@ -888,6 +983,18 @@ function bindEvents() {
   };
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!drawer.hidden) {
+        setDrawerOpen(false);
+        return;
+      }
+      if (activeStationId !== 'overview') {
+        e.preventDefault();
+        exitRoomToOverview();
+      }
+      return;
+    }
+
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
     if (!drawer.hidden) return;
@@ -911,8 +1018,7 @@ async function init() {
   applyTheme(currentTheme, false);
   await loadFactorySnapshot();
   bindEvents();
-  renderStationPanels();
-  renderHudAnd3D();
+  selectStation('overview');
   renderDrawer();
 
   try {
