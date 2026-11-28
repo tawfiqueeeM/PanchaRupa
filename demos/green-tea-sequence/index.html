@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Green Tea Processing Sequence — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -256,5 +257,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-green-tea-sequence",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Green Tea Recipe & Scenario", "description": "Pick a recipe preset to see how fixation drum, roller, and dryer durations, temperatures, and yields change.", "highlightSelector": ".scenario-bar"}, {"title": "Observe Contention & Waiting Reasons", "description": "Step through the Drum \u2192 Roller \u2192 Dryer sequence and monitor resource contention states.", "highlightSelector": "main"}, {"title": "Reset or Export Trace", "description": "Use the header actions to reset the batch or export the Green Tea sequence log.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

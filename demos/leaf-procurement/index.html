@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Leaf Procurement & MRP Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -225,5 +226,15 @@
   </section>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-leaf-procurement",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Choose Procurement Scenario", "description": "Test 25% yield fresh-leaf demand calculation, buffer offset, late delivery shortage, or winter dormancy.", "highlightSelector": ".scenario-bar"}, {"title": "Inspect Yield & Buffer Offsets", "description": "Review net purchasing requirements and shortage alerts calculated from target finished tea demand.", "highlightSelector": "main"}, {"title": "Reset or Export Procurement Plan", "description": "Reset scenario parameters or export the procurement schedule from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

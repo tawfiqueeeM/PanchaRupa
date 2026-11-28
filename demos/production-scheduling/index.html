@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Production Scheduling & Machine Calendar</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -183,5 +184,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-production-scheduling",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Scheduling Scenario", "description": "Test a feasible 9-hour DAY-40 shift, shared roller/dryer mutual exclusion, or unplanned dryer outage.", "highlightSelector": ".scenario-bar"}, {"title": "Inspect Gantt & Bottleneck Makespan", "description": "Review changeover cleanup intervals, machine calendars, and shift feasibility indicators.", "highlightSelector": "main"}, {"title": "Reset or Export Schedule", "description": "Reset order quantities or export the production schedule from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

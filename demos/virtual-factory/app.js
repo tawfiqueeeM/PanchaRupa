@@ -1,3 +1,5 @@
+import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261202';
+
 const DEFAULT_STATIONS = [
   { id: 'intake', name: '1. Raw Leaf Reception & Diverter', shortName: 'Room 01: Intake' },
   { id: 'withering', name: '2. Climate-Controlled Withering Hall', shortName: 'Room 02: Withering' },
@@ -1156,7 +1158,7 @@ async function init() {
   renderDrawer();
 
   try {
-    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261201');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261202');
     renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;
@@ -1183,6 +1185,37 @@ async function init() {
   } catch (err) {
     console.warn('3D WebGL scene unavailable; HUD and snapshot data hydrated:', err);
   }
+
+  initDemoTour({
+    storageKey: 'pancharupa-tour-virtual-factory',
+    headerTargetSelector: '.hud-controls',
+    steps: [
+      {
+        title: 'Explore the 6-Room Tea Factory',
+        description:
+          'Drag to orbit, scroll to zoom, and right-drag to pan across all 6 compartmentalized rooms from Raw Leaf Reception (01) to Foil Packaging (06).',
+        highlightSelector: '#factory3dViewport',
+      },
+      {
+        title: 'Inspect Any Room (Click or 1–6)',
+        description:
+          'Click any room or press keys 1–6 to zoom in and open the Left Operator HMI Controls alongside the Right PLC Logic & Hardware Specs. Press Esc or Exit Room to return to Overview (0).',
+        highlightSelector: '.hud-bottom-bar',
+      },
+      {
+        title: 'Green vs. Golden Tea Priority Routing',
+        description:
+          'Path 01→03 runs Green Tea continuously while Room 02 accumulates withered leaf. Once Room 02 hits 250 kg (or you click Force Golden Batch), 01→03 pauses while Golden Tea feeds 02→03.',
+        highlightSelector: '#hudActiveRoute',
+      },
+      {
+        title: 'Controls, Alarms & Theme',
+        description:
+          'Use Play/Pause, 1×/2×/4× speed, Light/Dark mode, and DB/PLC/DES benchmarks in the top bar—or open any room to test safety interlocks and optical reject spikes (>8%).',
+        highlightSelector: '.hud-controls',
+      },
+    ],
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Inventory & Order Fulfillment Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -154,5 +155,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-inventory-and-fulfillment",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Inventory & Fulfillment Scenario", "description": "Switch between nominal DAY-40 allocation, over-allocation rejection, and held-lot dispatch blocking.", "highlightSelector": ".scenario-bar"}, {"title": "Reserve, Dispatch & Settle Lots", "description": "Track bulk and retail stock levels through the RESERVED \u2192 DISPATCHED \u2192 SETTLED lifecycle.", "highlightSelector": "main"}, {"title": "Reset or Export Inventory Ledger", "description": "Reset stock balances or export allocation records from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

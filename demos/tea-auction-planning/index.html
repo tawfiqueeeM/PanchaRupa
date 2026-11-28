@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Tea Auction Planning & Venue Optimization</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -141,5 +142,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-tea-auction-planning",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Auction Scenario", "description": "Compare the Three-Centre Baseline (Panchagarh, Sreemangal, Chattogram) against a Reserve Price Deficit RELIST gate.", "highlightSelector": "#scenarioSelect"}, {"title": "Adjust Lot Mass & Reserve Sliders", "description": "Drag the Catalogued Lot Mass and Floor Reserve Price sliders to recalculate net realization and break-even premiums.", "highlightSelector": ".panel-container"}, {"title": "Review KPIs & Venue Decision", "description": "Check Recommended Venue, Best Realized Net Price, and Chattogram Break-Even cards at the top.", "highlightSelector": ".auc-grid"}, {"title": "Reset or Export Valuation", "description": "Click Reset Scenario or Export JSON / CSV from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

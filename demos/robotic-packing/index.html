@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Robotic Packing Cell — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -208,5 +209,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-robotic-packing",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Robotic Cell Scenario", "description": "Choose 50g (12-bottle) carton packing, 100g format changeover, or interrupted pick fault recovery.", "highlightSelector": ".scenario-bar"}, {"title": "Execute Pick-Place & Safe Purge", "description": "Step the robotic arm through carton assembly, format changeover, and fault hold/purge recovery.", "highlightSelector": "main"}, {"title": "Reset or Export Cell Telemetry", "description": "Reset the robotic cell or export carton traceability logs from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

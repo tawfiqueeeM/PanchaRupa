@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Withering Airflow & Moisture Control — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -200,5 +201,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-withering-airflow",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Airflow & Humidity Scenario", "description": "Compare fan speed curves on identical batches, test ambient humidity sensitivity, or inject a moisture probe fault.", "highlightSelector": ".scenario-bar"}, {"title": "Tune VFD Fan Speed & Target Moisture", "description": "Adjust fan speed and target moisture to observe drying rate, energy use, and %QW64 cutoff behavior.", "highlightSelector": "main"}, {"title": "Reset or Export Withering Data", "description": "Reset the trough simulation or export telemetry from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

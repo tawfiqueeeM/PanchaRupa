@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Worker Shift Planning & Skills Matrix</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -129,5 +130,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-worker-shift-planning",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Crew Coverage Scenario", "description": "Test a full crew (100% coverage) against absent operators, double-booking overlaps, or skill mismatches.", "highlightSelector": ".scenario-bar"}, {"title": "Inspect Station Coverage & Violations", "description": "Review uncovered stations and concurrency/skill violation badges in real time.", "highlightSelector": "main"}, {"title": "Reset or Export Shift Roster", "description": "Reset the roster or export shift assignments from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

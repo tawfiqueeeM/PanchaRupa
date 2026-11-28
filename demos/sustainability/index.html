@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../../shared/css/tokens.css">
   <link rel="stylesheet" href="../../shared/css/base.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <div class="sustainability-dashboard">
@@ -171,5 +172,15 @@
   </div>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-sustainability",
+        headerTargetSelector: ".hero-banner",
+        steps: [{"title": "Select Thermodynamic Scenario", "description": "Switch between Nominal Production, Intake Quality Failure, and Queue Delay Deterioration.", "highlightSelector": "#scenarioSelect"}, {"title": "Compare Paired Replay (200 kg)", "description": "Click Compare Paired Replay to see energy waste and financial divergence under identical 200 kg input.", "highlightSelector": "#btnPairedReplay"}, {"title": "Inspect Mass & Energy Accounting", "description": "Review wet-mass conservation, waste energy attribution, and quality authority routing across the dashboard.", "highlightSelector": ".sustainability-dashboard"}, {"title": "Reset or Export Audit", "description": "Use Reset or Export CSV / JSON to save sustainability metrics.", "highlightSelector": ".controls-bar"}],
+      });
+    });
+  </script>
 </body>
 </html>

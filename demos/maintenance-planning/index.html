@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Maintenance Planning & Outage Impact</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -158,5 +159,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-maintenance-planning",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Maintenance Scenario", "description": "Compare a planned PM window (zero delay) against an unplanned dryer breakdown with queued WIP.", "highlightSelector": ".scenario-bar"}, {"title": "Create & Complete Work Orders", "description": "Open corrective work orders, inspect schedule impact, and complete them to restore asset availability.", "highlightSelector": "main"}, {"title": "Reset or Export Maintenance Log", "description": "Reset asset states or export work-order history from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

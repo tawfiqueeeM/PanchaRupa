@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Golden Tea Processing Sequence — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -241,5 +242,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-golden-tea-sequence",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Batch Eligibility & Sequence", "description": "Choose a Golden Tea scenario to test leaf eligibility gates and 4-stage progression (Withering \u2192 Rolling \u2192 Oxidation \u2192 Drying).", "highlightSelector": ".scenario-bar"}, {"title": "Advance Stages & Check Dryer Mutex", "description": "Step through sequence stages and observe how shared dryer mutual exclusion prevents concurrent batch ownership.", "highlightSelector": "main"}, {"title": "Reset or Export Sequence Log", "description": "Reset the sequence state or export the batch execution trace from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

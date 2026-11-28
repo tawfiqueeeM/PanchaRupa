@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grading & Routing Interlock — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -188,5 +189,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-grading-and-routing",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Choose a Grading & Routing Case", "description": "Select a scenario to test quality release gates (Hold vs. Released) and destination bin capacity interlocks.", "highlightSelector": ".scenario-bar"}, {"title": "Route Lots & Verify Mass Balance", "description": "Trigger routing actions to see full-bin rerouting recovery and strict quantity conservation across genealogy.", "highlightSelector": "main"}, {"title": "Reset or Export Routing Ledger", "description": "Reset the grading bins or export the routed lot ledger to JSON/CSV.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

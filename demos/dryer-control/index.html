@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tea Dryer Control & Fan Interlock — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -186,5 +187,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-dryer-control",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Pick a Drying Scenario", "description": "Switch between Nominal Drying (95\u00b0C SP) and Fan Proof Trip & Recovery using the scenario preset pills.", "highlightSelector": ".scenario-bar"}, {"title": "Monitor Chamber PV, SP & SCR Output", "description": "Watch Chamber Measured Temperature (PV), Target Setpoint (SP), and %QW60 SCR Heat Output modulate live.", "highlightSelector": ".dryer-cockpit"}, {"title": "Test Safety Trips & 3-Phase Reset", "description": "Trigger fan proof loss or over-temperature trips, then follow the strict 3-phase safety reset (clear fault, acknowledge, restart) or Reset Demo.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

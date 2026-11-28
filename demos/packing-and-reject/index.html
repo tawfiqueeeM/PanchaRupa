@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Packing & Reject Interlock — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -223,5 +224,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-packing-and-reject",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Dosing & Reject Scenario", "description": "Switch between nominal multi-format dosing and underfill reject exclusion scenarios.", "highlightSelector": ".scenario-bar"}, {"title": "Run Dosing & Check Mass Balance", "description": "Trigger container dosing, inspect rejected underfills, and verify strict mass-balance reconciliation.", "highlightSelector": "main"}, {"title": "Reset or Export Packing Ledger", "description": "Reset container IDs back to PK-0001 or export packing logs from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

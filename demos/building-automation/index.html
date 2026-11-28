@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa BMS & Building Automation Supervisor</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -187,5 +188,15 @@
   </section>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-building-automation",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select an Operational Scenario", "description": "Use the Operational Scenario dropdown to switch between nominal operations, ventilation proof loss, high humidity excursion, or stale Modbus meter watchdog timeout.", "highlightSelector": "#scenarioSelect"}, {"title": "Step Simulation & Toggle Faults", "description": "Click Step Time (+5 min) to advance telemetry, or use Toggle Fan Cmd and Simulate Proof Loss to test interlock trips and acknowledgements.", "highlightSelector": "#btnStepTime"}, {"title": "Inspect Live BMS Gauges", "description": "Watch AHU airflow, warehouse climate humidity, and Modbus energy readouts update in real time across the dashboard cards.", "highlightSelector": ".bms-grid"}, {"title": "Reset or Export Telemetry", "description": "Use Reset All to restore the nominal baseline or Export JSON / CSV from the top-right header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

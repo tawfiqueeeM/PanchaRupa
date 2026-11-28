@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaf Intake & Buffer Interlock — PanchaRupa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <header class="demo-header">
@@ -294,5 +295,15 @@
   </main>
 
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-leaf-intake",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Weighbridge Scenario", "description": "Choose nominal leaf acceptance, tare/gross validation error, downstream buffer interlock, or quality quarantine.", "highlightSelector": ".scenario-bar"}, {"title": "Compute Net Weight & Release Hopper", "description": "Adjust gross/tare weights and trigger weigh-in to verify idempotent delivery creation.", "highlightSelector": "main"}, {"title": "Reset or Export Intake Log", "description": "Reset the weighbridge state or export delivery records via the header buttons.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>

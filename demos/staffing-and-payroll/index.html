@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa Staffing, Payroll & Month 24 Financial Close</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
 </head>
 <body>
   <!-- Header -->
@@ -172,5 +173,15 @@
 
   <!-- Script -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initDemoTour } from "../../shared/js/demo-tour.js?v=20261202";
+    document.addEventListener("DOMContentLoaded", () => {
+      initDemoTour({
+        storageKey: "pancharupa-tour-staffing-and-payroll",
+        headerTargetSelector: ".demo-actions",
+        steps: [{"title": "Select Payroll & Attendance Scenario", "description": "Inspect shift meal calculations, multi-stage payroll approval, and Month 24 accrual vs. cash reconciliation.", "highlightSelector": ".scenario-bar"}, {"title": "Modify Shifts & Test Approval Reset", "description": "Edit attendance or overtime to see how post-authorization changes revoke approval and reset the stage.", "highlightSelector": "main"}, {"title": "Reset or Export Payroll Report", "description": "Reset payroll inputs or export statements from the header.", "highlightSelector": ".demo-actions"}],
+      });
+    });
+  </script>
 </body>
 </html>
