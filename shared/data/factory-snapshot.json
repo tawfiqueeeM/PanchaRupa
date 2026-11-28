@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-11-27T23:52:11.524954+00:00",
+  "generatedAt": "2026-11-28T00:00:36.144056+00:00",
   "overallStatus": "PASS",
   "checks": {
     "db": {
       "command": "python db/verify.py",
       "exitCode": 0,
       "passed": true,
-      "durationSeconds": 0.275,
+      "durationSeconds": 0.108,
       "output": [
         "OK: schema initialized, fixtures seeded, recursive CTE queries and FK/CHECK constraints verified."
       ]
@@ -15,7 +15,7 @@
       "command": "python plc/plc_verify.py",
       "exitCode": 0,
       "passed": true,
-      "durationSeconds": 0.603,
+      "durationSeconds": 0.3,
       "output": [
         "[PASS] Parsed & validated FB_DryerSafetyControl.st (IEC 61131-3 structure + addresses)",
         "[PASS] Parsed & validated FB_WitheringAirflowControl.st (IEC 61131-3 structure + addresses)",
@@ -31,7 +31,7 @@
       "command": "python sim/policies.py --seed 42 --replications 1000",
       "exitCode": 0,
       "passed": true,
-      "durationSeconds": 114.249
+      "durationSeconds": 113.343
     }
   },
   "simulation": {
@@ -39,7 +39,7 @@
       "experimentId": "EXP-EUROSIM-2027-BENCHMARK",
       "seed": 42,
       "replications": 1000,
-      "completedAt": "2026-11-27T23:52:11.513132+00:00"
+      "completedAt": "2026-11-28T00:00:36.131446+00:00"
     },
     "policies": {
       "fixed_standard": {
@@ -47,7 +47,7 @@
         "kpis": {
           "runSummary": {
             "experimentId": "EXP-EUROSIM-2027-FIXED_STANDARD",
-            "completedAt": "2026-11-27T23:50:53.831142+00:00",
+            "completedAt": "2026-11-27T23:59:12.845153+00:00",
             "totalSimulatedDays": 365
           },
           "operationalKpis": {
@@ -149,7 +149,7 @@
         "kpis": {
           "runSummary": {
             "experimentId": "EXP-EUROSIM-2027-FIXED_BUFFER",
-            "completedAt": "2026-11-27T23:51:19.330881+00:00",
+            "completedAt": "2026-11-27T23:59:39.305036+00:00",
             "totalSimulatedDays": 365
           },
           "operationalKpis": {
@@ -251,7 +251,7 @@
         "kpis": {
           "runSummary": {
             "experimentId": "EXP-EUROSIM-2027-SEASONAL_STANDARD",
-            "completedAt": "2026-11-27T23:51:45.146361+00:00",
+            "completedAt": "2026-11-28T00:00:08.067779+00:00",
             "totalSimulatedDays": 365
           },
           "operationalKpis": {
@@ -353,7 +353,7 @@
         "kpis": {
           "runSummary": {
             "experimentId": "EXP-EUROSIM-2027-SEASONAL_BUFFER",
-            "completedAt": "2026-11-27T23:52:11.511121+00:00",
+            "completedAt": "2026-11-28T00:00:36.128487+00:00",
             "totalSimulatedDays": 365
           },
           "operationalKpis": {

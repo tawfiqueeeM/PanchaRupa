@@ -93,59 +93,59 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--hud-bg);
+  border: 2px solid #475569;
+  background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(8px);
-  color: var(--text);
-  font-size: 0.72rem;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.15s ease, opacity 0.15s ease;
+  transition: border-color 0.15s ease, opacity 0.15s ease, transform 0.08s linear;
   white-space: nowrap;
-  box-shadow: var(--shadow-hud);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
 }
 
 .station-3d-label:hover {
-  border-color: var(--accent);
+  border-color: #38bdf8;
+}
+
+.station-3d-label--emerald {
+  border-color: #10b981;
+}
+
+.station-3d-label--gold {
+  border-color: #f59e0b;
+}
+
+.station-3d-label--alarm {
+  border-color: #ef4444;
 }
 
 .station-3d-label .label-name {
+  font-size: 13px;
   font-weight: 700;
-  color: var(--accent-text);
+  letter-spacing: 0.03em;
+  color: #ffffff;
 }
 
 .station-3d-label .label-metric {
-  font-size: 0.68rem;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
-.room02-buffer-badge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 5px 11px;
-  border-radius: 9999px;
-  border: 1.5px solid #0f766e;
-  background: var(--hud-bg);
-  color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.72rem;
-  font-weight: 800;
-  white-space: nowrap;
-  box-shadow: var(--shadow-hud);
-  pointer-events: none;
+.station-3d-label--emerald .label-metric {
+  color: #6ee7b7;
 }
 
-.room02-buffer-badge--active {
-  border-color: #d97706;
-  background: #fef3c7;
-  color: #92400e;
+.station-3d-label--gold .label-metric {
+  color: #fcd34d;
 }
 
-[data-theme="dark"] .room02-buffer-badge--active {
-  background: rgba(180, 83, 9, 0.92);
-  color: #fef3c7;
+.station-3d-label--alarm .label-metric {
+  color: #fca5a5;
 }
 
 /* ISA-18.2 Top Alarm Strip */

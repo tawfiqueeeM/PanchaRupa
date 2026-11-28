@@ -7,7 +7,7 @@ export const FACTORY_STATIONS = [
     order: 1,
     shortcut: '1',
     roomCode: 'ROOM 01',
-    zoneLabel: 'ROOM 01 · RECEPTION & DIVERTER (SC-01, DV-01A/B)',
+    pillTitle: '01 · INTAKE',
     name: '1. Raw Leaf Reception & Diverter',
     shortName: 'Room 01: Intake',
     x: -16,
@@ -20,7 +20,7 @@ export const FACTORY_STATIONS = [
     order: 2,
     shortcut: '2',
     roomCode: 'ROOM 02',
-    zoneLabel: 'ROOM 02 · WITHERING HALL · GOLDEN BUFFER (T-01..04)',
+    pillTitle: '02 · WITHERING',
     name: '2. Climate-Controlled Withering Hall',
     shortName: 'Room 02: Withering',
     x: -8,
@@ -33,7 +33,7 @@ export const FACTORY_STATIONS = [
     order: 3,
     shortcut: '3',
     roomCode: 'ROOM 03',
-    zoneLabel: 'ROOM 03 · FIXATION, ROLLING & OXIDATION (RL-01..02)',
+    pillTitle: '03 · ROLLING',
     name: '3. Fixation, Rolling & Oxidation Room',
     shortName: 'Room 03: Rolling',
     x: -12,
@@ -46,7 +46,7 @@ export const FACTORY_STATIONS = [
     order: 4,
     shortcut: '4',
     roomCode: 'ROOM 04',
-    zoneLabel: 'ROOM 04 · THERMAL DRYING · ATEX ZONE 22 (DR-01)',
+    pillTitle: '04 · DRYER',
     name: '4. Thermal Drying Room (ATEX Zone 22)',
     shortName: 'Room 04: Dryer',
     x: 0,
@@ -59,7 +59,7 @@ export const FACTORY_STATIONS = [
     order: 5,
     shortcut: '5',
     roomCode: 'ROOM 05',
-    zoneLabel: 'ROOM 05 · GRADING & OPTICAL SORTING (GR-01, OS-01, RJ-01)',
+    pillTitle: '05 · SORTING',
     name: '5. Vibratory Grading & Optical Sorting',
     shortName: 'Room 05: Sorting',
     x: 8,
@@ -72,7 +72,7 @@ export const FACTORY_STATIONS = [
     order: 6,
     shortcut: '6',
     roomCode: 'ROOM 06',
-    zoneLabel: 'ROOM 06 · CLEANROOM WEIGH-FILL & PACKAGING (PK-01)',
+    pillTitle: '06 · PACKAGING',
     name: '6. Cleanroom Weigh-Fill & Foil Packaging',
     shortName: 'Room 06: Packaging',
     x: 16,
@@ -82,10 +82,10 @@ export const FACTORY_STATIONS = [
   },
 ];
 
-// Elevated front-left corner bird's-eye view framing the L-shaped 6-room facility
+// Centered front-isometric Overview camera framing all 6 rooms with wide pill separation
 const OVERVIEW_CAMERA = {
-  pos: new THREE.Vector3(-27, 20.5, 22),
-  target: new THREE.Vector3(-1.5, 1.0, -1.0),
+  pos: new THREE.Vector3(-12, 24, 25),
+  target: new THREE.Vector3(0, 0, -1.5),
 };
 
 // Deterministic PRNG for repeatable procedural leaf textures
@@ -513,21 +513,54 @@ export function createFactory3D({
   path1Belt.receiveShadow = true;
   scene.add(path1Belt);
 
-  // 2) Path 2 (01->03) South belt along x=-16 (z=-5.5 to z=+3.5) — Green Tea Direct
-  const bypassBeltMat = new THREE.MeshStandardMaterial({ color: 0x15803d, metalness: 0.4, roughness: 0.5 });
+  // 2) Path 2 (01->03) South belt along x=-16 (z=-5.5 to z=+3.5) — Green Tea Direct + Flow Rails/Chevrons
+  const bypassBeltMat = new THREE.MeshStandardMaterial({
+    color: 0x10b981,
+    emissive: 0x10b981,
+    emissiveIntensity: 0.45,
+    transparent: true,
+    opacity: 0.95,
+    roughness: 0.4,
+  });
   const path2Belt = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.2, 9.2), bypassBeltMat);
   path2Belt.position.set(-16, 0.55, -1.0);
   path2Belt.castShadow = true;
   path2Belt.receiveShadow = true;
   scene.add(path2Belt);
 
-  // 3) Path 3 (02->03) South belt along x=-8 (z=-5.5 to z=+3.5) — Golden Tea Handover
-  const goldenBeltMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.45, roughness: 0.45 });
+  const path2Chevrons = [];
+  const chevronGeo = new THREE.ConeGeometry(0.18, 0.34, 3);
+  for (let c = 0; c < 4; c++) {
+    const chev = new THREE.Mesh(chevronGeo, bypassBeltMat);
+    chev.rotation.x = Math.PI / 2;
+    chev.position.set(-16, 0.68, -4.0 + c * 2.0);
+    scene.add(chev);
+    path2Chevrons.push(chev);
+  }
+
+  // 3) Path 3 (02->03) South belt along x=-8 (z=-5.5 to z=+3.5) — Golden Tea Handover + Flow Rails/Chevrons
+  const goldenBeltMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    emissive: 0x000000,
+    emissiveIntensity: 0.0,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.5,
+  });
   const path3Belt = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.2, 9.2), goldenBeltMat);
   path3Belt.position.set(-8, 0.55, -1.0);
   path3Belt.castShadow = true;
   path3Belt.receiveShadow = true;
   scene.add(path3Belt);
+
+  const path3Chevrons = [];
+  for (let c = 0; c < 4; c++) {
+    const chev = new THREE.Mesh(chevronGeo, goldenBeltMat);
+    chev.rotation.x = Math.PI / 2;
+    chev.position.set(-8, 0.68, -4.0 + c * 2.0);
+    scene.add(chev);
+    path3Chevrons.push(chev);
+  }
 
   // 4) Discharge (03->04) North-East belt from (-6, +3.5) to (0, -5.5)
   const dx34 = 6.0;
@@ -701,37 +734,6 @@ export function createFactory3D({
   let rollerClumps = [];
   let graderDeckGroup = null;
 
-  // Room Overhead Back-Wall Plaques & Front Floor Plaques
-  FACTORY_STATIONS.forEach((st) => {
-    const isDryer = st.id === 'dryer';
-    const isSorting = st.id === 'sorting';
-    const border = isDryer ? '#eab308' : isSorting ? '#0284c7' : '#0f766e';
-    const textCol = isDryer ? '#fde047' : '#f8fafc';
-
-    if (st.z < 0) {
-      const wallPlaque = new THREE.Mesh(
-        new THREE.PlaneGeometry(6.8, 0.95),
-        new THREE.MeshBasicMaterial({
-          map: createPlaqueTexture(st.zoneLabel, border, textCol),
-          transparent: true,
-        })
-      );
-      wallPlaque.position.set(st.x, 3.35, -9.84);
-      scene.add(wallPlaque);
-    }
-
-    const floorPlaque = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.2, 0.88),
-      new THREE.MeshBasicMaterial({
-        map: createPlaqueTexture(`${st.roomCode}: ${st.shortName.replace(/^Room \d+:\s*/, '').toUpperCase()}`, border, textCol),
-        transparent: true,
-      })
-    );
-    floorPlaque.rotation.x = -Math.PI / 2;
-    floorPlaque.position.set(st.x, 0.025, st.z + 3.25);
-    scene.add(floorPlaque);
-  });
-
   // Safety-Yellow ATEX Zone 22 Floor Perimeter around Dryer DR-01 in Room 04 (x = 0, z = -5.5)
   {
     const atexMat = new THREE.MeshBasicMaterial({ color: 0xeab308 });
@@ -752,17 +754,6 @@ export function createFactory3D({
       strip.position.set(b.x, 0.025, b.z);
       scene.add(strip);
     });
-
-    const atexSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.4, 0.62),
-      new THREE.MeshBasicMaterial({
-        map: createPlaqueTexture('ATEX ZONE 22 · DR-01', '#eab308', '#fde047'),
-        transparent: true,
-      })
-    );
-    atexSign.rotation.x = -Math.PI / 2;
-    atexSign.position.set(dx, 0.028, dz - 2.55);
-    scene.add(atexSign);
   }
 
   function makeHotspot(station) {
@@ -1274,20 +1265,13 @@ export function createFactory3D({
     upperEastBatches.push(b);
   }
 
-  // Prominent Animated Floating Counter Badge above Room 02
-  const room02CounterEl = document.createElement('div');
-  room02CounterEl.className = 'room02-buffer-badge';
-  room02CounterEl.textContent = 'GOLDEN BUFFER: 145 / 250 kg (58%)';
-  labelsContainer.appendChild(room02CounterEl);
-  const room02CounterAnchor = new THREE.Vector3(-8, 3.35, -5.5);
-
-  // Floating 3D Station Labels
+  // Single High-Contrast Dark Pill Per Room
   const labelEls = new Map();
   FACTORY_STATIONS.forEach((st) => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'station-3d-label';
-    el.innerHTML = `<span class="label-name">${st.roomCode} · ${st.shortName.replace(/^Room \d+:\s*/, '')}</span><span class="label-metric" data-station="${st.id}">Ready</span>`;
+    el.innerHTML = `<span class="label-name">${st.pillTitle}</span><span class="label-metric" data-station="${st.id}">Ready</span>`;
     el.addEventListener('click', () => {
       focusStation(st.id);
       if (onStationSelect) onStationSelect(st.id);
@@ -1296,7 +1280,7 @@ export function createFactory3D({
     labelEls.set(st.id, el);
   });
 
-  // Toggleable ISA-5.1 Instrument Callout Badges (6 Rooms)
+  // Toggleable ISA-5.1 Instrument Callout Badges (Hidden in Overview, shown only when zoomed into a room)
   const ISA_TAGS = [
     { id: 'SC-01', stationId: 'intake' },
     { id: 'FN-01', stationId: 'withering' },
@@ -1307,6 +1291,7 @@ export function createFactory3D({
   ];
   const tagEls = new Map();
   let showIsaTags = true;
+  let focusedStationId = 'overview';
 
   ISA_TAGS.forEach((tag) => {
     const el = document.createElement('div');
@@ -1338,6 +1323,7 @@ export function createFactory3D({
   }
 
   function focusStation(stationId) {
+    focusedStationId = stationId || 'overview';
     if (stationId === 'overview') {
       startTween(OVERVIEW_CAMERA.pos, OVERVIEW_CAMERA.target);
       return;
@@ -1690,30 +1676,64 @@ export function createFactory3D({
       el.style.pointerEvents = 'auto';
     });
 
-    // Project & update Room 02 floating Golden Buffer counter badge every frame
-    {
-      const pct = Math.min(100, Math.round((simState.witheringBufferKg / 250) * 100));
-      const kgStr = Math.round(simState.witheringBufferKg);
-      room02CounterEl.textContent = simState.goldenHandoverActive
-        ? `GOLDEN RUN: ${kgStr} / 250 kg — 01→03 PAUSED`
-        : `GOLDEN BUFFER: ${kgStr} / 250 kg (${pct}%)`;
-      room02CounterEl.classList.toggle('room02-buffer-badge--active', simState.goldenHandoverActive);
+      // Visual Flow Highlighting on Path 2 (01->03) vs Path 3 (02->03)
+      if (!isWinter && simState.goldenHandoverActive) {
+        bypassBeltMat.color.setHex(0x94a3b8);
+        bypassBeltMat.emissive.setHex(0x000000);
+        bypassBeltMat.emissiveIntensity = 0.0;
+        bypassBeltMat.opacity = 0.35;
 
-      projVec.copy(room02CounterAnchor).project(camera);
-      if (projVec.z > 1) {
-        room02CounterEl.style.opacity = '0';
+        goldenBeltMat.color.setHex(0xf59e0b);
+        goldenBeltMat.emissive.setHex(0xd97706);
+        goldenBeltMat.emissiveIntensity = 0.65;
+        goldenBeltMat.opacity = 0.95;
+      } else if (!isWinter) {
+        bypassBeltMat.color.setHex(0x10b981);
+        bypassBeltMat.emissive.setHex(0x059669);
+        bypassBeltMat.emissiveIntensity = 0.55;
+        bypassBeltMat.opacity = 0.95;
+
+        goldenBeltMat.color.setHex(0x94a3b8);
+        goldenBeltMat.emissive.setHex(0x000000);
+        goldenBeltMat.emissiveIntensity = 0.0;
+        goldenBeltMat.opacity = 0.35;
       } else {
-        const rx = (projVec.x * 0.5 + 0.5) * cw;
-        const ry = (-projVec.y * 0.5 + 0.5) * ch;
-        room02CounterEl.style.transform = `translate(-50%, -100%) translate(${rx.toFixed(1)}px, ${ry.toFixed(1)}px)`;
-        room02CounterEl.style.opacity = '1';
+        bypassBeltMat.color.setHex(0x94a3b8);
+        bypassBeltMat.emissiveIntensity = 0.0;
+        bypassBeltMat.opacity = 0.35;
+        goldenBeltMat.color.setHex(0x94a3b8);
+        goldenBeltMat.emissiveIntensity = 0.0;
+        goldenBeltMat.opacity = 0.35;
       }
-    }
 
-    if (showIsaTags) {
+      // Live Room 02 Pill Counter & Room 03 Active Source Pill Border
+      const r2Pill = labelEls.get('withering');
+      if (r2Pill) {
+        const kgStr = Math.round(simState.witheringBufferKg);
+        const metricEl = r2Pill.querySelector('.label-metric');
+        if (metricEl && !simState.stationAlarms.withering && !isWinter) {
+          metricEl.textContent = simState.goldenHandoverActive
+            ? `${kgStr} / 250 kg · FEEDING R03 · 01→03 PAUSED`
+            : `${kgStr} / 250 kg`;
+        }
+        r2Pill.classList.toggle('station-3d-label--emerald', !simState.goldenHandoverActive && !simState.stationAlarms.withering);
+        r2Pill.classList.toggle('station-3d-label--gold', simState.goldenHandoverActive && !simState.stationAlarms.withering);
+        r2Pill.classList.toggle('station-3d-label--alarm', Boolean(simState.stationAlarms.withering));
+      }
+      const r3Pill = labelEls.get('rolling');
+      if (r3Pill) {
+        r3Pill.classList.toggle('station-3d-label--emerald', !simState.goldenHandoverActive && !isWinter);
+        r3Pill.classList.toggle('station-3d-label--gold', simState.goldenHandoverActive && !isWinter);
+      }
+
+      // Hide ISA-5.1 sensor tags in Overview (0); show only when zoomed into that specific room (1-6)
       tagEls.forEach(({ el, stationId }) => {
         const anchor = tagAnchors.get(stationId);
-        if (!anchor) return;
+        const visibleInRoom = showIsaTags && focusedStationId === stationId;
+        if (!anchor || !visibleInRoom) {
+          el.style.opacity = '0';
+          return;
+        }
         projVec.copy(anchor).project(camera);
         if (projVec.z > 1) {
           el.style.opacity = '0';
@@ -1724,7 +1744,6 @@ export function createFactory3D({
         el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
         el.style.opacity = '1';
       });
-    }
   }
 
   function setTheme(mode = 'light') {

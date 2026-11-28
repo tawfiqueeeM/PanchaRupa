@@ -543,24 +543,28 @@ function renderHudAnd3D() {
           ? 'QUARANTINE HOLD'
           : isWinter
             ? 'WINTER STANDBY · 0 kg/d'
-            : `${dailyIntake} kg/d · ${hmiState.bGoldenBatchActive ? 'DV-01B CLOSED' : 'BYPASS 01→03'}`,
+            : `${dailyIntake} kg/d · GREEN/GOLDEN SPLIT`,
         withering: hmiState.witherSensorFault
           ? '%Q3.3 SENSOR FAULT'
           : isWinter
             ? 'STANDBY · Fan 0%'
-            : `${hmiState.witheringBufferKg.toFixed(0)}/250 kg · ${hmiState.bGoldenBatchActive ? 'HANDOVER 02→03' : `Fan ${effectiveFanPct}%`}`,
+            : hmiState.bGoldenBatchActive
+              ? `${Math.round(hmiState.witheringBufferKg)} / 250 kg · FEEDING R03 · 01→03 PAUSED`
+              : `${Math.round(hmiState.witheringBufferKg)} / 250 kg`,
         rolling: isWinter
           ? 'STANDBY · Idle'
-          : `${hmiState.bGoldenBatchActive ? 'GOLDEN TEA' : 'GREEN TEA'} · ${hmiState.rollPressureBar.toFixed(1)} bar`,
+          : hmiState.bGoldenBatchActive
+            ? 'ACTIVE: GOLDEN (02→03)'
+            : 'ACTIVE: GREEN (01→03)',
         dryer: hmiState.bSafetyTrip
           ? '%Q3.1 SAFETY TRIP'
           : isWinter
-            ? 'STANDBY · 22.0°C'
-            : `${hmiState.rInletTempDegC.toFixed(0)}°C · ${dryerUtil.toFixed(1)}% util`,
+            ? 'STANDBY · 22°C'
+            : `${hmiState.rInletTempDegC.toFixed(0)}°C · 3% MOISTURE`,
         sorting: hmiState.rejectSpikeActive
-          ? `ALM-502 · ${hmiState.rRejectRatePct.toFixed(1)}% REJECT`
-          : `OS-01 · ${hmiState.rRejectRatePct.toFixed(1)}% Reject`,
-        warehouse: `${stockKg.toLocaleString()} kg · BDT ${Math.round(wr.minimumWinterCashBalanceBdt ?? 0).toLocaleString()}`,
+          ? `ALM-502 · ${hmiState.rRejectRatePct.toFixed(1)}% REJECT → RJ-01`
+          : `${hmiState.rRejectRatePct.toFixed(1)}% REJECT → RJ-01`,
+        warehouse: `${stockKg.toLocaleString()} kg · 250g POUCHES`,
       },
       isaTagValues: {
         'SC-01': hmiState.intakeQuarantine ? 'HOLD' : `${dailyIntake} kg/d`,
@@ -1152,7 +1156,7 @@ async function init() {
   renderDrawer();
 
   try {
-    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261130');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261201');
     renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;
