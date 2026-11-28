@@ -14,7 +14,7 @@ PanchaRupa Specialty Tea Facility operates in Panchagarh District (northern Bang
 1. **Database & Lot Genealogy Layer (`db/`):** SQLite schema (`db/schema.sql`) with `CHECK` and foreign-key constraints plus recursive Common Table Expression (CTE) queries (`db/queries.sql`) tracing every finished pack back to its smallholder supplier and delivery lot.
 2. **Industrial PLC Controls Layer (`plc/`):** Deterministic IEC 61131-3 Structured Text (`ST`) function blocks for Withering Airflow (`FB_WitheringAirflowControl.st`) and Dryer Safety (`FB_DryerSafetyControl.st`), verified scan-by-scan by `plc/plc_verify.py`.
 3. **Discrete-Event Simulation Layer (`sim/`):** Paired-seed Monte Carlo engine (`sim/factory_des.py`, `sim/policies.py`) evaluating 4 crossed staffing × inventory policies over 365-day horizons (`N = 1,000` replications, seed `42`), capturing monsoon peaks and the Jan–Feb winter dormancy (`0.0 kg/day` fresh leaf intake).
-4. **3D Interactive Operator HMI (`demos/virtual-factory/`):** Full-viewport Three.js 3D factory floor with eye-level `OrbitControls`, clickable station hotspots, dual-sided Operator HMI and live IEC 61131-3 code panels, and cross-layer telemetry hydrated from `shared/data/factory-snapshot.json`.
+4. **3D Interactive Operator HMI (`demos/virtual-factory/`):** Full-viewport Three.js 6-room L-shaped digital twin with ISA-101 / ISA-18.2 / ISA-5.1 High-Performance HMI, Light/Dark mode, dual-line Green/Golden Tea XOR priority routing, optical/vibratory sorting (`GR-01`, `OS-01`, `RJ-01`), a 4-vendor IEC 61131-3 Target Control Platform Switcher (`?vendor=siemens|abb|beckhoff|rockwell`), and a reusable step-by-step `How to Use` tour (`shared/js/demo-tour.js`) across all 20 demos.
 
 ### Scale-Up Progression Summary
 
@@ -27,43 +27,47 @@ PanchaRupa Specialty Tea Facility operates in Panchagarh District (northern Bang
 
 ---
 
-## 2. Factory Floor Plan & Mass / Moisture Balance
+## 2. 6-Room L-Shaped Factory Floor Plan, XOR Priority Routing & Mass Balance
 
-### 2.1 ASCII Factory Floor Plan (Zones 1–5)
+### 2.1 ASCII L-Shaped Two-Tier Floor Plan (Rooms 01–06)
 
 ```text
-+---------------------------------------------------------------------------------------------------+
-|                        PANCHARUPA SPECIALTY TEA FACILITY — FLOOR PLAN (5 ZONES)                   |
-|                                                                                                   |
-|  [ZONE 1: INTAKE DOCK]     [ZONE 2: WITHERING]     [ZONE 3: ROLLING]     [ZONE 4: DRYER LINE]    |
-|  +--------------------+    +------------------+    +---------------+    +--------------------+    |
-|  | Weighbridge Scale  |    | Trough A (%QW64) |    | Roller Drum 1 |    | Fluidized-Bed      |    |
-|  | Load Cell (4-20mA) |--->| Trough B (%QW64) |--->| Roller Drum 2 |--->| Dryer (%QW60 SCR)  |    |
-|  | Quarantine Gate    |    | Fans + %IW70 RH  |    | Oxidation Bed |    | PT100 (%IW60)      |    |
-|  +--------------------+    +------------------+    +---------------+    +---------+----------+    |
-|                                                                                   |               |
-|  ==================== SAFETY WALKWAY & INTER-STATION CONVEYOR =================== | ============= |
-|                                                                                   v               |
-|                                                                     [ZONE 5: PACKAGING & WHS]     |
-|                                                                     +--------------------------+  |
-|                                                                     | Grading & Dosing Cell    |  |
-|                                                                     | 50g / 100g / 50kg Sacks  |  |
-|                                                                     | Pre-Winter Buffer Racks  |  |
-|                                                                     +--------------------------+  |
-+---------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------+
+|                 PANCHARUPA SPECIALTY TEA FACILITY — L-SHAPED 6-ROOM FLOOR PLAN (ISA-101)                 |
+|                                                                                                          |
+|  [ROOM 01: INTAKE]      [ROOM 02: WITHERING]      [ROOM 04: DRYER]       [ROOM 05: SORTING]   [ROOM 06]  |
+|  SC-01, DV-01A/B  -----> T-01..04, FN-01..04      ATEX Zone 22 (DR-01) -> GR-01, OS-01     -> PK-01     |
+|  (Path 1: 01->02)       (250 kg Golden Buffer)    TT-401/402, FS-401     RJ-01 Reject Bin     250g Foil  |
+|        |                          |                        ^             (ALM-502 >8.0%)      Pouches    |
+|        | Path 2: 01->03           | Path 3: 02->03         |                                             |
+|        | (Green Tea Direct)       | (Golden Handover)      | Discharge (03->04)                          |
+|        v                          v                        |                                             |
+|  +----------------------------------------------------+    |                                             |
+|  | ROOM 03 (FRONT BAY): FIXATION, ROLLING & OXIDATION |----+                                             |
+|  | RL-01..02 · Strict XOR Single-Source Infeed        |                                                  |
+|  | (01->03 pauses automatically when 02->03 active)   |                                                  |
+|  +----------------------------------------------------+                                                  |
++----------------------------------------------------------------------------------------------------------+
 ```
 
-### 2.2 Stage-by-Stage Mass & Moisture Balance (4.2:1 Wet-to-Dry Ratio)
+### 2.2 Strict Single-Source (XOR) Batch Priority Interlock & 4-Vendor Target Architecture
+
+- **Strict Single-Source (XOR) Roller Interlock (`bGoldenBatchActive`):** Room 03 never receives from Room 01 and Room 02 simultaneously. While Room 02 accumulates withered Golden Tea leaves (`rWitheringBufferKg < 250 kg`), **Path 2 (`01→03`)** feeds fresh green shoots directly into Room 03 and gate `DG-02` remains closed. Once `rWitheringBufferKg >= 250 kg`, `bGoldenBatchActive` latches `TRUE`, diverter `DV-01B` closes to pause `01→03`, and **Path 3 (`02→03`)** discharges the Golden Tea batch until empty (`250 → 0 kg`) before resuming `01→03`.
+- **Optical Color Sorting & Reject Interlock (Room 05):** Vibratory grader `GR-01` and RGB optical sorter `OS-01` divert pale stalks and scorched dust into `RJ-01` (`3.2%` nominal reject rate), raising ISA-18.2 alarm `ALM-502` if reject rate exceeds `8.0%`.
+- **Portable IEC 61131-3 4-Vendor Architecture:** Benchmarked on **Siemens S7-1500 / S7-1512SP F-1 PN** (`SINAMICS G120`, `PROFINET / PROFIsafe`) and mapped to **ABB AC500 V3 + SM560-S** (`ACS580`, `System 800xA` OPC UA, `TTH300` / `266DSH`), **Beckhoff CX5240 + TwinSAFE EL6910** (`TwinCAT 3`, `AX5000`, `EtherCAT / FSoE`), and **Rockwell GuardLogix 5380** (`PowerFlex 525` STO, `EtherNet/IP / CIP Safety`).
+
+### 2.3 Stage-by-Stage Mass & Moisture Balance (4.2:1 Wet-to-Dry Ratio)
 
 For a canonical `1,000 kg` finished dry tea monthly design target (`4,200 kg` fresh green leaf intake at `4.2:1` wet-to-dry ratio, `23.81%` net dry yield; DES standard outturn parameter `0.25` for `4.0:1` sensitivity runs):
 
-| Stage | Zone | Input Mass (kg) | Moisture In (%) | Moisture Out (%) | Moisture / Trim Loss (kg) | Output Mass (kg) | Key Process Target |
+| Stage | Room | Input Mass (kg) | Moisture In (%) | Moisture Out (%) | Moisture / Trim Loss (kg) | Output Mass (kg) | Key Process Target |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1. Leaf Intake & Cleaning | Zone 1 | `4,200.0` | `78.0%` | `77.5%` | `93.3` (foreign matter / surface) | `4,106.7` | `gross > tare`, `SUPPLIER -> DELIVERY` |
-| 2. Withering | Zone 2 | `4,106.7` | `77.5%` | `65.0%` | `1,466.7` (evaporated) | `2,640.0` | Cutoff at `rLeafMoisturePct <= 65.0%` |
-| 3. Rolling & Oxidation | Zone 3 | `2,640.0` | `65.0%` | `62.0%` | `208.4` (cell sap / evap.) | `2,431.6` | `35 min` rolling + controlled oxidation |
-| 4. Fluidized-Bed Drying | Zone 4 | `2,431.6` | `62.0%` | `3.5%` | `1,473.9` (thermal moisture) | `957.7` (or `1,000.0` @ `4.2:1` net) | `95.0 °C` SP; runaway trip `>= 140.0 °C` |
-| 5. Grading & Packaging | Zone 5 | `1,000.0` | `3.5%` | `3.5%` | `0.0` (underfill recycled) | `1,000.0` | `50g` jars, `100g` bottles, `50kg` sacks |
+| 1. Leaf Intake & Diverter | Room 01 | `4,200.0` | `78.0%` | `77.5%` | `93.3` (foreign matter / surface) | `4,106.7` | `SC-01` (`gross > tare`), `DV-01A/B` split |
+| 2. Withering (Golden Buffer) | Room 02 | `4,106.7` | `77.5%` | `68.0%` | `1,466.7` (evaporated) | `2,640.0` | `250 kg` batch threshold; cutoff `<= 65.0%` |
+| 3. Fixation, Rolling & Oxidation | Room 03 | `2,640.0` | `68.0%` | `65.0%` | `208.4` (cell sap / evap.) | `2,431.6` | XOR single-source (`01→03` or `02→03`) |
+| 4. Thermal Drying (ATEX Z22) | Room 04 | `2,431.6` | `65.0%` | `3.0%` | `1,473.9` (thermal moisture) | `957.7` (or `1,000.0` @ `4.2:1` net) | `95.0 °C` SP; runaway trip `>= 115/140 °C` |
+| 5. Vibratory & Optical Sorting | Room 05 | `1,033.0` | `3.0%` | `3.0%` | `33.0` (`3.2%` nominal to `RJ-01`) | `1,000.0` | `GR-01` + `OS-01`; `ALM-502` at `> 8.0%` |
+| 6. Cleanroom Weigh-Fill & Pack | Room 06 | `1,000.0` | `3.0%` | `3.0%` | `0.0` (underfill recycled) | `1,000.0` | `PK-01` `250g` kraft-and-foil pouches |
 
 ---
 

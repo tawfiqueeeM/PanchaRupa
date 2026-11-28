@@ -39,9 +39,9 @@ Engineering documentation for the Panchagarh virtual tea factory and operating b
 
 - [26-Week Industrial Training & Engineering Report](docs/INTERNSHIP_REPORT.md) — Complete scale-up documentation, floor plan, mass/moisture balance, electrical single-line diagram, P&IDs, SQL lot genealogy, and `N=1,000` Monte Carlo benchmarks.
 
-### Live 3D Virtual Factory HMI
+### Live 3D Virtual Factory HMI (6-Room L-Shaped Digital Twin)
 
-Serve the repository over HTTP and open `/demos/virtual-factory/` in your browser:
+Serve the repository over HTTP and open `/demos/virtual-factory/` in your browser (supports `?vendor=siemens|abb|beckhoff|rockwell` deep-links, ISA-101/18.2/5.1 High-Performance HMI, XOR Green/Golden Tea routing, optical sorting `RJ-01`, and the shared `How to Use` tour in `shared/js/demo-tour.js`):
 
 ```bash
 python -m http.server 8080
@@ -65,7 +65,7 @@ python -m http.server 8080
 | `11` | Inventory & Fulfillment | Dept 2 · Warehouse WMS, Quality Hold, Order Settlement | https://tawfiqueeem.github.io/PanchaRupa/demos/inventory-and-fulfillment/ |
 | `12` | Costing, Margins & Break-Even | Dept 7 · Absorption Cost (`BDT 181.63`), Break-Even | https://tawfiqueeem.github.io/PanchaRupa/demos/costing-and-margin/ |
 | `13` | Preventive Maintenance | Dept 2 · CMMS Orders, Runtime Hours, Outage Isolation | https://tawfiqueeem.github.io/PanchaRupa/demos/maintenance-planning/ |
-| `14` | Integrated Virtual Factory Simulator (3D Capstone) | Dept 5 · Three.js 3D Digital Twin, DB/PLC/DES Snapshot | https://tawfiqueeem.github.io/PanchaRupa/demos/virtual-factory/ |
+| `14` | Integrated Virtual Factory Simulator (3D Capstone) | Dept 5 · 6-Room L-Shaped Three.js Twin, XOR Routing, 4-Vendor PLC Switcher | https://tawfiqueeem.github.io/PanchaRupa/demos/virtual-factory/ |
 | `15` | Delta Robot Packing Cell | Dept 4 · Delta Kinematics, Carton Changeover, Fault Recovery | https://tawfiqueeem.github.io/PanchaRupa/demos/robotic-packing/ |
 | `16` | Factory Data Platform | Dept 3 · Relational DDL, Foreign Keys, Lot Genealogy | https://tawfiqueeem.github.io/PanchaRupa/demos/factory-data/ |
 | `17` | Sustainability & Waste Balance | Dept 4 · Mass Balance, Biomass Furnace, Energy Waste | https://tawfiqueeem.github.io/PanchaRupa/demos/sustainability/ |

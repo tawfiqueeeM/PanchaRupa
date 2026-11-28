@@ -1,4 +1,4 @@
-import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261205';
+import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261206';
 
 const DEFAULT_STATIONS = [
   { id: 'intake', name: '1. Raw Leaf Reception & Diverter', shortName: 'Room 01: Intake' },
@@ -158,10 +158,19 @@ let factorySnapshot = FALLBACK_SNAPSHOT;
 let snapshotIsLive = false;
 let activePolicyKey = 'seasonal_buffer';
 let activeStationId = 'overview';
-let activeVendor = 'siemens';
+const SUPPORTED_VENDORS = ['siemens', 'abb', 'beckhoff', 'rockwell'];
+let activeVendor = (() => {
+  try {
+    const q = (new URLSearchParams(window.location.search).get('vendor') || '').trim().toLowerCase();
+    return SUPPORTED_VENDORS.includes(q) ? q : 'siemens';
+  } catch {
+    return 'siemens';
+  }
+})();
 
 const VENDOR_PROFILES = {
   siemens: {
+    topLabel: 'Target Architecture: Siemens S7-1500',
     badge: 'Field Baseline · TIA Portal',
     isBaseline: true,
     protocols: ['PROFINET / PROFIsafe', 'TIA Portal V19', '%I / %QW Addressing'],
@@ -217,6 +226,7 @@ const VENDOR_PROFILES = {
     },
   },
   abb: {
+    topLabel: 'Target Architecture: ABB AC500 V3 / System 800xA',
     badge: 'Target Port · Automation Builder / 800xA',
     isBaseline: false,
     protocols: ['PROFINET / PROFIsafe', 'System 800xA / AC 800M OPC UA', '%IX / %QW Addressing'],
@@ -272,6 +282,7 @@ const VENDOR_PROFILES = {
     },
   },
   beckhoff: {
+    topLabel: 'Target Architecture: Beckhoff CX5240 / TwinCAT 3',
     badge: 'Target Port · TwinCAT 3 / EtherCAT',
     isBaseline: false,
     protocols: ['EtherCAT / FSoE', 'TwinCAT 3', 'AT %I* / AT %Q* Symbolic'],
@@ -327,6 +338,7 @@ const VENDOR_PROFILES = {
     },
   },
   rockwell: {
+    topLabel: 'Target Architecture: Rockwell GuardLogix 5380',
     badge: 'Target Port · Studio 5000 / GuardLogix',
     isBaseline: false,
     protocols: ['EtherNet/IP / CIP Safety', 'Studio 5000 Logix Designer', 'Local:1:I.Data Tags'],
@@ -1148,13 +1160,7 @@ function selectStation(stationId) {
   }
   document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
-      activeVendor = tab.dataset.vendor || 'siemens';
-      document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((t) => {
-        const isAct = t.dataset.vendor === activeVendor;
-        t.classList.toggle('active', isAct);
-        t.setAttribute('aria-selected', String(isAct));
-      });
-      renderStationPanels();
+      setActiveVendor(tab.dataset.vendor || 'siemens', true);
     });
   });
 
@@ -1192,6 +1198,35 @@ function ackAllAlarms() {
     alarm.acked = true;
   });
   renderAlarmBanner();
+}
+
+function setActiveVendor(vendorId, updateUrl = false) {
+  const normalized = SUPPORTED_VENDORS.includes(vendorId) ? vendorId : 'siemens';
+  activeVendor = normalized;
+  const vendor = VENDOR_PROFILES[activeVendor] || VENDOR_PROFILES.siemens;
+
+  const hudVendorEl = document.getElementById('hudVendorBadge');
+  if (hudVendorEl) {
+    hudVendorEl.textContent = vendor.topLabel;
+  }
+
+  document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((t) => {
+    const isAct = t.dataset.vendor === activeVendor;
+    t.classList.toggle('active', isAct);
+    t.setAttribute('aria-selected', String(isAct));
+  });
+
+  if (updateUrl && window.history?.replaceState) {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('vendor', activeVendor);
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // Ignore URL update errors
+    }
+  }
+
+  renderStationPanels();
 }
 
 function bindEvents() {
@@ -1270,13 +1305,7 @@ function bindEvents() {
 
   document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
-      activeVendor = tab.dataset.vendor || 'siemens';
-      document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((t) => {
-        const isAct = t.dataset.vendor === activeVendor;
-        t.classList.toggle('active', isAct);
-        t.setAttribute('aria-selected', String(isAct));
-      });
-      renderStationPanels();
+      setActiveVendor(tab.dataset.vendor || 'siemens', true);
     });
   });
 
@@ -1420,6 +1449,7 @@ async function init() {
   applyTheme(currentTheme, false);
   await loadFactorySnapshot();
   bindEvents();
+  setActiveVendor(activeVendor, false);
   selectStation('overview');
   renderDrawer();
 
