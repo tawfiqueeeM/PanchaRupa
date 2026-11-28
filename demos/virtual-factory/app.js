@@ -1,4 +1,4 @@
-import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261204';
+import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261205';
 
 const DEFAULT_STATIONS = [
   { id: 'intake', name: '1. Raw Leaf Reception & Diverter', shortName: 'Room 01: Intake' },
@@ -1407,6 +1407,15 @@ function bindEvents() {
   });
 }
 
+function syncTopbarHeight() {
+  const topBar = document.querySelector('.hud-top-bar');
+  if (!topBar) return;
+  const rect = topBar.getBoundingClientRect();
+  if (rect.bottom > 0) {
+    document.documentElement.style.setProperty('--topbar-height', `${Math.ceil(rect.bottom)}px`);
+  }
+}
+
 async function init() {
   applyTheme(currentTheme, false);
   await loadFactorySnapshot();
@@ -1414,8 +1423,16 @@ async function init() {
   selectStation('overview');
   renderDrawer();
 
+  const topBar = document.querySelector('.hud-top-bar');
+  if (topBar && typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(syncTopbarHeight);
+    ro.observe(topBar);
+  }
+  window.addEventListener('resize', syncTopbarHeight);
+  syncTopbarHeight();
+
   try {
-    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261204');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261205');
     renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;

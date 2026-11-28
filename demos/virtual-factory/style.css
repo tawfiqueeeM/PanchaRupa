@@ -1,4 +1,5 @@
 :root {
+  --topbar-height: 116px;
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-alt: #f1f5f9;
@@ -424,8 +425,8 @@ body {
 /* Dual-Sided Engineering Showcase Panels (Left: HMI, Right: PLC Code) */
 .side-panel {
   position: fixed;
-  top: 108px;
-  bottom: 68px;
+  top: calc(var(--topbar-height) + 8px);
+  bottom: 64px;
   width: 348px;
   max-width: calc(100vw - 24px);
   z-index: 19;
@@ -456,7 +457,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 14px 16px 10px;
   background: var(--surface-alt);
   border-bottom: 1px solid var(--border);
 }
@@ -928,10 +929,10 @@ body {
 /* Collapsible Verification Drawer */
 .verification-drawer {
   position: fixed;
-  top: 108px;
+  top: calc(var(--topbar-height) + 8px);
   left: 12px;
   right: 12px;
-  bottom: 66px;
+  bottom: 64px;
   z-index: 30;
   overflow-y: auto;
   background: var(--panel-bg);
