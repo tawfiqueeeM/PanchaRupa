@@ -1,4 +1,4 @@
-import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261202';
+import { initDemoTour } from '../../shared/js/demo-tour.js?v=20261204';
 
 const DEFAULT_STATIONS = [
   { id: 'intake', name: '1. Raw Leaf Reception & Diverter', shortName: 'Room 01: Intake' },
@@ -158,6 +158,230 @@ let factorySnapshot = FALLBACK_SNAPSHOT;
 let snapshotIsLive = false;
 let activePolicyKey = 'seasonal_buffer';
 let activeStationId = 'overview';
+let activeVendor = 'siemens';
+
+const VENDOR_PROFILES = {
+  siemens: {
+    badge: 'Field Baseline · TIA Portal',
+    isBaseline: true,
+    protocols: ['PROFINET / PROFIsafe', 'TIA Portal V19', '%I / %QW Addressing'],
+    addr: (tag) => {
+      const map = {
+        fan: 'nFanSpeedRef (%QW64)',
+        temp: 'rInletTemp (%IW60 / TT-401)',
+        hopper: 'bHopperRelease AT %Q1.0',
+        probeFault: 'bSensorFault AT %Q3.3',
+        heatCmd: 'rHeatCmdPercent (%QW60)',
+        airflow: 'bAirflowProof (%I3.0 / FS-401)',
+        beacon: 'bAlarmBeacon AT %Q3.1',
+      };
+      return map[tag] || tag;
+    },
+    rooms: {
+      intake: [
+        { k: 'PLC / I/O', v: 'Siemens S7-1214C DC/DC/DC · ET 200SP' },
+        { k: 'Load Cell & Diverters', v: 'Mettler Toledo SC-01 · Pneumatic DV-01A/B' },
+        { k: 'VFD / Drive', v: 'SINAMICS G120C (1.5 kW Intake + Bypass)' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET · %I1.0 / %Q1.0' },
+      ],
+      withering: [
+        { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · ET 200SP Remote I/O' },
+        { k: 'VFD & Motors', v: '4× SINAMICS G120 (FN-01..04, 2.2 kW Axial)' },
+        { k: 'Sensors', v: 'Capacitive Moisture (%IW70) · Buffer (250 kg)' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET · %QW64 / %Q3.3' },
+      ],
+      rolling: [
+        { k: 'PLC / I/O', v: 'Siemens S7-1511-1 PN · SIRIUS 3SK1 Safety' },
+        { k: 'Drives & Motors', v: '2× SINAMICS G120 + 5.5 kW Brass Rollers' },
+        { k: 'Instrumentation', v: 'Pneumatic Regulator (0–6 bar) + RH%' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET / OPC UA · %I2.x / %Q2.x' },
+      ],
+      dryer: [
+        { k: 'Fail-Safe PLC', v: 'Siemens S7-1512SP F-1 PN (SIL 2 / PL d)' },
+        { k: 'Sensors', v: '2× PT100 RTD (TT-401/402, %IW60) · FS-401 (%I3.0)' },
+        { k: 'Heater Control', v: '3-Ph SCR Thyristor (%QW60, 36 kW) + Stack' },
+        { k: 'ATEX & Safety', v: 'ATEX Zone 22 (Ex tc IIIB) · PROFIsafe %Q3.1' },
+      ],
+      sorting: [
+        { k: 'PLC / Vision', v: 'Siemens S7-1215C · ET 200SP · OS-01 Vision' },
+        { k: 'Grader & Sorter', v: 'GR-01 4-Deck Vibratory + RGB Air-Jet' },
+        { k: 'Reject Handling', v: 'RJ-01 Pneumatic Reject Bin · Load Cell' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET Vision · %IW80 / %Q5.0' },
+      ],
+      warehouse: [
+        { k: 'PLC / Cell', v: 'Siemens S7-1215C · SINAMICS G120C Sealer' },
+        { k: 'Instrumentation', v: 'Checkweigher PK-01 · RFID Lot Scanner' },
+        { k: 'Environment', v: 'Cleanroom Dehumidifier (<55% RH) · HEPA' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET / OPC UA · %I6.x / %QW90' },
+      ],
+    },
+  },
+  abb: {
+    badge: 'Target Port · Automation Builder / 800xA',
+    isBaseline: false,
+    protocols: ['PROFINET / PROFIsafe', 'System 800xA / AC 800M OPC UA', '%IX / %QW Addressing'],
+    addr: (tag) => {
+      const map = {
+        fan: 'nFanSpeedRef (%QW64)',
+        temp: 'rInletTemp (%IW60 / TTH300)',
+        hopper: 'bHopperRelease AT %QX1.0',
+        probeFault: 'bSensorFault AT %QX3.3',
+        heatCmd: 'rHeatCmdPercent (%QW60)',
+        airflow: 'bAirflowProof (%IX3.0 / 266DSH)',
+        beacon: 'bAlarmBeacon AT %QX3.1',
+      };
+      return map[tag] || tag;
+    },
+    rooms: {
+      intake: [
+        { k: 'PLC / Safety', v: 'ABB AC500 V3 (PM5650-2ETH) · 800xA OPC UA' },
+        { k: 'Load Cell & Diverters', v: 'SC-01 Strain Bridge · Pneumatic DV-01A/B' },
+        { k: 'VFD / Drive', v: 'ABB ACS380 Machinery Drive (1.5 kW)' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET · %IX1.0 / %QX1.0' },
+      ],
+      withering: [
+        { k: 'PLC / Compatibility', v: 'ABB AC500 V3 (PM5650-2ETH) · AC 800M OPC UA' },
+        { k: 'VFD & Motors', v: '4× ABB ACS580 (FN-01..04, 2.2 kW Axial)' },
+        { k: 'Sensors', v: 'Capacitive Moisture (%IW70) · Buffer (250 kg)' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET · %QW64 / %QX3.3' },
+      ],
+      rolling: [
+        { k: 'PLC / Safety', v: 'ABB AC500 V3 + AC500-S (SM560-S) SIL 3' },
+        { k: 'Drives & Motors', v: '2× ABB ACS580 + 5.5 kW Brass Rollers' },
+        { k: 'Instrumentation', v: 'Pneumatic Regulator (0–6 bar) + RH%' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET / 800xA OPC UA · %IX2.x' },
+      ],
+      dryer: [
+        { k: 'Safety PLC', v: 'ABB AC500 V3 (PM5650-2ETH) + SM560-S SIL 3' },
+        { k: 'Transmitters', v: 'ABB TTH300 RTD (%IW60) · ABB 266DSH (%IX3.0)' },
+        { k: 'Heater Control', v: '3-Ph SCR Thyristor (%QW60, 36 kW) + Stack' },
+        { k: 'ATEX & Safety', v: 'ATEX Zone 22 (Ex tc IIIB) · PROFIsafe %QX3.1' },
+      ],
+      sorting: [
+        { k: 'PLC / Vision', v: 'ABB AC500 V3 · OS-01 RGB Line-Scan' },
+        { k: 'Grader & Sorter', v: 'GR-01 4-Deck Vibratory + Air-Jet Manifold' },
+        { k: 'Reject Handling', v: 'RJ-01 Pneumatic Reject Bin · Load Cell' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET · %IW80 / %QX5.0' },
+      ],
+      warehouse: [
+        { k: 'PLC / Cell', v: 'ABB AC500 V3 · ABB ACS380 Foil Sealer' },
+        { k: 'Instrumentation', v: 'Checkweigher PK-01 · RFID Lot Scanner' },
+        { k: 'Environment', v: '800xA HVAC Telemetry (<55% RH) · HEPA' },
+        { k: 'Fieldbus / Addr', v: 'PROFINET / OPC UA · %IX6.x / %QW90' },
+      ],
+    },
+  },
+  beckhoff: {
+    badge: 'Target Port · TwinCAT 3 / EtherCAT',
+    isBaseline: false,
+    protocols: ['EtherCAT / FSoE', 'TwinCAT 3', 'AT %I* / AT %Q* Symbolic'],
+    addr: (tag) => {
+      const map = {
+        fan: 'nFanSpeedRef AT %Q*',
+        temp: 'rInletTemp AT %I* (TT-401)',
+        hopper: 'bHopperRelease AT %Q*',
+        probeFault: 'bSensorFault AT %Q*',
+        heatCmd: 'rHeatCmdPercent AT %Q*',
+        airflow: 'bAirflowProof AT %I* (FS-401)',
+        beacon: 'bAlarmBeacon AT %Q*',
+      };
+      return map[tag] || tag;
+    },
+    rooms: {
+      intake: [
+        { k: 'Controller / I/O', v: 'Beckhoff CX5240 Embedded PC · ELM Terminals' },
+        { k: 'Load Cell & Diverters', v: 'ELM3502 Bridge Terminal · DV-01A/B' },
+        { k: 'Drive / Motor', v: 'AX5000 Servo/Drive (1.5 kW Intake)' },
+        { k: 'Fieldbus / Addr', v: 'EtherCAT · Symbolic AT %I* / AT %Q*' },
+      ],
+      withering: [
+        { k: 'Controller / I/O', v: 'Beckhoff CX5240 Embedded PC · EL3054 AI' },
+        { k: 'Drives & Motors', v: '4× AX5000 / ELM Fan Drives (FN-01..04)' },
+        { k: 'Sensors', v: 'Capacitive Moisture (AT %I*) · Buffer (250 kg)' },
+        { k: 'Fieldbus / Addr', v: 'EtherCAT · TwinCAT 3 AT %Q* Speed Ref' },
+      ],
+      rolling: [
+        { k: 'Controller / Safety', v: 'Beckhoff CX5240 + TwinSAFE EL6910 SIL 3' },
+        { k: 'Drives & Motors', v: '2× AX5000 Multi-Axis + 5.5 kW Rollers' },
+        { k: 'Instrumentation', v: 'ELM3004 Analog Pressure + RH% Terminal' },
+        { k: 'Fieldbus / Addr', v: 'EtherCAT / FSoE · AT %I* / AT %Q*' },
+      ],
+      dryer: [
+        { k: 'Safety Controller', v: 'Beckhoff CX5240 + TwinSAFE EL6910 (SIL 3)' },
+        { k: 'Sensors', v: 'EL3202 PT100 (TT-401/402) · FS-401 FSoE' },
+        { k: 'Heater Control', v: 'EL4004 SCR Control (AT %Q*, 36 kW)' },
+        { k: 'ATEX & Safety', v: 'ATEX Zone 22 · FailSafe over EtherCAT (FSoE)' },
+      ],
+      sorting: [
+        { k: 'Controller / Vision', v: 'Beckhoff CX5240 · TwinCAT Vision OS-01' },
+        { k: 'Grader & Sorter', v: 'GR-01 Vibratory + High-Speed Air-Jet' },
+        { k: 'Reject Handling', v: 'RJ-01 Pneumatic Reject Bin · ELM3502' },
+        { k: 'Fieldbus / Addr', v: 'EtherCAT · Symbolic AT %I* / AT %Q*' },
+      ],
+      warehouse: [
+        { k: 'Controller / Cell', v: 'Beckhoff CX5240 · AX5000 Sealer Cell' },
+        { k: 'Instrumentation', v: 'Checkweigher PK-01 · EtherCAT RFID' },
+        { k: 'Environment', v: 'TwinCAT ADS / OPC UA (<55% RH) · HEPA' },
+        { k: 'Fieldbus / Addr', v: 'EtherCAT · Symbolic AT %I* / AT %Q*' },
+      ],
+    },
+  },
+  rockwell: {
+    badge: 'Target Port · Studio 5000 / GuardLogix',
+    isBaseline: false,
+    protocols: ['EtherNet/IP / CIP Safety', 'Studio 5000 Logix Designer', 'Local:1:I.Data Tags'],
+    addr: (tag) => {
+      const map = {
+        fan: 'nFanSpeedRef (Local:2:O.Data[0])',
+        temp: 'rInletTemp (Local:1:I.Ch0Data)',
+        hopper: 'bHopperRelease (Local:2:O.Data.0)',
+        probeFault: 'bSensorFault (Local:2:O.Data.3)',
+        heatCmd: 'rHeatCmdPct (Local:2:O.Ch1Data)',
+        airflow: 'bAirflowProof (Local:1:I.Data.0)',
+        beacon: 'bAlarmBeacon (Local:2:O.Data.1)',
+      };
+      return map[tag] || tag;
+    },
+    rooms: {
+      intake: [
+        { k: 'PLC / Safety', v: 'Allen-Bradley GuardLogix 5380 (5069-L320ERS2)' },
+        { k: 'Load Cell & Diverters', v: '5069-IY4 Analog + Pneumatic DV-01A/B' },
+        { k: 'VFD / Drive', v: 'PowerFlex 525 VFD (STO, 1.5 kW)' },
+        { k: 'Fieldbus / Addr', v: 'EtherNet/IP · Local:1:I.Data' },
+      ],
+      withering: [
+        { k: 'PLC / I/O', v: 'GuardLogix 5380 · Compact 5000 Safety I/O' },
+        { k: 'VFDs & Motors', v: '4× PowerFlex 525 VFDs (Safe Torque Off)' },
+        { k: 'Sensors', v: 'Capacitive Moisture (Local:1:I.Ch1Data)' },
+        { k: 'Fieldbus / Addr', v: 'EtherNet/IP · Local:2:O.Data' },
+      ],
+      rolling: [
+        { k: 'PLC / Safety', v: 'GuardLogix 5380 (SIL 3) · Compact 5000' },
+        { k: 'VFDs & Motors', v: '2× PowerFlex 525 (STO) + 5.5 kW Rollers' },
+        { k: 'Instrumentation', v: '5069-IY4 Pressure Regulator + RH%' },
+        { k: 'Fieldbus / Addr', v: 'EtherNet/IP / CIP Safety · Local:1:I.Data' },
+      ],
+      dryer: [
+        { k: 'Safety PLC', v: 'Allen-Bradley GuardLogix 5380 (5069-L320ERS2, SIL 3)' },
+        { k: 'Sensors', v: '5069-RT6 PT100 (TT-401) · FS-401 CIP Safety' },
+        { k: 'Heater Control', v: 'PowerFlex / SCR Analog (Local:2:O.Ch1Data)' },
+        { k: 'ATEX & Safety', v: 'ATEX Zone 22 · CIP Safety STO & E-Stop' },
+      ],
+      sorting: [
+        { k: 'PLC / Vision', v: 'GuardLogix 5380 · OS-01 Vision Gate' },
+        { k: 'Grader & Sorter', v: 'GR-01 4-Deck Vibratory + Air-Jet' },
+        { k: 'Reject Handling', v: 'RJ-01 Pneumatic Reject Bin · 5069-IY4' },
+        { k: 'Fieldbus / Addr', v: 'EtherNet/IP · Local:1:I.Data' },
+      ],
+      warehouse: [
+        { k: 'PLC / Cell', v: 'GuardLogix 5380 · PowerFlex 525 Sealer' },
+        { k: 'Instrumentation', v: 'Checkweigher PK-01 · EtherNet/IP RFID' },
+        { k: 'Environment', v: 'FactoryTalk / OPC UA (<55% RH) · HEPA' },
+        { k: 'Fieldbus / Addr', v: 'EtherNet/IP · Local:1:I.Data' },
+      ],
+    },
+  },
+};
 let isPlaying = true;
 let simSpeed = 1.0;
 let isaTagsVisible = true;
@@ -748,10 +972,18 @@ function renderStationPanels() {
     });
   }
 
-  // Right panel: Physical Equipment & Instrumentation + PLC code
+  // Right panel: Vendor badge, Physical Equipment & Instrumentation + PLC code
+  const vendor = VENDOR_PROFILES[activeVendor] || VENDOR_PROFILES.siemens;
+  const vendorBadgeEl = document.getElementById('vendorBadge');
+  if (vendorBadgeEl) {
+    vendorBadgeEl.textContent = vendor.badge;
+    vendorBadgeEl.className = `vendor-badge ${vendor.isBaseline ? 'vendor-badge--baseline' : 'vendor-badge--port'}`;
+  }
+
   const equipEl = document.getElementById('physicalEquipmentSpec');
   if (equipEl) {
-    equipEl.innerHTML = (spec.equipmentSpec || [])
+    const rows = vendor.rooms[activeStationId] || spec.equipmentSpec || [];
+    equipEl.innerHTML = rows
       .map((row) => `<div class="equip-spec-row"><dt>${row.k}</dt><dd>${row.v}</dd></div>`)
       .join('');
   }
@@ -759,7 +991,7 @@ function renderStationPanels() {
   const hwEl = document.getElementById('plcHardwareMeta');
   hwEl.innerHTML = `
     <span class="hw-chip hw-chip--lang">${spec.language}</span>
-    ${spec.hardware.map((h) => `<span class="hw-chip">${h}</span>`).join('')}
+    ${vendor.protocols.map((p) => `<span class="hw-chip">${p}</span>`).join('')}
   `;
   document.getElementById('plcCodeSourceLabel').textContent = spec.codeLabel;
   loadStCode(activeStationId).then((code) => {
@@ -774,25 +1006,26 @@ function renderLivePlcVars() {
   if (!varsEl || activeStationId === 'overview') return;
   const { isWinter, effectiveFanPct, nFanSpeedRef } = computeDerivedPlcTags();
 
+  const vendor = VENDOR_PROFILES[activeVendor] || VENDOR_PROFILES.siemens;
   const coreVars = [
     { k: 'bSafetyTrip', v: String(hmiState.bSafetyTrip), alarm: hmiState.bSafetyTrip },
     { k: 'bGoldenBatchActive', v: String(hmiState.bGoldenBatchActive) },
     { k: 'bDiverterDV01B (01→03)', v: String(!hmiState.bGoldenBatchActive && !isWinter) },
     { k: 'bGateDG02 (02→03)', v: String(hmiState.bGoldenBatchActive && !isWinter) },
-    { k: 'nFanSpeedRef (%QW64)', v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
-    { k: 'rInletTemp (TT-401)', v: `${hmiState.rInletTempDegC.toFixed(1)} °C`, alarm: hmiState.dryerTripped },
+    { k: vendor.addr('fan'), v: `${nFanSpeedRef} (${effectiveFanPct}%)`, alarm: hmiState.airflowLossFault || hmiState.witherSensorFault },
+    { k: vendor.addr('temp'), v: `${hmiState.rInletTempDegC.toFixed(1)} °C`, alarm: hmiState.dryerTripped },
   ];
 
   let stationVars = [];
   if (activeStationId === 'intake') {
     stationVars = [
       { k: 'rDeltaIntakeKg', v: `+${hmiState.intakeDeltaKg} kg` },
-      { k: 'bHopperRelease AT %Q1.0', v: String(!hmiState.intakeQuarantine && !isWinter), alarm: hmiState.intakeQuarantine },
+      { k: vendor.addr('hopper'), v: String(!hmiState.intakeQuarantine && !isWinter), alarm: hmiState.intakeQuarantine },
     ];
   } else if (activeStationId === 'withering') {
     stationVars = [
       { k: 'rWitheringBufferKg', v: `${hmiState.witheringBufferKg.toFixed(1)} / 250.0 kg` },
-      { k: 'bSensorFault AT %Q3.3', v: String(hmiState.witherSensorFault), alarm: hmiState.witherSensorFault },
+      { k: vendor.addr('probeFault'), v: String(hmiState.witherSensorFault), alarm: hmiState.witherSensorFault },
     ];
   } else if (activeStationId === 'rolling') {
     stationVars = [
@@ -805,9 +1038,9 @@ function renderLivePlcVars() {
         ? 0.0
         : Math.min(100, Math.round((hmiState.dryerTempSpDegC / 130) * 100));
     stationVars = [
-      { k: 'rHeatCmdPercent (%QW60)', v: `${heatCmd.toFixed(1)} %` },
-      { k: 'bAirflowProof (FS-401)', v: String(!hmiState.airflowLossFault), alarm: hmiState.airflowLossFault },
-      { k: 'bAlarmBeacon AT %Q3.1', v: hmiState.bSafetyTrip ? 'TRUE (TRIPPED)' : 'FALSE', alarm: hmiState.bSafetyTrip },
+      { k: vendor.addr('heatCmd'), v: `${heatCmd.toFixed(1)} %` },
+      { k: vendor.addr('airflow'), v: String(!hmiState.airflowLossFault), alarm: hmiState.airflowLossFault },
+      { k: vendor.addr('beacon'), v: hmiState.bSafetyTrip ? 'TRUE (TRIPPED)' : 'FALSE', alarm: hmiState.bSafetyTrip },
     ];
   } else if (activeStationId === 'sorting') {
     stationVars = [
@@ -913,6 +1146,18 @@ function selectStation(stationId) {
   if (!isOverview) {
     renderStationPanels();
   }
+  document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeVendor = tab.dataset.vendor || 'siemens';
+      document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((t) => {
+        const isAct = t.dataset.vendor === activeVendor;
+        t.classList.toggle('active', isAct);
+        t.setAttribute('aria-selected', String(isAct));
+      });
+      renderStationPanels();
+    });
+  });
+
   document.querySelectorAll('.zone-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.station === stationId);
   });
@@ -1021,6 +1266,18 @@ function bindEvents() {
     hmiState.bSafetyTrip = false;
     renderStationPanels();
     renderHudAnd3D();
+  });
+
+  document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeVendor = tab.dataset.vendor || 'siemens';
+      document.querySelectorAll('#vendor-switcher .vendor-tab').forEach((t) => {
+        const isAct = t.dataset.vendor === activeVendor;
+        t.classList.toggle('active', isAct);
+        t.setAttribute('aria-selected', String(isAct));
+      });
+      renderStationPanels();
+    });
   });
 
   document.querySelectorAll('.zone-btn').forEach((btn) => {
@@ -1158,7 +1415,7 @@ async function init() {
   renderDrawer();
 
   try {
-    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261202');
+    const { createFactory3D, FACTORY_STATIONS, renderTeaLeafSwatch } = await import('./factory-3d.js?v=20261204');
     renderLeafSwatchFn = renderTeaLeafSwatch;
     if (Array.isArray(FACTORY_STATIONS) && FACTORY_STATIONS.length > 0) {
       stationsList = FACTORY_STATIONS;

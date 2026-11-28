@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanchaRupa 3D Virtual Tea Factory — 6-Room Digital Twin HMI</title>
   <link rel="stylesheet" href="../../shared/css/tokens.css">
-  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261202">
-  <link rel="stylesheet" href="style.css?v=20261202">
+  <link rel="stylesheet" href="../../shared/css/demo-tour.css?v=20261204">
+  <link rel="stylesheet" href="style.css?v=20261204">
   <script type="importmap">
     {
       "imports": {
@@ -163,6 +163,23 @@
     </div>
 
     <div class="side-panel-body">
+      <!-- 4-Vendor Target Control Platform Switcher -->
+      <div class="vendor-switcher-box">
+        <div class="vendor-switcher-header">
+          <span class="section-label" style="margin-bottom:0;">Target Control Platform</span>
+          <span id="vendorBadge" class="vendor-badge vendor-badge--baseline">Field Baseline · TIA Portal</span>
+        </div>
+        <div id="vendor-switcher" class="vendor-tabs" role="tablist" aria-label="Target PLC Vendor">
+          <button class="vendor-tab active" data-vendor="siemens" type="button" role="tab" aria-selected="true">Siemens</button>
+          <button class="vendor-tab" data-vendor="abb" type="button" role="tab" aria-selected="false">ABB</button>
+          <button class="vendor-tab" data-vendor="beckhoff" type="button" role="tab" aria-selected="false">Beckhoff</button>
+          <button class="vendor-tab" data-vendor="rockwell" type="button" role="tab" aria-selected="false">Rockwell</button>
+        </div>
+        <p class="vendor-provenance">
+          Portable IEC 61131-3 ST Core · Benchmarked on Siemens S7-1500, Mapped for Nordic Industrial Standards.
+        </p>
+      </div>
+
       <div class="hw-box">
         <div class="section-label">Physical Equipment &amp; Instrumentation</div>
         <dl id="physicalEquipmentSpec" class="equip-spec-list"></dl>
@@ -222,7 +239,7 @@
     </div>
   </aside>
 
-  <script type="module" src="factory-3d.js?v=20261202"></script>
-  <script type="module" src="app.js?v=20261202"></script>
+  <script type="module" src="factory-3d.js?v=20261204"></script>
+  <script type="module" src="app.js?v=20261204"></script>
 </body>
 </html>
